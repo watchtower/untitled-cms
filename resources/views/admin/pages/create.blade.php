@@ -1,0 +1,243 @@
+@extends('admin.layout')
+
+@section('content')
+<div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">Create New Page</h1>
+            <a href="{{ route('admin.pages.index') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+                Back to Pages
+            </a>
+        </div>
+
+        <form method="POST" action="{{ route('admin.pages.store') }}" class="space-y-6">
+            @csrf
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Content -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                        <input 
+                            type="text" 
+                            id="title" 
+                            name="title" 
+                            value="{{ old('title') }}"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                            required
+                            autofocus
+                        >
+                        @error('title')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+                        <input 
+                            type="text" 
+                            id="slug" 
+                            name="slug" 
+                            value="{{ old('slug') }}"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                            placeholder="Leave empty to auto-generate from title"
+                        >
+                        <p class="mt-1 text-xs text-gray-500">URL-friendly version of the title. Leave empty to auto-generate.</p>
+                        @error('slug')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="summary" class="block text-sm font-medium text-gray-700 mb-2">Summary</label>
+                        <textarea 
+                            id="summary" 
+                            name="summary" 
+                            rows="3"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                            placeholder="Brief description of the page..."
+                        >{{ old('summary') }}</textarea>
+                        @error('summary')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                        <textarea 
+                            id="content" 
+                            name="content" 
+                            rows="15"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                        >{{ old('content') }}</textarea>
+                        @error('content')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-6">
+                    <!-- Publishing -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Publishing</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                <select 
+                                    id="status" 
+                                    name="status" 
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                >
+                                    <option value="draft" {{ old('status', 'draft') === 'draft' ? 'selected' : '' }}>Draft</option>
+                                    <option value="published" {{ old('status') === 'published' ? 'selected' : '' }}>Published</option>
+                                </select>
+                                @error('status')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="published_at" class="block text-sm font-medium text-gray-700 mb-2">Publish Date</label>
+                                <input 
+                                    type="datetime-local" 
+                                    id="published_at" 
+                                    name="published_at" 
+                                    value="{{ old('published_at') }}"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                >
+                                <p class="mt-1 text-xs text-gray-500">Leave empty to publish immediately when status is published.</p>
+                                @error('published_at')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEO -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">SEO Settings</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="meta_title" class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                                <input 
+                                    type="text" 
+                                    id="meta_title" 
+                                    name="meta_title" 
+                                    value="{{ old('meta_title') }}"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    placeholder="Leave empty to use page title"
+                                >
+                                @error('meta_title')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="meta_description" class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                                <textarea 
+                                    id="meta_description" 
+                                    name="meta_description" 
+                                    rows="3"
+                                    maxlength="320"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    placeholder="Brief description for search engines..."
+                                >{{ old('meta_description') }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500">Recommended: 150-160 characters</p>
+                                @error('meta_description')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="meta_keywords" class="block text-sm font-medium text-gray-700 mb-2">Meta Keywords</label>
+                                <input 
+                                    type="text" 
+                                    id="meta_keywords" 
+                                    name="meta_keywords" 
+                                    value="{{ old('meta_keywords') ? (is_array(old('meta_keywords')) ? implode(', ', old('meta_keywords')) : old('meta_keywords')) : '' }}"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    placeholder="keyword1, keyword2, keyword3"
+                                >
+                                <p class="mt-1 text-xs text-gray-500">Separate with commas</p>
+                                @error('meta_keywords')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex flex-col space-y-3">
+                        <button 
+                            type="submit" 
+                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        >
+                            Create Page
+                        </button>
+                        <a 
+                            href="{{ route('admin.pages.index') }}" 
+                            class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded text-center"
+                        >
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://ckeditor4-19-1.cdn.3b.my/ckeditor.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize CKEditor
+    CKEDITOR.replace('content', {
+        height: 400,
+        toolbar: [
+            { name: 'document', items: ['Source', 'Preview'] },
+            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
+            { name: 'editing', items: ['Find', 'Replace', 'SelectAll'] },
+            '/',
+            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'] },
+            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv'] },
+            { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
+            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
+            '/',
+            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+            { name: 'colors', items: ['TextColor', 'BGColor'] },
+            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
+        ],
+        removeButtons: '',
+        format_tags: 'p;h1;h2;h3;h4;h5;h6;pre',
+        allowedContent: true,
+        extraAllowedContent: 'div(*);span(*);p(*);h1(*);h2(*);h3(*);h4(*);h5(*);h6(*)',
+    });
+
+    // Auto-generate slug from title
+    document.getElementById('title').addEventListener('input', function() {
+        const title = this.value;
+        const slugField = document.getElementById('slug');
+        
+        if (!slugField.dataset.manuallyEdited) {
+            const slug = title
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            
+            slugField.value = slug;
+        }
+    });
+
+    // Track manual slug editing
+    document.getElementById('slug').addEventListener('input', function() {
+        this.dataset.manuallyEdited = 'true';
+    });
+});
+</script>
+@endsection

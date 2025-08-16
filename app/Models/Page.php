@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Page extends Model
@@ -66,5 +67,10 @@ class Page extends Model
     public function scopeDraft($query)
     {
         return $query->where('status', 'draft');
+    }
+
+    public function contentBlocks(): HasMany
+    {
+        return $this->hasMany(ContentBlock::class)->ordered();
     }
 }

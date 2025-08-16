@@ -23,7 +23,7 @@ A clean, modular, and extensible Laravel-based content management system designe
 - PHP 8.2 or higher
 - Composer
 - Node.js & npm
-- MySQL 8.0+ or SQLite
+- MySQL 8.0+ (recommended) or SQLite
 
 ### Installation
 
@@ -45,18 +45,38 @@ A clean, modular, and extensible Laravel-based content management system designe
    php artisan key:generate
    ```
 
-4. **Database setup**
+4. **Database configuration**
+   
+   Update your `.env` file with your database credentials:
+   
+   **For MySQL (recommended):**
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=untitled_cms
+   DB_USERNAME=your_username
+   DB_PASSWORD=your_password
+   ```
+   
+   **For SQLite (alternative):**
+   ```env
+   DB_CONNECTION=sqlite
+   DB_DATABASE=/absolute/path/to/database.sqlite
+   ```
+
+5. **Database setup**
    ```bash
    php artisan migrate
    php artisan db:seed
    ```
 
-5. **Build assets**
+6. **Build assets**
    ```bash
    npm run dev
    ```
 
-6. **Start development server**
+7. **Start development server**
    ```bash
    php artisan serve
    ```
@@ -91,6 +111,7 @@ routes/
 
 - **Backend**: Laravel 12.x with PHP 8.2+
 - **Frontend**: Blade templating with Tailwind CSS and Alpine.js
+- **WYSIWYG Editor**: CKEditor 4 for rich content editing
 - **Database**: MySQL/SQLite with Eloquent ORM
 - **Authentication**: Laravel Breeze
 - **Testing**: Pest with Laravel plugins
@@ -134,6 +155,28 @@ npm run dev
 npm run build
 ```
 
+## 🎛️ Content Management
+
+### WYSIWYG Editor
+
+The CMS includes CKEditor 4 for rich text editing with the following features:
+
+- **Rich Text Formatting**: Bold, italic, underline, colors, fonts
+- **Content Blocks**: Paragraphs, headings (H1-H6), lists, quotes
+- **Media Support**: Image insertion, links, tables
+- **Code Support**: Source code view and special characters
+- **SEO Friendly**: Clean HTML output with semantic markup
+
+The editor is automatically initialized on page creation and editing forms. No additional configuration required.
+
+### Page Management
+
+- **Content Types**: Rich text content with CKEditor 4 integration
+- **SEO Optimization**: Meta titles, descriptions, and keywords
+- **Publishing Workflow**: Draft/Published status with scheduled publishing
+- **URL Management**: Automatic slug generation from titles
+- **Content Organization**: Hierarchical page structure
+
 ## 📖 Documentation
 
 - **[Project Plan](PROJECT_PLAN.md)**: Complete development roadmap and technical specifications
@@ -168,10 +211,11 @@ npm run build
 - [x] Authentication system
 - [x] Admin dashboard
 - [x] Basic project structure
-- [ ] Site settings management
-- [ ] Page management with content blocks
+- [x] Site settings management
+- [x] Page management with CKEditor 4 integration
+- [x] Navigation builder
+- [ ] Content blocks system (advanced)
 - [ ] Media management
-- [ ] Navigation builder
 - [ ] User roles and permissions
 
 ### Phase 2 - Developer Tools 🔮
