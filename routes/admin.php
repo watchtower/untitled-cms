@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\NavigationController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -13,6 +14,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
             'draft_pages' => \App\Models\Page::where('status', 'draft')->count(),
             'total_users' => \App\Models\User::count(),
             'navigation_items' => \App\Models\NavigationItem::count(),
+            'media_files' => \App\Models\Media::count(),
         ];
 
         return view('admin.dashboard', compact('stats'));
@@ -23,6 +25,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     Route::resource('navigation', NavigationController::class);
     Route::put('/navigation/order', [NavigationController::class, 'updateOrder'])->name('navigation.order');
+
+    Route::resource('media', MediaController::class)->except(['create', 'edit']);
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
