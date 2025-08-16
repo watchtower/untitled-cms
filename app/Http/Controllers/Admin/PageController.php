@@ -11,6 +11,11 @@ use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Page::class, 'page');
+    }
+
     public function index(Request $request)
     {
         $query = Page::with(['creator', 'updater']);

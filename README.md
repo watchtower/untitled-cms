@@ -68,7 +68,7 @@ A clean, modular, and extensible Laravel-based content management system designe
 5. **Database setup**
    ```bash
    php artisan migrate
-   php artisan db:seed
+   php artisan db:seed --class=UserRoleSeeder
    ```
 
 6. **Build assets**
@@ -82,6 +82,15 @@ A clean, modular, and extensible Laravel-based content management system designe
    ```
 
 Visit `http://localhost:8000` to see your CMS in action!
+
+### Default Login Credentials
+
+After running the seeder, you can log in with:
+- **Email**: admin@example.com
+- **Password**: password
+- **Role**: Super Admin
+
+*Remember to change these credentials in production!*
 
 ## 🏗️ Architecture
 
@@ -177,6 +186,21 @@ The editor is automatically initialized on page creation and editing forms. No a
 - **URL Management**: Automatic slug generation from titles
 - **Content Organization**: Hierarchical page structure
 
+### Media Library
+
+- **File Upload**: Drag-and-drop file uploads with validation
+- **Media Types**: Support for images, documents, videos, and audio
+- **Image Handling**: Automatic dimension detection and thumbnails
+- **File Management**: View, edit metadata, copy URLs, and delete files
+- **Search & Filter**: Filter by file type and search by filename/description
+
+### User Roles & Permissions
+
+- **Super Admin**: Full system access and user management
+- **Admin**: Content management and publishing permissions
+- **Editor**: Content creation with limited editing permissions
+- **Policy-Based**: Granular permissions using Laravel policies
+
 ## 📖 Documentation
 
 - **[Project Plan](PROJECT_PLAN.md)**: Complete development roadmap and technical specifications
@@ -189,6 +213,8 @@ The editor is automatically initialized on page creation and editing forms. No a
 - SQL injection protection via Eloquent ORM
 - Password hashing with bcrypt
 - Rate limiting on authentication routes
+- Role-based access control with policies
+- File upload validation and secure storage
 
 ## 🤝 Contributing
 
@@ -207,18 +233,25 @@ The editor is automatically initialized on page creation and editing forms. No a
 
 ## 📋 Roadmap
 
-### Phase 1 - Core CMS ✅
-- [x] Authentication system
-- [x] Admin dashboard
-- [x] Basic project structure
+### Phase 1 - Core CMS ✅ COMPLETED
+- [x] Authentication system with Laravel Breeze
+- [x] Admin dashboard with statistics
+- [x] Basic project structure and architecture
 - [x] Site settings management
 - [x] Page management with CKEditor 4 integration
-- [x] Navigation builder
-- [ ] Content blocks system (advanced)
-- [ ] Media management
-- [ ] User roles and permissions
+- [x] Navigation builder with drag-and-drop ordering
+- [x] Media upload and management system
+- [x] User roles and permissions (Super Admin, Admin, Editor)
+- [x] SEO meta fields and URL management
+- [x] MySQL integration and database optimization
+- [x] Content blocks system foundation
+- [x] Draft/Published workflow
+- [x] Form validation and security policies
+
+**Status**: Production ready! All core CMS features implemented and tested.
 
 ### Phase 2 - Developer Tools 🔮
+*Will be developed as a separate repository/project*
 - [ ] IP and geo location services
 - [ ] Network monitoring tools
 - [ ] DNS management
