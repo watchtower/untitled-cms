@@ -1,55 +1,62 @@
 @extends('admin.layout')
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900">Media Library</h1>
-        <button 
-            onclick="document.getElementById('upload-modal').classList.remove('hidden')" 
-            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
-        >
-            Upload File
-        </button>
-    </div>
-
-    <!-- Filters -->
-    <div class="bg-white p-4 rounded-lg shadow">
-        <form method="GET" class="flex gap-4 items-end">
-            <div class="flex-1">
-                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                <input 
-                    type="text" 
-                    id="search" 
-                    name="search" 
-                    value="{{ request('search') }}"
-                    placeholder="Search by filename, alt text, or description..."
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                >
-            </div>
+<div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
             <div>
-                <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select 
-                    id="type" 
-                    name="type"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                >
-                    <option value="">All Types</option>
-                    <option value="image" {{ request('type') === 'image' ? 'selected' : '' }}>Images</option>
-                    <option value="video" {{ request('type') === 'video' ? 'selected' : '' }}>Videos</option>
-                    <option value="audio" {{ request('type') === 'audio' ? 'selected' : '' }}>Audio</option>
-                    <option value="application" {{ request('type') === 'application' ? 'selected' : '' }}>Documents</option>
-                </select>
+                <h1 class="text-2xl font-bold text-gray-900">Media Library</h1>
+                <p class="text-sm text-gray-600 mt-1">Manage and organize your media files</p>
             </div>
-            <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                Filter
+            <button 
+                onclick="document.getElementById('upload-modal').classList.remove('hidden')" 
+                class="inline-flex items-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200"
+            >
+                <svg class="-ml-0.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path d="M9.25 13.25a.75.75 0 001.5 0V4.636l2.955 3.129a.75.75 0 001.09-1.03l-4.25-4.5a.75.75 0 00-1.09 0l-4.25 4.5a.75.75 0 101.09 1.03L9.25 4.636v8.614z" />
+                    <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                </svg>
+                Upload File
             </button>
-            @if(request()->hasAny(['search', 'type']))
-                <a href="{{ route('admin.media.index') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded">
-                    Clear
-                </a>
-            @endif
-        </form>
-    </div>
+        </div>
+
+
+        <!-- Filters -->
+        <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+            <form method="GET" class="flex flex-wrap gap-4">
+                <div class="flex-1 min-w-64">
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ request('search') }}"
+                        placeholder="Search by filename, alt text, or description..."
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    >
+                </div>
+                <div>
+                    <select 
+                        name="type"
+                        class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    >
+                        <option value="">All Types</option>
+                        <option value="image" {{ request('type') === 'image' ? 'selected' : '' }}>Images</option>
+                        <option value="video" {{ request('type') === 'video' ? 'selected' : '' }}>Videos</option>
+                        <option value="audio" {{ request('type') === 'audio' ? 'selected' : '' }}>Audio</option>
+                        <option value="application" {{ request('type') === 'application' ? 'selected' : '' }}>Documents</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors duration-200">
+                        Filter
+                    </button>
+                    @if(request()->hasAny(['search', 'type']))
+                        <a href="{{ route('admin.media.index') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded transition-colors duration-200">
+                            Clear
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
 
     <!-- Media Grid -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -91,18 +98,33 @@
                 {{ $media->withQueryString()->links() }}
             </div>
         @else
-            <div class="p-12 text-center">
-                <div class="text-gray-400 text-6xl mb-4">📁</div>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">No media files found</h3>
-                <p class="text-gray-500 mb-4">Get started by uploading your first file.</p>
-                <button 
-                    onclick="document.getElementById('upload-modal').classList.remove('hidden')" 
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
-                >
-                    Upload File
-                </button>
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-semibold text-gray-900">No media files found</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    @if(request()->hasAny(['search', 'type']))
+                        No media files match your current filters.
+                    @else
+                        Get started by uploading your first file.
+                    @endif
+                </p>
+                <div class="mt-6">
+                    <button 
+                        onclick="document.getElementById('upload-modal').classList.remove('hidden')" 
+                        class="inline-flex items-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200"
+                    >
+                        <svg class="-ml-0.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M9.25 13.25a.75.75 0 001.5 0V4.636l2.955 3.129a.75.75 0 001.09-1.03l-4.25-4.5a.75.75 0 00-1.09 0l-4.25 4.5a.75.75 0 101.09 1.03L9.25 4.636v8.614z" />
+                            <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                        </svg>
+                        Upload File
+                    </button>
+                </div>
             </div>
         @endif
+    </div>
     </div>
 </div>
 

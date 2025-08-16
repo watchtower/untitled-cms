@@ -11,8 +11,10 @@ use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
+
     public function __construct()
     {
+        $this->middleware('auth');
         $this->authorizeResource(Page::class, 'page');
     }
 
@@ -150,5 +152,40 @@ class PageController extends Controller
 
         return redirect()->route('admin.pages.edit', $newPage)
             ->with('success', 'Page duplicated successfully.');
+    }
+
+    public function publish(Page $page)
+    {
+        $this->authorize('update', $page);
+
+        $page->update([
+            'status' => 'published',
+            'published_at' => now(),
+            'updated_by' => auth()->id(),
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Page published successfully.');
+    }
+
+    public function unpublish(Page $page)
+    {
+        $this->authorize('update', $page);
+
+        $page->update([
+            'status' => 'draft',
+            'published_at' => null,
+            'updated_by' => auth()->id(),
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Page unpublished successfully.');
+    }
+
+    public function preview(Page $page)
+    {
+        $this->authorize('view', $page);
+        
+        return view('pages.show', compact('page'));
     }
 }

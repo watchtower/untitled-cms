@@ -4,13 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -22,6 +23,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'status',
+        'last_login_at',
     ];
 
     /**
@@ -43,6 +46,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -79,5 +83,55 @@ class User extends Authenticatable
             'editor' => 'Editor',
             default => 'Unknown'
         };
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    public function isInactive(): bool
+    {
+        return $this->status === 'inactive';
+    }
+
+    public function activate(): bool
+    {
+        return $this->update(['status' => 'active']);
+    }
+
+    public function deactivate(): bool
+    {
+        return $this->update(['status' => 'inactive']);
+    }
+
+    public function getStatusDisplayAttribute(): string
+    {
+        return ucfirst($this->status);
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+
+    public function updateLastLogin(): void
+    {
+        $this->update(['last_login_at' => now()]);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+
+    public function scopeByRole($query, string $role)
+    {
+        return $query->where('role', $role);
     }
 }
