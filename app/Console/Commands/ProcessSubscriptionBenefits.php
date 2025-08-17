@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use App\Models\Token;
+use App\Models\User;
 use App\Models\UserToken;
-use App\Models\TokenTransaction;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -22,18 +21,20 @@ class ProcessSubscriptionBenefits extends Command
         // Get active paid subscribers (Jedi and Master levels)
         $subscribers = User::whereHas('subscriptionLevel', function ($query) {
             $query->where('level', '>', 1) // Above Padawan (free tier)
-                  ->where('is_active', true);
+                ->where('is_active', true);
         })->where('subscription_active', true)->get();
 
         if ($subscribers->isEmpty()) {
             $this->info('No active paid subscribers found.');
+
             return 0;
         }
 
         $l33tBytesToken = Token::where('slug', 'l33t-bytes')->first();
-        
-        if (!$l33tBytesToken) {
+
+        if (! $l33tBytesToken) {
             $this->error('L33t Bytes token not found!');
+
             return 1;
         }
 
@@ -43,7 +44,7 @@ class ProcessSubscriptionBenefits extends Command
         DB::transaction(function () use ($subscribers, $l33tBytesToken, &$totalProcessed, &$totalTokensGranted) {
             foreach ($subscribers as $user) {
                 $allocation = $this->getMonthlyAllocation($user);
-                
+
                 if ($allocation > 0) {
                     // Get or create user token record
                     $userToken = UserToken::firstOrCreate([
@@ -62,7 +63,7 @@ class ProcessSubscriptionBenefits extends Command
                     if ($success) {
                         $totalProcessed++;
                         $totalTokensGranted += $allocation;
-                        
+
                         $this->info("✓ {$user->name} ({$user->subscriptionLevel->name}): +{$allocation} L33t Bytes");
                     } else {
                         $this->error("✗ Failed to process {$user->name}");
@@ -83,7 +84,7 @@ class ProcessSubscriptionBenefits extends Command
      */
     private function getMonthlyAllocation(User $user): int
     {
-        if (!$user->subscriptionLevel) {
+        if (! $user->subscriptionLevel) {
             return 0;
         }
 

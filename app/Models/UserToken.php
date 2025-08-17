@@ -41,7 +41,7 @@ class UserToken extends Model
         $balanceBefore = $this->balance;
         $this->balance += $amount;
         $balanceAfter = $this->balance;
-        
+
         if ($this->save()) {
             // Log the transaction
             TokenTransaction::create([
@@ -55,10 +55,10 @@ class UserToken extends Model
                 'type' => $type,
                 'created_at' => now(),
             ]);
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -70,11 +70,11 @@ class UserToken extends Model
         if ($this->balance < $amount) {
             return false; // Insufficient balance
         }
-        
+
         $balanceBefore = $this->balance;
         $this->balance -= $amount;
         $balanceAfter = $this->balance;
-        
+
         if ($this->save()) {
             // Log the transaction
             TokenTransaction::create([
@@ -88,10 +88,10 @@ class UserToken extends Model
                 'type' => $type,
                 'created_at' => now(),
             ]);
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -103,7 +103,7 @@ class UserToken extends Model
         $balanceBefore = $this->balance;
         $amount = $newBalance - $balanceBefore;
         $this->balance = $newBalance;
-        
+
         if ($this->save()) {
             // Log the transaction
             TokenTransaction::create([
@@ -117,10 +117,10 @@ class UserToken extends Model
                 'type' => 'admin_set',
                 'created_at' => now(),
             ]);
-            
+
             return true;
         }
-        
+
         return false;
     }
 }

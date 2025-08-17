@@ -127,14 +127,15 @@ class NavigationController extends Controller
 
     public function toggleVisibility(NavigationItem $navigation)
     {
-        $navigation->update(['is_visible' => !$navigation->is_visible]);
+        $navigation->update(['is_visible' => ! $navigation->is_visible]);
+
         return redirect()->route('admin.navigation.index')->with('success', 'Navigation item visibility updated.');
     }
 
     public function duplicate(NavigationItem $navigation)
     {
         $newItem = $navigation->replicate();
-        $newItem->label = $newItem->label . ' (copy)';
+        $newItem->label = $newItem->label.' (copy)';
         $newItem->sort_order = NavigationItem::where('parent_id', $navigation->parent_id)->max('sort_order') + 1;
         $newItem->save();
 

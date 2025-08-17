@@ -1,110 +1,119 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <!-- User Avatar -->
-                <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
-                    <span class="text-white font-bold text-lg">
-                        {{ substr($user->name, 0, 1) }}
-                    </span>
-                </div>
-                <div>
-                    <h2 class="font-bold text-2xl text-gray-900 leading-tight">
-                        {{ $user->name }}'s Profile
-                    </h2>
-                    <p class="text-sm text-gray-600 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        {{ $user->getRoleDisplayNameAttribute() }}
-                        @if($user->subscriptionLevel)
-                            <span class="ml-2 px-2 py-1 text-xs font-medium bg-gradient-to-r from-purple-100 to-cyan-100 text-purple-800 rounded-full">
-                                {{ $user->subscriptionLevel->name }}
-                            </span>
-                        @endif
-                    </p>
-                </div>
-            </div>
-            
-            <div class="hidden md:flex items-center gap-3">
-                <div class="text-right">
-                    <div class="text-sm font-medium text-gray-900">{{ number_format($l33tBytesBalance) }}</div>
-                    <div class="text-xs text-gray-500">L33t Bytes</div>
-                </div>
-                <div class="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Profile') }}
+        </h2>
     </x-slot>
 
-    <!-- Background Pattern -->
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-        <!-- Hero Pattern -->
-        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23e5e7eb" fill-opacity="0.3"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
-        
-        <div class="relative py-8 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto">
-                <!-- Main Content Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Left Column - L33t Economy -->
-                    <div class="lg:col-span-1 space-y-6">
-                        <div class="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 border border-white/20">
-                            @include('profile.partials.l33t-economy-section')
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    <!-- Page Header -->
+                    <div class="mb-8">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="h-12 w-12 flex-shrink-0">
+                                <div class="h-12 w-12 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900">Profile Settings</h1>
+                                <p class="text-sm text-gray-600 mt-1">Manage your account information and L33t economy status</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Right Column - Profile Settings -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Profile Information -->
-                        <div class="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 sm:p-8 border border-white/20 hover:shadow-2xl transition-all duration-300">
-                            <div class="max-w-2xl">
-                                @include('profile.partials.update-profile-information-form')
+                    <!-- L33t Economy Section -->
+                    <div class="mb-8">
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900">L33t Economy</h2>
+                                    <p class="text-sm text-gray-600 mt-1">Your subscription level and currency balances</p>
+                                </div>
+                                @if($user->subscriptionLevel)
+                                    @php
+                                        $levelColors = [
+                                            1 => 'bg-green-100 text-green-800 ring-green-600/20',
+                                            2 => 'bg-blue-100 text-blue-800 ring-blue-600/20', 
+                                            3 => 'bg-purple-100 text-purple-800 ring-purple-600/20'
+                                        ];
+                                        $colorClass = $levelColors[$user->subscriptionLevel->level] ?? 'bg-gray-100 text-gray-800 ring-gray-600/20';
+                                    @endphp
+                                    <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ring-1 ring-inset {{ $colorClass }}">
+                                        {{ $user->subscriptionLevel->name }}
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800 ring-1 ring-inset ring-gray-600/20">
+                                        No Subscription
+                                    </span>
+                                @endif
                             </div>
-                        </div>
 
-                        <!-- Password Update -->
-                        <div class="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 sm:p-8 border border-white/20 hover:shadow-2xl transition-all duration-300">
-                            <div class="max-w-2xl">
-                                @include('profile.partials.update-password-form')
-                            </div>
-                        </div>
-
-                        <!-- Account Management -->
-                        <div class="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 sm:p-8 border border-white/20 hover:shadow-2xl transition-all duration-300">
-                            <div class="max-w-2xl">
-                                @include('profile.partials.delete-user-form')
-                            </div>
-                        </div>
-                        
-                        <!-- Quick Stats Footer -->
-                        <div class="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 backdrop-blur-sm rounded-2xl p-6 border border-purple-200/30">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                                <div>
-                                    <div class="text-2xl font-bold text-gray-900">{{ number_format($l33tBytesBalance) }}</div>
-                                    <div class="text-xs text-gray-600">L33t Bytes</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl font-bold text-gray-900">{{ number_format($dailyBitsBalance) }}</div>
-                                    <div class="text-xs text-gray-600">Daily Bits</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl font-bold text-gray-900">{{ number_format($weeklyPowerBitsBalance) }}</div>
-                                    <div class="text-xs text-gray-600">Power Bits</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl font-bold text-gray-900">
-                                        @if($user->subscriptionLevel)
-                                            {{ $user->subscriptionLevel->level }}
-                                        @else
-                                            0
-                                        @endif
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <!-- L33t Bytes -->
+                                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="h-8 w-8 rounded-md bg-amber-100 flex items-center justify-center">
+                                                <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="ml-3 flex-1">
+                                            <p class="text-sm font-medium text-gray-900">L33t Bytes</p>
+                                            <p class="text-xs text-gray-500">Permanent tokens</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-lg font-semibold text-gray-900">{{ number_format($l33tBytesBalance) }}</p>
+                                        </div>
                                     </div>
-                                    <div class="text-xs text-gray-600">L33t Level</div>
                                 </div>
+
+                                <!-- Bits Balances -->
+                                @foreach($userCounters as $userCounter)
+                                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="h-8 w-8 rounded-md bg-blue-100 flex items-center justify-center">
+                                                    <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="ml-3 flex-1">
+                                                <p class="text-sm font-medium text-gray-900">{{ $userCounter->counterType->name }}</p>
+                                                <p class="text-xs text-gray-500">Resets {{ $userCounter->counterType->reset_frequency }}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-lg font-semibold text-gray-900">{{ number_format($userCounter->current_count) }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Settings -->
+                    <div class="space-y-8">
+                        <!-- Profile Information -->
+                        <div class="border-b border-gray-200 pb-8">
+                            @include('profile.partials.update-profile-information-form')
+                        </div>
+
+                        <!-- Update Password -->
+                        <div class="border-b border-gray-200 pb-8">
+                            @include('profile.partials.update-password-form')
+                        </div>
+
+                        <!-- Delete Account -->
+                        <div>
+                            @include('profile.partials.delete-user-form')
                         </div>
                     </div>
                 </div>

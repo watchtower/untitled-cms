@@ -68,6 +68,6 @@ class SubscriptionLevel extends Model
      */
     public function getFormattedPriceAttribute(): string
     {
-        return $this->isFree() ? 'Free' : '$' . number_format($this->price, 2) . '/month';
+        return $this->isFree() ? 'Free' : '$'.number_format($this->price, 2).'/month';
     }
 }

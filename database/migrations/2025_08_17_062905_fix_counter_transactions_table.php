@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('counter_transactions', function (Blueprint $table) {
             // Drop old columns and add new ones for proper counter type relationship
             $table->dropColumn(['action_type', 'amount', 'balance_before', 'balance_after']);
-            
+
             // Add proper foreign key relationship and new column names
             $table->foreignId('counter_id')->after('user_id')->constrained('counter_types')->onDelete('cascade');
             $table->foreignId('admin_id')->after('counter_id')->nullable()->constrained('users')->onDelete('set null');
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->dropForeign(['counter_id']);
             $table->dropForeign(['admin_id']);
             $table->dropColumn(['counter_id', 'admin_id', 'count_change', 'count_before', 'count_after']);
-            
+
             // Add back old columns
             $table->string('action_type')->after('user_id');
             $table->integer('amount')->after('action_type');

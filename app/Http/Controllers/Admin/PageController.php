@@ -5,15 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePageRequest;
 use App\Http\Requests\UpdatePageRequest;
-use App\Models\Page;
 use App\Models\Category;
+use App\Models\Page;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('auth');
@@ -54,7 +53,7 @@ class PageController extends Controller
         }
 
         $pages = $query->latest()->paginate(15);
-        
+
         // Get categories and tags for filter dropdowns
         $categories = Category::orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
@@ -66,7 +65,7 @@ class PageController extends Controller
     {
         $categories = Category::orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
-        
+
         return view('admin.pages.create', compact('categories', 'tags'));
     }
 
@@ -107,14 +106,14 @@ class PageController extends Controller
         if ($request->has('tag_ids')) {
             $tagData = json_decode($request->tag_ids, true);
             $tagIds = [];
-            
+
             if ($tagData) {
                 foreach ($tagData as $tagInfo) {
                     if ($tagInfo['isNew']) {
                         // Create new tag
                         $tag = Tag::create([
                             'name' => $tagInfo['name'],
-                            'slug' => Str::slug($tagInfo['name'])
+                            'slug' => Str::slug($tagInfo['name']),
                         ]);
                         $tagIds[] = $tag->id;
                     } else {
@@ -123,7 +122,7 @@ class PageController extends Controller
                     }
                 }
             }
-            
+
             $page->tags()->sync($tagIds);
         }
 
@@ -140,7 +139,7 @@ class PageController extends Controller
     {
         $categories = Category::orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
-        
+
         return view('admin.pages.edit', compact('page', 'categories', 'tags'));
     }
 
@@ -184,14 +183,14 @@ class PageController extends Controller
         if ($request->has('tag_ids')) {
             $tagData = json_decode($request->tag_ids, true);
             $tagIds = [];
-            
+
             if ($tagData) {
                 foreach ($tagData as $tagInfo) {
                     if ($tagInfo['isNew']) {
                         // Create new tag
                         $tag = Tag::create([
                             'name' => $tagInfo['name'],
-                            'slug' => Str::slug($tagInfo['name'])
+                            'slug' => Str::slug($tagInfo['name']),
                         ]);
                         $tagIds[] = $tag->id;
                     } else {
@@ -200,7 +199,7 @@ class PageController extends Controller
                     }
                 }
             }
-            
+
             $page->tags()->sync($tagIds);
         } else {
             $page->tags()->sync([]);
@@ -273,7 +272,7 @@ class PageController extends Controller
     public function preview(Page $page)
     {
         $this->authorize('view', $page);
-        
+
         return view('pages.show', compact('page'));
     }
 }

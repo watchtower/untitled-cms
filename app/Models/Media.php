@@ -39,12 +39,12 @@ class Media extends Model
     {
         $bytes = $this->size;
         $units = ['B', 'KB', 'MB', 'GB'];
-        
+
         for ($i = 0; $bytes > 1024; $i++) {
             $bytes /= 1024;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 
     public function isImage(): bool
@@ -55,6 +55,7 @@ class Media extends Model
     public function getTypeAttribute(): string
     {
         $type = explode('/', $this->mime_type)[0];
+
         return ucfirst($type);
     }
 }

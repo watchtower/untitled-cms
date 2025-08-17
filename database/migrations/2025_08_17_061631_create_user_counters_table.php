@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('current_count')->default(0);
             $table->timestamp('last_reset_at')->nullable();
             $table->timestamps();
-            
+
             // Unique constraint to prevent duplicate user-counter type pairs
             $table->unique(['user_id', 'counter_type_id']);
         });

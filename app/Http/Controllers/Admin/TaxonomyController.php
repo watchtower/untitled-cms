@@ -18,11 +18,11 @@ class TaxonomyController extends Controller
     public function index(Request $request)
     {
         $activeTab = $request->get('tab', 'categories');
-        
+
         $categories = Category::withCount('pages')
             ->orderBy('name')
             ->get();
-            
+
         $tags = Tag::withCount('pages')
             ->orderBy('name')
             ->get();
@@ -31,13 +31,13 @@ class TaxonomyController extends Controller
         $categoryStats = [
             'total' => $categories->count(),
             'used' => $categories->where('pages_count', '>', 0)->count(),
-            'unused' => $categories->where('pages_count', 0)->count()
+            'unused' => $categories->where('pages_count', 0)->count(),
         ];
 
         $tagStats = [
             'total' => $tags->count(),
             'used' => $tags->where('pages_count', '>', 0)->count(),
-            'unused' => $tags->where('pages_count', 0)->count()
+            'unused' => $tags->where('pages_count', 0)->count(),
         ];
 
         return view('admin.taxonomy.index', compact('categories', 'tags', 'activeTab', 'categoryStats', 'tagStats'));
@@ -46,7 +46,7 @@ class TaxonomyController extends Controller
     public function store(Request $request)
     {
         $type = $request->input('type'); // 'category' or 'tag'
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:category,tag',
@@ -54,7 +54,7 @@ class TaxonomyController extends Controller
 
         $data = [
             'name' => $request->name,
-            'slug' => Str::slug($request->name)
+            'slug' => Str::slug($request->name),
         ];
 
         if ($type === 'category') {
@@ -62,7 +62,7 @@ class TaxonomyController extends Controller
             if (Category::where('name', $request->name)->exists()) {
                 return back()->withErrors(['name' => 'Category already exists.']);
             }
-            
+
             Category::create($data);
             $message = 'Category created successfully.';
         } else {
@@ -70,7 +70,7 @@ class TaxonomyController extends Controller
             if (Tag::where('name', $request->name)->exists()) {
                 return back()->withErrors(['name' => 'Tag already exists.']);
             }
-            
+
             Tag::create($data);
             $message = 'Tag created successfully.';
         }
@@ -87,27 +87,27 @@ class TaxonomyController extends Controller
 
         $data = [
             'name' => $request->name,
-            'slug' => Str::slug($request->name)
+            'slug' => Str::slug($request->name),
         ];
 
         if ($type === 'category') {
             $item = Category::findOrFail($id);
-            
+
             // Check for duplicate category (excluding current)
             if (Category::where('name', $request->name)->where('id', '!=', $id)->exists()) {
                 return back()->withErrors(['name' => 'Category already exists.']);
             }
-            
+
             $item->update($data);
             $message = 'Category updated successfully.';
         } else {
             $item = Tag::findOrFail($id);
-            
+
             // Check for duplicate tag (excluding current)
             if (Tag::where('name', $request->name)->where('id', '!=', $id)->exists()) {
                 return back()->withErrors(['name' => 'Tag already exists.']);
             }
-            
+
             $item->update($data);
             $message = 'Tag updated successfully.';
         }
@@ -128,13 +128,13 @@ class TaxonomyController extends Controller
 
         // Check if item is in use
         if ($item->pages()->count() > 0) {
-            return back()->with('error', $itemType . ' cannot be deleted because it is assigned to pages.');
+            return back()->with('error', $itemType.' cannot be deleted because it is assigned to pages.');
         }
 
         $item->delete();
 
         return redirect()->route('admin.taxonomy.index', ['tab' => $type === 'category' ? 'categories' : 'tags'])
-            ->with('success', $itemType . ' deleted successfully.');
+            ->with('success', $itemType.' deleted successfully.');
     }
 
     public function bulkDelete(Request $request)
@@ -142,7 +142,7 @@ class TaxonomyController extends Controller
         $request->validate([
             'type' => 'required|in:category,tag',
             'ids' => 'required|array',
-            'ids.*' => 'integer'
+            'ids.*' => 'integer',
         ]);
 
         $type = $request->type;
@@ -156,16 +156,18 @@ class TaxonomyController extends Controller
                     $item = Category::findOrFail($id);
                     if ($item->pages()->count() > 0) {
                         $errors[] = "Category '{$item->name}' is in use and cannot be deleted.";
+
                         continue;
                     }
                 } else {
                     $item = Tag::findOrFail($id);
                     if ($item->pages()->count() > 0) {
                         $errors[] = "Tag '{$item->name}' is in use and cannot be deleted.";
+
                         continue;
                     }
                 }
-                
+
                 $item->delete();
                 $deleted++;
             } catch (\Exception $e) {
@@ -173,10 +175,10 @@ class TaxonomyController extends Controller
             }
         }
 
-        $message = $deleted > 0 ? "{$deleted} " . Str::plural(($type === 'category' ? 'category' : 'tag'), $deleted) . " deleted successfully." : '';
-        
-        if (!empty($errors)) {
-            return back()->with('warning', $message ? $message . ' However, some items could not be deleted: ' . implode(' ', $errors) : implode(' ', $errors));
+        $message = $deleted > 0 ? "{$deleted} ".Str::plural(($type === 'category' ? 'category' : 'tag'), $deleted).' deleted successfully.' : '';
+
+        if (! empty($errors)) {
+            return back()->with('warning', $message ? $message.' However, some items could not be deleted: '.implode(' ', $errors) : implode(' ', $errors));
         }
 
         return redirect()->route('admin.taxonomy.index', ['tab' => $type === 'category' ? 'categories' : 'tags'])
@@ -189,7 +191,7 @@ class TaxonomyController extends Controller
             'from_type' => 'required|in:category,tag',
             'to_type' => 'required|in:category,tag',
             'ids' => 'required|array',
-            'ids.*' => 'integer'
+            'ids.*' => 'integer',
         ]);
 
         if ($request->from_type === $request->to_type) {
@@ -212,13 +214,14 @@ class TaxonomyController extends Controller
                 // Check if target already exists
                 if ($targetModel::where('name', $sourceItem->name)->exists()) {
                     $errors[] = "Target with name '{$sourceItem->name}' already exists.";
+
                     continue;
                 }
 
                 // Create new item in target type
                 $newItem = $targetModel::create([
                     'name' => $sourceItem->name,
-                    'slug' => $sourceItem->slug
+                    'slug' => $sourceItem->slug,
                 ]);
 
                 // Transfer page relationships
@@ -243,11 +246,11 @@ class TaxonomyController extends Controller
 
         $fromTypeName = $request->from_type === 'category' ? 'category' : 'tag';
         $toTypeName = $request->to_type === 'category' ? 'category' : 'tag';
-        
-        $message = $converted > 0 ? "{$converted} " . Str::plural($fromTypeName, $converted) . " converted to " . Str::plural($toTypeName, $converted) . " successfully." : '';
-        
-        if (!empty($errors)) {
-            return back()->with('warning', $message ? $message . ' However, some items could not be converted: ' . implode(' ', $errors) : implode(' ', $errors));
+
+        $message = $converted > 0 ? "{$converted} ".Str::plural($fromTypeName, $converted).' converted to '.Str::plural($toTypeName, $converted).' successfully.' : '';
+
+        if (! empty($errors)) {
+            return back()->with('warning', $message ? $message.' However, some items could not be converted: '.implode(' ', $errors) : implode(' ', $errors));
         }
 
         return redirect()->route('admin.taxonomy.index')

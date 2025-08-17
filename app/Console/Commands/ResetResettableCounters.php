@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\CounterTransaction;
 use App\Models\CounterType;
 use App\Models\UserCounter;
-use App\Models\CounterTransaction;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +17,7 @@ class ResetResettableCounters extends Command
     public function handle()
     {
         $resetType = $this->option('type');
-        
+
         $this->info("Starting {$resetType} counter reset...");
 
         // Get counter types that need to be reset
@@ -27,6 +27,7 @@ class ResetResettableCounters extends Command
 
         if ($counterTypes->isEmpty()) {
             $this->info("No {$resetType} counter types found to reset.");
+
             return 0;
         }
 
@@ -44,10 +45,10 @@ class ResetResettableCounters extends Command
 
                 foreach ($userCounters as $userCounter) {
                     $countBefore = $userCounter->current_count;
-                    
+
                     // Reset to default allocation based on subscription level
                     $newCount = $this->getDefaultAllocationForUser($userCounter->user, $counterType);
-                    
+
                     $userCounter->current_count = $newCount;
                     $userCounter->last_reset_at = now();
                     $userCounter->save();
@@ -69,15 +70,15 @@ class ResetResettableCounters extends Command
                 }
 
                 $totalCountersReset++;
-                
+
                 // Update counter type's last reset timestamp
                 $counterType->update(['last_reset_at' => now()]);
-                
+
                 $this->info("  - Reset {$userCounters->count()} user counters");
             }
         });
 
-        $this->info("Reset complete!");
+        $this->info('Reset complete!');
         $this->info("Counters reset: {$totalCountersReset}");
         $this->info("Users affected: {$totalUsersAffected}");
 
@@ -89,7 +90,7 @@ class ResetResettableCounters extends Command
      */
     private function getDefaultAllocationForUser($user, CounterType $counterType): int
     {
-        if (!$user->subscriptionLevel) {
+        if (! $user->subscriptionLevel) {
             return $counterType->default_allocation;
         }
 

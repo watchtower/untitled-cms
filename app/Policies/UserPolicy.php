@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -31,7 +30,7 @@ class UserPolicy
 
         // Admins can edit editors and other admins (but not super admins)
         if ($user->isAdmin()) {
-            return !$model->isSuperAdmin();
+            return ! $model->isSuperAdmin();
         }
 
         return false;
@@ -51,7 +50,7 @@ class UserPolicy
 
         // Admins can delete editors and other admins (but not super admins)
         if ($user->isAdmin()) {
-            return !$model->isSuperAdmin();
+            return ! $model->isSuperAdmin();
         }
 
         return false;

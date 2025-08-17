@@ -15,7 +15,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->enum('status', ['active', 'inactive'])->default('active')->after('role');
             $table->timestamp('last_login_at')->nullable()->after('email_verified_at');
-            
+
             $table->index('status');
             $table->index('deleted_at');
         });

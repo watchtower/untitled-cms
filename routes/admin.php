@@ -1,15 +1,15 @@
 <?php
 
+use App\Http\Controllers\Admin\BitsManagementController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\NavigationController;
 use App\Http\Controllers\Admin\PageController;
-use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\TaxonomyController;
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\TokenManagementController;
-use App\Http\Controllers\Admin\BitsManagementController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {

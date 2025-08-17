@@ -86,7 +86,7 @@ class User extends Authenticatable
 
     public function getRoleDisplayNameAttribute(): string
     {
-        return match($this->role) {
+        return match ($this->role) {
             'super_admin' => 'Super Admin',
             'admin' => 'Admin',
             'editor' => 'Editor',
@@ -163,7 +163,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get user's counter balances  
+     * Get user's counter balances
      */
     public function userCounters(): HasMany
     {
@@ -191,9 +191,9 @@ class User extends Authenticatable
      */
     public function hasActiveSubscription(): bool
     {
-        return $this->subscription_active && 
-               $this->subscription_level_id && 
-               (!$this->subscription_expires_at || $this->subscription_expires_at->isFuture());
+        return $this->subscription_active &&
+               $this->subscription_level_id &&
+               (! $this->subscription_expires_at || $this->subscription_expires_at->isFuture());
     }
 
     /**
@@ -277,7 +277,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get Weekly Power Bits balance  
+     * Get Weekly Power Bits balance
      */
     public function getWeeklyPowerBitsBalance(): int
     {

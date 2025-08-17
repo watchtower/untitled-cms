@@ -11,6 +11,7 @@ Route::get('/dashboard', function () {
         ->topLevel()
         ->ordered()
         ->get();
+
     return view('dashboard', compact('navigationItems'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 

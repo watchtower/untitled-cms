@@ -16,14 +16,14 @@ class MediaController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('original_filename', 'like', '%' . $request->search . '%')
-                  ->orWhere('alt_text', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+                $q->where('original_filename', 'like', '%'.$request->search.'%')
+                    ->orWhere('alt_text', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%');
             });
         }
 
         if ($request->filled('type')) {
-            $query->where('mime_type', 'like', $request->type . '/%');
+            $query->where('mime_type', 'like', $request->type.'/%');
         }
 
         $media = $query->paginate(24);
@@ -40,7 +40,7 @@ class MediaController extends Controller
         ]);
 
         $file = $request->file('file');
-        $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
+        $filename = Str::random(40).'.'.$file->getClientOriginalExtension();
         $path = $file->storeAs('media', $filename, 'public');
 
         $metadata = [];

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->enum('reset_period', ['daily', 'weekly', 'monthly'])->default('daily');
             $table->timestamp('last_reset')->nullable(); // When was this counter last reset
             $table->timestamps();
-            
+
             // Unique constraint to prevent duplicate user-action pairs
             $table->unique(['user_id', 'action_type']);
         });

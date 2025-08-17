@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 class Page extends Model
 {
     use SoftDeletes;
+
     protected $fillable = [
         'title',
         'slug',

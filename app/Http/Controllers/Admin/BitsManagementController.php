@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\CounterType;
 use App\Models\CounterTransaction;
+use App\Models\CounterType;
 use App\Models\User;
 use App\Models\UserCounter;
 use Illuminate\Http\Request;
@@ -22,12 +22,12 @@ class BitsManagementController extends Controller
     public function index(Request $request)
     {
         $activeTab = $request->get('tab', 'overview');
-        
+
         // Get counter type statistics
         $counterTypes = CounterType::withCount('userCounters')->get();
         $totalUsers = User::count();
         $totalTransactions = CounterTransaction::count();
-        
+
         // Recent transactions
         $recentTransactions = CounterTransaction::with(['user', 'admin', 'counterType'])
             ->latest('created_at')
@@ -100,7 +100,7 @@ class BitsManagementController extends Controller
         ]);
 
         $counterType = CounterType::findOrFail($request->counter_type_id);
-        
+
         // Get or create user counter record
         $userCounter = UserCounter::firstOrCreate([
             'user_id' => $user->id,
@@ -177,7 +177,7 @@ class BitsManagementController extends Controller
             $query->where('created_at', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+            $query->where('created_at', '<=', $request->date_to.' 23:59:59');
         }
 
         $transactions = $query->latest('created_at')->paginate(50);
@@ -216,7 +216,7 @@ class BitsManagementController extends Controller
                         'user_id' => $user->id,
                         'counter_type_id' => $counterType->id,
                     ], ['current_count' => 0]);
-                    
+
                     if ($userCounter->addCount($request->amount, $request->reason, $admin, 'bulk_grant')) {
                         $affectedUsers++;
                     }
@@ -230,7 +230,7 @@ class BitsManagementController extends Controller
                         'user_id' => $user->id,
                         'counter_type_id' => $counterType->id,
                     ], ['current_count' => 0]);
-                    
+
                     if ($userCounter->addCount($request->amount, $request->reason, $admin, 'bulk_grant')) {
                         $affectedUsers++;
                     }
@@ -256,7 +256,7 @@ class BitsManagementController extends Controller
     public function initializeUserCounters(User $user)
     {
         $counterTypes = CounterType::active()->get();
-        
+
         foreach ($counterTypes as $counterType) {
             if ($counterType->default_allocation > 0) {
                 UserCounter::firstOrCreate([
@@ -287,7 +287,7 @@ class BitsManagementController extends Controller
      */
     private function getDefaultAllocationForUser(User $user, CounterType $counterType): int
     {
-        if (!$user->subscriptionLevel) {
+        if (! $user->subscriptionLevel) {
             return $counterType->default_allocation;
         }
 

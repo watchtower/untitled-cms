@@ -75,7 +75,7 @@ class TokenTransaction extends Model
      */
     public function getFormattedAmountAttribute(): string
     {
-        return ($this->amount >= 0 ? '+' : '') . number_format($this->amount);
+        return ($this->amount >= 0 ? '+' : '').number_format($this->amount);
     }
 
     /**

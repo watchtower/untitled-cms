@@ -24,7 +24,7 @@ class UserController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -124,7 +124,7 @@ class UserController extends Controller
     public function activate(User $user)
     {
         $this->authorize('update', $user);
-        
+
         $user->activate();
 
         return redirect()->back()
@@ -134,7 +134,7 @@ class UserController extends Controller
     public function deactivate(User $user)
     {
         $this->authorize('update', $user);
-        
+
         $user->deactivate();
 
         return redirect()->back()
@@ -144,7 +144,7 @@ class UserController extends Controller
     public function restore(User $user)
     {
         $this->authorize('restore', $user);
-        
+
         $user->restore();
 
         return redirect()->route('admin.users.index')
@@ -154,7 +154,7 @@ class UserController extends Controller
     public function forceDelete(User $user)
     {
         $this->authorize('forceDelete', $user);
-        
+
         $user->forceDelete();
 
         return redirect()->route('admin.users.index')
@@ -164,7 +164,7 @@ class UserController extends Controller
     public function verifyEmail(User $user)
     {
         $this->authorize('update', $user);
-        
+
         $user->update(['email_verified_at' => now()]);
 
         return redirect()->back()
@@ -174,7 +174,7 @@ class UserController extends Controller
     public function unverifyEmail(User $user)
     {
         $this->authorize('update', $user);
-        
+
         $user->update(['email_verified_at' => null]);
 
         return redirect()->back()

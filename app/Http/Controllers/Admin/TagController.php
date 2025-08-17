@@ -12,6 +12,7 @@ class TagController extends Controller
     public function index()
     {
         $tags = Tag::latest()->paginate(20);
+
         return view('admin.tags.index', compact('tags'));
     }
 
@@ -44,8 +45,8 @@ class TagController extends Controller
     public function update(Request $request, Tag $tag)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:tags,name,' . $tag->id,
-            'slug' => 'nullable|string|max:255|unique:tags,slug,' . $tag->id,
+            'name' => 'required|string|max:255|unique:tags,name,'.$tag->id,
+            'slug' => 'nullable|string|max:255|unique:tags,slug,'.$tag->id,
         ]);
 
         if (empty($validated['slug'])) {

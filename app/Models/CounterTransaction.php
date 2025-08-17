@@ -75,7 +75,7 @@ class CounterTransaction extends Model
      */
     public function getFormattedCountChangeAttribute(): string
     {
-        return ($this->count_change >= 0 ? '+' : '') . number_format($this->count_change);
+        return ($this->count_change >= 0 ? '+' : '').number_format($this->count_change);
     }
 
     /**

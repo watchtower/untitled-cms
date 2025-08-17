@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\SubscriptionLevel;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class SubscriptionLevelSeeder extends Seeder
@@ -24,7 +23,7 @@ class SubscriptionLevelSeeder extends Seeder
                     'Basic L33t Bytes allocation',
                     'Limited daily Bits for IP lookups',
                     'Basic tools access',
-                    'Community support'
+                    'Community support',
                 ],
                 'is_active' => true,
             ],
@@ -40,7 +39,7 @@ class SubscriptionLevelSeeder extends Seeder
                     'Advanced tools access',
                     'Priority support',
                     'API access',
-                    'Custom subdomain creation'
+                    'Custom subdomain creation',
                 ],
                 'is_active' => true,
             ],
@@ -58,7 +57,7 @@ class SubscriptionLevelSeeder extends Seeder
                     'Advanced API access',
                     'Multiple subdomains',
                     'White-label options',
-                    'Custom integrations'
+                    'Custom integrations',
                 ],
                 'is_active' => true,
             ],

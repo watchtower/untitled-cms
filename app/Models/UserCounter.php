@@ -53,7 +53,7 @@ class UserCounter extends Model
         $countBefore = $this->current_count;
         $this->current_count += $amount;
         $countAfter = $this->current_count;
-        
+
         if ($this->save()) {
             // Log the transaction
             CounterTransaction::create([
@@ -67,10 +67,10 @@ class UserCounter extends Model
                 'type' => $type,
                 'created_at' => now(),
             ]);
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -82,11 +82,11 @@ class UserCounter extends Model
         if ($this->current_count < $amount) {
             return false; // Insufficient balance
         }
-        
+
         $countBefore = $this->current_count;
         $this->current_count -= $amount;
         $countAfter = $this->current_count;
-        
+
         if ($this->save()) {
             // Log the transaction
             CounterTransaction::create([
@@ -100,10 +100,10 @@ class UserCounter extends Model
                 'type' => $type,
                 'created_at' => now(),
             ]);
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -116,7 +116,7 @@ class UserCounter extends Model
         $countChange = $newCount - $countBefore;
         $this->current_count = $newCount;
         $this->last_reset_at = now();
-        
+
         if ($this->save()) {
             // Log the transaction
             CounterTransaction::create([
@@ -130,10 +130,10 @@ class UserCounter extends Model
                 'type' => 'admin_set',
                 'created_at' => now(),
             ]);
-            
+
             return true;
         }
-        
+
         return false;
     }
 }

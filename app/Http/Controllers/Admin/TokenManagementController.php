@@ -22,12 +22,12 @@ class TokenManagementController extends Controller
     public function index(Request $request)
     {
         $activeTab = $request->get('tab', 'overview');
-        
+
         // Get token statistics
         $tokens = Token::withCount('userTokens')->get();
         $totalUsers = User::count();
         $totalTransactions = TokenTransaction::count();
-        
+
         // Recent transactions
         $recentTransactions = TokenTransaction::with(['user', 'admin', 'token'])
             ->latest('created_at')
@@ -102,7 +102,7 @@ class TokenManagementController extends Controller
         ]);
 
         $token = Token::findOrFail($request->token_id);
-        
+
         // Get or create user token record
         $userToken = UserToken::firstOrCreate([
             'user_id' => $user->id,
@@ -179,7 +179,7 @@ class TokenManagementController extends Controller
             $query->where('created_at', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+            $query->where('created_at', '<=', $request->date_to.' 23:59:59');
         }
 
         $transactions = $query->latest('created_at')->paginate(50);
@@ -218,7 +218,7 @@ class TokenManagementController extends Controller
                         'user_id' => $user->id,
                         'token_id' => $token->id,
                     ], ['balance' => 0]);
-                    
+
                     if ($userToken->addTokens($request->amount, $request->reason, $admin, 'bulk_grant')) {
                         $affectedUsers++;
                     }
@@ -232,7 +232,7 @@ class TokenManagementController extends Controller
                         'user_id' => $user->id,
                         'token_id' => $token->id,
                     ], ['balance' => 0]);
-                    
+
                     if ($userToken->addTokens($request->amount, $request->reason, $admin, 'bulk_grant')) {
                         $affectedUsers++;
                     }
@@ -258,7 +258,7 @@ class TokenManagementController extends Controller
     public function initializeUserTokens(User $user)
     {
         $tokens = Token::active()->get();
-        
+
         foreach ($tokens as $token) {
             if ($token->default_count > 0) {
                 UserToken::firstOrCreate([
