@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\NavigationController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\TagController;
+use App\Http\Controllers\Admin\TaxonomyController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,15 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::patch('/pages/{page}/unpublish', [PageController::class, 'unpublish'])->name('pages.unpublish');
     Route::get('/pages/{page}/preview', [PageController::class, 'preview'])->name('pages.preview');
 
+    // Unified Taxonomy Management
+    Route::get('/taxonomy', [TaxonomyController::class, 'index'])->name('taxonomy.index');
+    Route::post('/taxonomy', [TaxonomyController::class, 'store'])->name('taxonomy.store');
+    Route::put('/taxonomy/{type}/{id}', [TaxonomyController::class, 'update'])->name('taxonomy.update');
+    Route::delete('/taxonomy/{type}/{id}', [TaxonomyController::class, 'destroy'])->name('taxonomy.destroy');
+    Route::post('/taxonomy/bulk-delete', [TaxonomyController::class, 'bulkDelete'])->name('taxonomy.bulk-delete');
+    Route::post('/taxonomy/convert', [TaxonomyController::class, 'convert'])->name('taxonomy.convert');
+
+    // Legacy routes (for backward compatibility)
     Route::resource('categories', CategoryController::class);
     Route::resource('tags', TagController::class);
 

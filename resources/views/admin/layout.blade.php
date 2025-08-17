@@ -39,13 +39,9 @@
                                class="{{ request()->routeIs('admin.pages.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 Pages
                             </a>
-                            <a href="{{ route('admin.categories.index') }}" 
-                               class="{{ request()->routeIs('admin.categories.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                Categories
-                            </a>
-                            <a href="{{ route('admin.tags.index') }}" 
-                               class="{{ request()->routeIs('admin.tags.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                Tags
+                            <a href="{{ route('admin.taxonomy.index') }}" 
+                               class="{{ request()->routeIs('admin.taxonomy.*') || request()->routeIs('admin.categories.*') || request()->routeIs('admin.tags.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Taxonomy
                             </a>
                             <a href="{{ route('admin.navigation.index') }}" 
                                class="{{ request()->routeIs('admin.navigation.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
