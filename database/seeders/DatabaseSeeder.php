@@ -24,11 +24,11 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             SettingsSeeder::class,
-            UserRoleSeeder::class,
             SubscriptionLevelSeeder::class,
             TokenSeeder::class,
             ResettableCounterSeeder::class,
             UserSubscriptionSeeder::class,
+            UserRoleSeeder::class, // Run last to ensure admin user gets correct role
         ]);
     }
 }

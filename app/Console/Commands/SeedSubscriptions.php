@@ -39,11 +39,11 @@ class SeedSubscriptions extends Command
 
         // Run the essential seeders
         $seeders = [
-            'UserRoleSeeder',
             'SubscriptionLevelSeeder', 
             'TokenSeeder',
             'ResettableCounterSeeder',
             'UserSubscriptionSeeder',
+            'UserRoleSeeder', // Run last to ensure admin user gets correct role
         ];
 
         foreach ($seeders as $seeder) {
