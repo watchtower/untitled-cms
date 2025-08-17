@@ -22,6 +22,11 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             SettingsSeeder::class,
+            UserRoleSeeder::class,
+            SubscriptionLevelSeeder::class,
+            TokenSeeder::class,
+            ResettableCounterSeeder::class,
+            UserSubscriptionSeeder::class,
         ]);
     }
 }
