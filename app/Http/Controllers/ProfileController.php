@@ -16,8 +16,25 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+        
+        // Load gaming economy data
+        $user->load([
+            'subscriptionLevel',
+            'userTokens.token', 
+            'userCounters.counterType'
+        ]);
+        
+        // Get specific economy data
+        $l33tBytesBalance = $user->getL33tBytesBalance();
+        $dailyBitsBalance = $user->getDailyBitsBalance();
+        $weeklyPowerBitsBalance = $user->getWeeklyPowerBitsBalance();
+        
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'l33tBytesBalance' => $l33tBytesBalance,
+            'dailyBitsBalance' => $dailyBitsBalance,
+            'weeklyPowerBitsBalance' => $weeklyPowerBitsBalance,
         ]);
     }
 

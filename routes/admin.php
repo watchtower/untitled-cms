@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\TaxonomyController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\TokenManagementController;
+use App\Http\Controllers\Admin\BitsManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
@@ -59,4 +61,22 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
+    // L33t Bytes Token Management
+    Route::prefix('token-management')->name('token-management.')->group(function () {
+        Route::get('/', [TokenManagementController::class, 'index'])->name('index');
+        Route::get('/users', [TokenManagementController::class, 'users'])->name('users');
+        Route::post('/users/{user}/update-balance', [TokenManagementController::class, 'updateBalance'])->name('update-balance');
+        Route::get('/transactions', [TokenManagementController::class, 'transactions'])->name('transactions');
+        Route::post('/bulk-operation', [TokenManagementController::class, 'bulkOperation'])->name('bulk-operation');
+    });
+
+    // Bits Management (Resettable Counters)
+    Route::prefix('bits-management')->name('bits-management.')->group(function () {
+        Route::get('/', [BitsManagementController::class, 'index'])->name('index');
+        Route::get('/users', [BitsManagementController::class, 'users'])->name('users');
+        Route::post('/users/{user}/update-balance', [BitsManagementController::class, 'updateBalance'])->name('update-balance');
+        Route::get('/transactions', [BitsManagementController::class, 'transactions'])->name('transactions');
+        Route::post('/bulk-operation', [BitsManagementController::class, 'bulkOperation'])->name('bulk-operation');
+    });
 });

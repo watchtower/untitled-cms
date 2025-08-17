@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\ProfileController;
 use App\Models\NavigationItem;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
