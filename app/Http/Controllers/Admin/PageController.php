@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePageRequest;
 use App\Http\Requests\UpdatePageRequest;
 use App\Models\Page;
+use App\Models\Category;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -20,11 +22,25 @@ class PageController extends Controller
 
     public function index(Request $request)
     {
-        $query = Page::with(['creator', 'updater']);
+        $query = Page::with(['creator', 'updater', 'categories', 'tags']);
 
         // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // Filter by category
+        if ($request->filled('category')) {
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('categories.id', $request->category);
+            });
+        }
+
+        // Filter by tag
+        if ($request->filled('tag')) {
+            $query->whereHas('tags', function ($q) use ($request) {
+                $q->where('tags.id', $request->tag);
+            });
         }
 
         // Search functionality
@@ -38,13 +54,20 @@ class PageController extends Controller
         }
 
         $pages = $query->latest()->paginate(15);
+        
+        // Get categories and tags for filter dropdowns
+        $categories = Category::orderBy('name')->get();
+        $tags = Tag::orderBy('name')->get();
 
-        return view('admin.pages.index', compact('pages'));
+        return view('admin.pages.index', compact('pages', 'categories', 'tags'));
     }
 
     public function create()
     {
-        return view('admin.pages.create');
+        $categories = Category::orderBy('name')->get();
+        $tags = Tag::orderBy('name')->get();
+        
+        return view('admin.pages.create', compact('categories', 'tags'));
     }
 
     public function store(StorePageRequest $request)
@@ -75,6 +98,35 @@ class PageController extends Controller
 
         $page = Page::create($data);
 
+        // Assign categories
+        if ($request->has('categories')) {
+            $page->categories()->sync($request->categories);
+        }
+
+        // Handle tags
+        if ($request->has('tag_ids')) {
+            $tagData = json_decode($request->tag_ids, true);
+            $tagIds = [];
+            
+            if ($tagData) {
+                foreach ($tagData as $tagInfo) {
+                    if ($tagInfo['isNew']) {
+                        // Create new tag
+                        $tag = Tag::create([
+                            'name' => $tagInfo['name'],
+                            'slug' => Str::slug($tagInfo['name'])
+                        ]);
+                        $tagIds[] = $tag->id;
+                    } else {
+                        // Use existing tag
+                        $tagIds[] = $tagInfo['id'];
+                    }
+                }
+            }
+            
+            $page->tags()->sync($tagIds);
+        }
+
         return redirect()->route('admin.pages.index')
             ->with('success', 'Page created successfully.');
     }
@@ -86,7 +138,10 @@ class PageController extends Controller
 
     public function edit(Page $page)
     {
-        return view('admin.pages.edit', compact('page'));
+        $categories = Category::orderBy('name')->get();
+        $tags = Tag::orderBy('name')->get();
+        
+        return view('admin.pages.edit', compact('page', 'categories', 'tags'));
     }
 
     public function update(UpdatePageRequest $request, Page $page)
@@ -117,6 +172,39 @@ class PageController extends Controller
         }
 
         $page->update($data);
+
+        // Assign categories
+        if ($request->has('categories')) {
+            $page->categories()->sync($request->categories);
+        } else {
+            $page->categories()->sync([]);
+        }
+
+        // Handle tags
+        if ($request->has('tag_ids')) {
+            $tagData = json_decode($request->tag_ids, true);
+            $tagIds = [];
+            
+            if ($tagData) {
+                foreach ($tagData as $tagInfo) {
+                    if ($tagInfo['isNew']) {
+                        // Create new tag
+                        $tag = Tag::create([
+                            'name' => $tagInfo['name'],
+                            'slug' => Str::slug($tagInfo['name'])
+                        ]);
+                        $tagIds[] = $tag->id;
+                    } else {
+                        // Use existing tag
+                        $tagIds[] = $tagInfo['id'];
+                    }
+                }
+            }
+            
+            $page->tags()->sync($tagIds);
+        } else {
+            $page->tags()->sync([]);
+        }
 
         return redirect()->route('admin.pages.index')
             ->with('success', 'Page updated successfully.');

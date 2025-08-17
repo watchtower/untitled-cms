@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\NavigationController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
@@ -27,8 +29,13 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::patch('/pages/{page}/unpublish', [PageController::class, 'unpublish'])->name('pages.unpublish');
     Route::get('/pages/{page}/preview', [PageController::class, 'preview'])->name('pages.preview');
 
+    Route::resource('categories', CategoryController::class);
+    Route::resource('tags', TagController::class);
+
     Route::resource('navigation', NavigationController::class);
     Route::put('/navigation/order', [NavigationController::class, 'updateOrder'])->name('navigation.order');
+    Route::patch('/navigation/{navigation}/toggle-visibility', [NavigationController::class, 'toggleVisibility'])->name('navigation.toggle-visibility');
+    Route::post('/navigation/{navigation}/duplicate', [NavigationController::class, 'duplicate'])->name('navigation.duplicate');
 
     Route::resource('media', MediaController::class)->except(['create', 'edit']);
 

@@ -1,13 +1,16 @@
 <?php
 
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
+use App\Models\NavigationItem;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $navigationItems = NavigationItem::with(['page', 'children.page'])
+        ->topLevel()
+        ->ordered()
+        ->get();
+    return view('dashboard', compact('navigationItems'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

@@ -24,6 +24,9 @@ class StorePageRequest extends FormRequest
             'meta_keywords' => 'nullable|array',
             'meta_keywords.*' => 'string|max:50',
             'published_at' => 'nullable|date|after_or_equal:now',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:categories,id',
+            'tag_ids' => 'nullable|string',
         ];
     }
 

@@ -57,6 +57,22 @@ class Page extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    /**
+     * Get all of the categories for the page.
+     */
+    public function categories()
+    {
+        return $this->morphToMany(Category::class, 'categorizable');
+    }
+
+    /**
+     * Get all of the tags for the page.
+     */
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
+
     public function scopePublished($query)
     {
         return $query->where('status', 'published')
@@ -74,5 +90,10 @@ class Page extends Model
     public function contentBlocks(): HasMany
     {
         return $this->hasMany(ContentBlock::class)->ordered();
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
     }
 }

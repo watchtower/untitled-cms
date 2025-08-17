@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         AuthServiceProvider::class,
+        App\Providers\ViewServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

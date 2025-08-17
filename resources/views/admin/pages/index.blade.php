@@ -39,11 +39,37 @@
                         <option value="published" {{ request('status') === 'published' ? 'selected' : '' }}>Published</option>
                     </select>
                 </div>
+                <div>
+                    <select 
+                        name="category" 
+                        class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    >
+                        <option value="">All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <select 
+                        name="tag" 
+                        class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    >
+                        <option value="">All Tags</option>
+                        @foreach($tags as $tag)
+                            <option value="{{ $tag->id }}" {{ request('tag') == $tag->id ? 'selected' : '' }}>
+                                {{ $tag->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="flex gap-2">
                     <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors duration-200">
                         Filter
                     </button>
-                    @if(request()->hasAny(['search', 'status']))
+                    @if(request()->hasAny(['search', 'status', 'category', 'tag']))
                         <a href="{{ route('admin.pages.index') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded transition-colors duration-200">
                             Clear
                         </a>
@@ -60,6 +86,7 @@
                             <tr>
                                 <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Page</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+                                <th scope="col" class="hidden lg:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Categories & Tags</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Author</th>
                                 <th scope="col" class="hidden sm:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Last Updated</th>
                                 <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -101,6 +128,31 @@
                                                 Draft
                                             </span>
                                         @endif
+                                    </td>
+                                    <td class="hidden lg:table-cell px-3 py-4 text-sm">
+                                        <div class="space-y-1">
+                                            @if($page->categories->count() > 0)
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($page->categories as $category)
+                                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-600/10">
+                                                            {{ $category->name }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                            @if($page->tags->count() > 0)
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($page->tags as $tag)
+                                                        <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10">
+                                                            {{ $tag->name }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                            @if($page->categories->count() === 0 && $page->tags->count() === 0)
+                                                <span class="text-gray-400 text-xs">No taxonomy</span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                                         {{ $page->creator->name }}
@@ -214,7 +266,7 @@
                 </svg>
                 <h3 class="mt-2 text-sm font-semibold text-gray-900">No pages found</h3>
                 <p class="mt-1 text-sm text-gray-500">
-                    @if(request()->hasAny(['search', 'status']))
+                    @if(request()->hasAny(['search', 'status', 'category', 'tag']))
                         No pages match your current filters.
                     @else
                         Get started by creating your first page.

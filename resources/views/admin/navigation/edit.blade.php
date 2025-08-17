@@ -11,7 +11,7 @@
             </a>
         </div>
 
-        <form method="POST" action="{{ route('admin.navigation.update', $navigationItem) }}" class="space-y-6">
+        <form method="POST" action="{{ route('admin.navigation.update', ['navigation' => $navigation]) }}" class="space-y-6">
             @csrf
             @method('PUT')
 
@@ -24,7 +24,7 @@
                             type="text" 
                             id="label" 
                             name="label" 
-                            value="{{ old('label', $navigationItem->label) }}"
+                            value="{{ old('label', $navigation->label) }}"
                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                             required
                             autofocus
@@ -45,9 +45,9 @@
                             required
                         >
                             <option value="">Select navigation type</option>
-                            <option value="page" {{ old('type', $navigationItem->type) === 'page' ? 'selected' : '' }}>Link to Page</option>
-                            <option value="url" {{ old('type', $navigationItem->type) === 'url' ? 'selected' : '' }}>External URL</option>
-                            <option value="custom" {{ old('type', $navigationItem->type) === 'custom' ? 'selected' : '' }}>Custom URL</option>
+                            <option value="page" {{ old('type', $navigation->type) === 'page' ? 'selected' : '' }}>Link to Page</option>
+                            <option value="url" {{ old('type', $navigation->type) === 'url' ? 'selected' : '' }}>External URL</option>
+                            <option value="custom" {{ old('type', $navigation->type) === 'custom' ? 'selected' : '' }}>Custom URL</option>
                         </select>
                         @error('type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -63,7 +63,7 @@
                         >
                             <option value="">Choose a page</option>
                             @foreach($pages as $page)
-                                <option value="{{ $page->id }}" {{ old('page_id', $navigationItem->page_id) == $page->id ? 'selected' : '' }}>
+                                <option value="{{ $page->id }}" {{ old('page_id', $navigation->page_id) == $page->id ? 'selected' : '' }}>
                                     {{ $page->title }}
                                 </option>
                             @endforeach
@@ -79,7 +79,7 @@
                             type="url" 
                             id="url" 
                             name="url" 
-                            value="{{ old('url', $navigationItem->url) }}"
+                            value="{{ old('url', $navigation->url) }}"
                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                             placeholder="https://example.com or /custom-path"
                         >
@@ -95,7 +95,7 @@
                             type="text" 
                             id="css_class" 
                             name="css_class" 
-                            value="{{ old('css_class', $navigationItem->css_class) }}"
+                            value="{{ old('css_class', $navigation->css_class) }}"
                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                             placeholder="custom-class another-class"
                         >
@@ -122,8 +122,8 @@
                                 >
                                     <option value="">Top Level Item</option>
                                     @foreach($parentItems as $item)
-                                        @if($item->id !== $navigationItem->id)
-                                            <option value="{{ $item->id }}" {{ old('parent_id', $navigationItem->parent_id) == $item->id ? 'selected' : '' }}>
+                                        @if($item->id !== $navigation->id)
+                                            <option value="{{ $item->id }}" {{ old('parent_id', $navigation->parent_id) == $item->id ? 'selected' : '' }}>
                                                 {{ $item->label }}
                                             </option>
                                         @endif
@@ -141,7 +141,7 @@
                                     id="is_visible" 
                                     name="is_visible" 
                                     value="1"
-                                    {{ old('is_visible', $navigationItem->is_visible) ? 'checked' : '' }}
+                                    {{ old('is_visible', $navigation->is_visible) ? 'checked' : '' }}
                                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                 >
                                 <label for="is_visible" class="ml-2 block text-sm text-gray-900">
@@ -155,7 +155,7 @@
                                     id="opens_new_tab" 
                                     name="opens_new_tab" 
                                     value="1"
-                                    {{ old('opens_new_tab', $navigationItem->opens_new_tab) ? 'checked' : '' }}
+                                    {{ old('opens_new_tab', $navigation->opens_new_tab) ? 'checked' : '' }}
                                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                 >
                                 <label for="opens_new_tab" class="ml-2 block text-sm text-gray-900">
@@ -201,17 +201,21 @@ document.addEventListener('DOMContentLoaded', function() {
         pageSelect.classList.add('hidden');
         urlInput.classList.add('hidden');
         
-        // Clear field requirements
+        // Clear field requirements and disable fields when hidden
         urlField.removeAttribute('required');
+        urlField.disabled = true;
         pageField.removeAttribute('required');
+        pageField.disabled = true;
         
         // Show relevant field based on type
         if (selectedType === 'page') {
             pageSelect.classList.remove('hidden');
             pageField.setAttribute('required', 'required');
+            pageField.disabled = false;
         } else if (selectedType === 'url' || selectedType === 'custom') {
             urlInput.classList.remove('hidden');
             urlField.setAttribute('required', 'required');
+            urlField.disabled = false;
             
             // Update placeholder and label based on type
             const label = urlInput.querySelector('label');
