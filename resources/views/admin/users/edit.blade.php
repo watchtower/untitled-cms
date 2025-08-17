@@ -127,6 +127,39 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label for="subscription_level_id" class="block text-sm font-medium text-gray-700 mb-2">Subscription Level</label>
+                        <select 
+                            id="subscription_level_id" 
+                            name="subscription_level_id" 
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                        >
+                            <option value="">No Subscription</option>
+                            @foreach($subscriptionLevels as $level)
+                                <option value="{{ $level->id }}" {{ old('subscription_level_id', $user->subscription_level_id) == $level->id ? 'selected' : '' }}>
+                                    {{ $level->name }} - ${{ number_format($level->price, 2) }}/month
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('subscription_level_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex items-center">
+                        <input 
+                            type="checkbox" 
+                            id="subscription_active" 
+                            name="subscription_active" 
+                            value="1"
+                            {{ old('subscription_active', $user->subscription_active) ? 'checked' : '' }}
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                        >
+                        <label for="subscription_active" class="ml-2 block text-sm text-gray-700">
+                            Subscription is active
+                        </label>
+                    </div>
+
                     <div class="flex items-center">
                         <input 
                             type="checkbox" 

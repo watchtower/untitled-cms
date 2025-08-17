@@ -81,7 +81,8 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return view('admin.users.edit', compact('user'));
+        $subscriptionLevels = \App\Models\SubscriptionLevel::active()->orderBy('level')->get();
+        return view('admin.users.edit', compact('user', 'subscriptionLevels'));
     }
 
     public function update(Request $request, User $user)
@@ -92,6 +93,8 @@ class UserController extends Controller
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'in:super_admin,admin,editor'],
             'status' => ['required', 'in:active,inactive'],
+            'subscription_level_id' => ['nullable', 'exists:subscription_levels,id'],
+            'subscription_active' => ['boolean'],
             'email_verified' => ['boolean'],
         ]);
 
@@ -100,6 +103,8 @@ class UserController extends Controller
             'email' => $validated['email'],
             'role' => $validated['role'],
             'status' => $validated['status'],
+            'subscription_level_id' => $validated['subscription_level_id'],
+            'subscription_active' => $request->boolean('subscription_active'),
             'email_verified_at' => $request->boolean('email_verified') ? now() : null,
         ];
 
@@ -107,7 +112,13 @@ class UserController extends Controller
             $updateData['password'] = Hash::make($validated['password']);
         }
 
+        $oldSubscriptionLevel = $user->subscription_level_id;
         $user->update($updateData);
+
+        // Auto-initialize tokens and counters if subscription level changed
+        if ($oldSubscriptionLevel !== $validated['subscription_level_id']) {
+            $this->initializeUserEconomy($user);
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User updated successfully.');
@@ -179,5 +190,67 @@ class UserController extends Controller
 
         return redirect()->back()
             ->with('success', 'Email verification removed.');
+    }
+
+    /**
+     * Initialize user's L33t economy (tokens and counters) based on subscription level
+     */
+    private function initializeUserEconomy(User $user)
+    {
+        // Initialize tokens
+        $tokens = \App\Models\Token::active()->get();
+        foreach ($tokens as $token) {
+            if ($token->default_count > 0) {
+                \App\Models\UserToken::firstOrCreate([
+                    'user_id' => $user->id,
+                    'token_id' => $token->id,
+                ], [
+                    'balance' => $this->getDefaultTokenAllocation($user, $token),
+                ]);
+            }
+        }
+
+        // Initialize counters
+        $counterTypes = \App\Models\CounterType::active()->get();
+        foreach ($counterTypes as $counterType) {
+            if ($counterType->default_allocation > 0) {
+                \App\Models\UserCounter::firstOrCreate([
+                    'user_id' => $user->id,
+                    'counter_type_id' => $counterType->id,
+                ], [
+                    'current_count' => $this->getDefaultCounterAllocation($user, $counterType),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Get default token allocation based on user's subscription level
+     */
+    private function getDefaultTokenAllocation(User $user, \App\Models\Token $token): int
+    {
+        if (!$user->subscriptionLevel) {
+            return $token->default_count;
+        }
+
+        // Multiply base allocation by subscription level
+        return $token->default_count * $user->subscriptionLevel->level;
+    }
+
+    /**
+     * Get default counter allocation based on user's subscription level
+     */
+    private function getDefaultCounterAllocation(User $user, \App\Models\CounterType $counterType): int
+    {
+        if (!$user->subscriptionLevel) {
+            return $counterType->default_allocation;
+        }
+
+        return match ($user->subscriptionLevel->level) {
+            1 => $counterType->default_allocation, // Padawan: base allocation
+            2 => $counterType->default_allocation * 5, // Jedi: 5x allocation
+            3 => 999999, // Master: unlimited
+            default => $counterType->default_allocation,
+        };
     }
 }
