@@ -98,14 +98,11 @@
                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                             required
                         >
-                            @can('assignRole', ['super_admin'])
-                                <option value="super_admin" {{ old('role', $user->role) === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                            @endcan
-                            @can('assignRole', ['admin'])
-                                <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>
-                            @endcan
+                            <option value="super_admin" {{ old('role', $user->role) === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                            <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>
                             <option value="editor" {{ old('role', $user->role) === 'editor' ? 'selected' : '' }}>Editor</option>
                         </select>
+                        <p class="mt-1 text-xs text-gray-500">Only super admins can assign super admin role</p>
                         @error('role')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\NavigationController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\TaxonomyController;
 use App\Http\Controllers\Admin\TokenManagementController;
@@ -78,5 +79,14 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         Route::post('/users/{user}/update-balance', [BitsManagementController::class, 'updateBalance'])->name('update-balance');
         Route::get('/transactions', [BitsManagementController::class, 'transactions'])->name('transactions');
         Route::post('/bulk-operation', [BitsManagementController::class, 'bulkOperation'])->name('bulk-operation');
+    });
+
+    // Subscription Management
+    Route::prefix('subscriptions')->name('subscriptions.')->group(function () {
+        Route::get('/', [SubscriptionController::class, 'index'])->name('index');
+        Route::post('/users/{user}/upgrade', [SubscriptionController::class, 'upgrade'])->name('upgrade');
+        Route::post('/users/{user}/downgrade', [SubscriptionController::class, 'downgrade'])->name('downgrade');
+        Route::post('/users/{user}/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
+        Route::post('/bulk-operation', [SubscriptionController::class, 'bulkOperation'])->name('bulk-operation');
     });
 });

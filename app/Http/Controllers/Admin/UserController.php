@@ -18,7 +18,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::withTrashed();
+        $query = User::withTrashed()->with('subscriptionLevel');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -82,6 +82,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $subscriptionLevels = \App\Models\SubscriptionLevel::active()->orderBy('level')->get();
+
         return view('admin.users.edit', compact('user', 'subscriptionLevels'));
     }
 
@@ -97,6 +98,19 @@ class UserController extends Controller
             'subscription_active' => ['boolean'],
             'email_verified' => ['boolean'],
         ]);
+
+        // Check if user can assign this role - bypass for fresh database user
+        $currentUser = auth()->user();
+
+        // Fresh check from database to avoid session caching
+        $freshUser = User::find($currentUser->id);
+
+        if (! $freshUser->isSuperAdmin()) {
+            $policy = new \App\Policies\UserPolicy;
+            if (! $policy->assignRole($freshUser, $validated['role'])) {
+                return back()->withErrors(['role' => "You do not have permission to assign the '{$validated['role']}' role. Your current role: {$freshUser->role}"]);
+            }
+        }
 
         $updateData = [
             'name' => $validated['name'],
@@ -229,7 +243,7 @@ class UserController extends Controller
      */
     private function getDefaultTokenAllocation(User $user, \App\Models\Token $token): int
     {
-        if (!$user->subscriptionLevel) {
+        if (! $user->subscriptionLevel) {
             return $token->default_count;
         }
 
@@ -242,7 +256,7 @@ class UserController extends Controller
      */
     private function getDefaultCounterAllocation(User $user, \App\Models\CounterType $counterType): int
     {
-        if (!$user->subscriptionLevel) {
+        if (! $user->subscriptionLevel) {
             return $counterType->default_allocation;
         }
 

@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\CounterType;
 use App\Models\SubscriptionLevel;
 use App\Models\Token;
-use App\Models\CounterType;
-use App\Models\UserToken;
+use App\Models\User;
 use App\Models\UserCounter;
+use App\Models\UserToken;
 use Illuminate\Database\Seeder;
 
 class UserSubscriptionSeeder extends Seeder
@@ -72,8 +72,8 @@ class UserSubscriptionSeeder extends Seeder
             // Initialize user's economy based on subscription level
             $this->initializeUserEconomy($user);
 
-            echo "Created/Updated user: {$user->name} with subscription: " . 
-                 ($user->subscriptionLevel?->name ?? 'No Subscription') . "\n";
+            echo "Created/Updated user: {$user->name} with subscription: ".
+                 ($user->subscriptionLevel?->name ?? 'No Subscription')."\n";
         }
     }
 
@@ -119,7 +119,7 @@ class UserSubscriptionSeeder extends Seeder
      */
     private function getDefaultTokenAllocation(User $user, Token $token): int
     {
-        if (!$user->subscriptionLevel) {
+        if (! $user->subscriptionLevel) {
             return $token->default_count;
         }
 
@@ -132,7 +132,7 @@ class UserSubscriptionSeeder extends Seeder
      */
     private function getDefaultCounterAllocation(User $user, CounterType $counterType): int
     {
-        if (!$user->subscriptionLevel) {
+        if (! $user->subscriptionLevel) {
             return $counterType->default_allocation;
         }
 

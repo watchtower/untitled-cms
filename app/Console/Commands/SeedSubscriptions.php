@@ -29,8 +29,9 @@ class SeedSubscriptions extends Command
 
         if ($this->option('fresh')) {
             $this->warn('⚠️ This will refresh your database!');
-            if (!$this->confirm('Are you sure you want to continue?')) {
+            if (! $this->confirm('Are you sure you want to continue?')) {
                 $this->info('Operation cancelled.');
+
                 return 0;
             }
 
@@ -39,7 +40,7 @@ class SeedSubscriptions extends Command
 
         // Run the essential seeders
         $seeders = [
-            'SubscriptionLevelSeeder', 
+            'SubscriptionLevelSeeder',
             'TokenSeeder',
             'ResettableCounterSeeder',
             'UserSubscriptionSeeder',
@@ -54,14 +55,14 @@ class SeedSubscriptions extends Command
         $this->newLine();
         $this->info('✅ L33t subscription system setup complete!');
         $this->newLine();
-        
+
         $this->line('🎮 Demo users created:');
         $this->line('   📧 padawan@example.com (password: password) - L33t Padawan');
-        $this->line('   📧 jedi@example.com (password: password) - L33t Jedi'); 
+        $this->line('   📧 jedi@example.com (password: password) - L33t Jedi');
         $this->line('   📧 master@example.com (password: password) - L33t Master');
         $this->line('   📧 free@example.com (password: password) - No Subscription');
         $this->line('   📧 admin@example.com (password: password) - Super Admin');
-        
+
         $this->newLine();
         $this->line('🔧 Manage subscriptions at: /admin/users');
         $this->line('💰 Manage L33t Bytes at: /admin/token-management');

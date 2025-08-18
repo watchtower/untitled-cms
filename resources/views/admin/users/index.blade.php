@@ -73,6 +73,7 @@
                                 <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">User</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+                                <th scope="col" class="hidden md:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Subscription</th>
                                 <th scope="col" class="hidden sm:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email Verification</th>
                                 <th scope="col" class="hidden lg:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Last Login</th>
                                 <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -134,6 +135,32 @@
                                                     <circle cx="3" cy="3" r="3" />
                                                 </svg>
                                                 {{ $user->status_display }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm">
+                                        @if($user->subscriptionLevel)
+                                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+                                                {{ $user->subscriptionLevel->level === 1 ? 'bg-green-100 text-green-800 ring-1 ring-green-600/20' : 
+                                                   ($user->subscriptionLevel->level === 2 ? 'bg-blue-100 text-blue-800 ring-1 ring-blue-600/20' : 'bg-purple-100 text-purple-800 ring-1 ring-purple-600/20') }}">
+                                                @if($user->subscriptionLevel->level === 1)
+                                                    <svg class="mr-1.5 h-2 w-2 fill-green-500" viewBox="0 0 6 6" aria-hidden="true">
+                                                        <circle cx="3" cy="3" r="3" />
+                                                    </svg>
+                                                @elseif($user->subscriptionLevel->level === 2)
+                                                    <svg class="mr-1.5 h-2 w-2 fill-blue-500" viewBox="0 0 6 6" aria-hidden="true">
+                                                        <circle cx="3" cy="3" r="3" />
+                                                    </svg>
+                                                @else
+                                                    <svg class="mr-1.5 h-2 w-2 fill-purple-500" viewBox="0 0 6 6" aria-hidden="true">
+                                                        <circle cx="3" cy="3" r="3" />
+                                                    </svg>
+                                                @endif
+                                                {{ $user->subscriptionLevel->name }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-gray-600/20">
+                                                No Subscription
                                             </span>
                                         @endif
                                     </td>
