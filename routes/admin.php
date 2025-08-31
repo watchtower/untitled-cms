@@ -66,13 +66,14 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Route::resource('site-monitors', SiteMonitorController::class);
     // Route::post('/site-monitors/{siteMonitor}/check', [SiteMonitorController::class, 'check'])->name('site-monitors.check');
 
-    // L33t Bytes Token Management
+    // Token Management
     Route::prefix('token-management')->name('token-management.')->group(function () {
         Route::get('/', [TokenManagementController::class, 'index'])->name('index');
         Route::get('/users', [TokenManagementController::class, 'users'])->name('users');
         Route::post('/users/{user}/update-balance', [TokenManagementController::class, 'updateBalance'])->name('update-balance');
         Route::get('/transactions', [TokenManagementController::class, 'transactions'])->name('transactions');
         Route::post('/bulk-operation', [TokenManagementController::class, 'bulkOperation'])->name('bulk-operation');
+        Route::post('/reset/{token}', [TokenManagementController::class, 'resetToken'])->name('reset-token');
     });
 
     // Bits Management (Resettable Counters)
@@ -82,6 +83,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         Route::post('/users/{user}/update-balance', [BitsManagementController::class, 'updateBalance'])->name('update-balance');
         Route::get('/transactions', [BitsManagementController::class, 'transactions'])->name('transactions');
         Route::post('/bulk-operation', [BitsManagementController::class, 'bulkOperation'])->name('bulk-operation');
+        Route::post('/reset/{counterType}', [BitsManagementController::class, 'resetCounterType'])->name('reset-counter');
     });
 
     // Subscription Management

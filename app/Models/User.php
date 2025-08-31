@@ -320,9 +320,9 @@ class User extends Authenticatable
     }
 
     /**
-     * Get L33t Bytes balance (alias for permanent tokens)
+     * Get Bytes balance (alias for permanent tokens)
      */
-    public function getL33tBytesBalance(): int
+    public function getBytesBalance(): int
     {
         return $this->getPermanentTokenBalance();
     }

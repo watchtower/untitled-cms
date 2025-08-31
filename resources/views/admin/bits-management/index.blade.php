@@ -1,6 +1,17 @@
 @extends('admin.layout')
 
 @section('content')
+@if(session('success'))
+    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-green-700">{{ session('success') }}</span>
+        </div>
+    </div>
+@endif
+
 <div class="space-y-6" x-data="bitsManagement()" x-init="init()">
     <!-- Header with Actions -->
     <div class="bg-white shadow-sm border border-gray-200 rounded-lg">
@@ -9,7 +20,7 @@
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 flex items-center">
                         <span class="text-4xl mr-3">⚡</span>
-                        L33t Bits Management
+                        Bits Management
                     </h1>
                     <p class="text-sm text-gray-600 mt-2">Advanced resettable counter management with real-time analytics</p>
                 </div>
@@ -116,6 +127,16 @@
                     </button>
                 </div>
                 
+                @if($errors->any())
+                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <ul class="text-red-600 text-sm">
+                            @foreach($errors->all() as $error)
+                                <li>• {{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                
                 <form method="POST" action="{{ route('admin.bits-management.bulk-operation') }}" class="space-y-4">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -197,9 +218,12 @@
                                         <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             Next: {{ $counterType->next_reset_at ? $counterType->next_reset_at->format('M j, g:i A') : 'Not scheduled' }}
                                         </span>
-                                        <button class="px-3 py-1 text-sm bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 transition-colors">
-                                            Reset Now
-                                        </button>
+                                        <form action="{{ route('admin.bits-management.reset-counter', $counterType) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to reset {{ $counterType->name }} for all users? This cannot be undone.')">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1 text-sm bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 transition-colors">
+                                                Reset Now
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -352,12 +376,15 @@
                                 </svg>
                                 View Details
                             </button>
-                            <button class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 border border-orange-200 rounded-lg hover:bg-orange-200 transition-colors">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                                Reset Now
-                            </button>
+                            <form action="{{ route('admin.bits-management.reset-counter', $counterType) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to reset {{ $counterType->name }} for all users? This cannot be undone.')">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 border border-orange-200 rounded-lg hover:bg-orange-200 transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    Reset Now
+                                </button>
+                            </form>
                             <button class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-100 border border-indigo-200 rounded-lg hover:bg-indigo-200 transition-colors">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -478,7 +505,7 @@ function bitsManagement() {
         showResetScheduler: false,
         
         init() {
-            console.log('L33t Bits Management System initialized');
+            console.log('Bits Management System initialized');
         },
         
         refreshData() {

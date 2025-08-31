@@ -6,7 +6,7 @@
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">Transaction Log</h1>
-                <p class="text-sm text-gray-600 mt-1">Complete history of all L33t Bytes transactions</p>
+                <p class="text-sm text-gray-600 mt-1">Complete history of all token transactions</p>
             </div>
         </div>
 
@@ -238,7 +238,7 @@
                     @if(request()->hasAny(['user_id', 'token_id', 'type', 'date_from', 'date_to']))
                         Try adjusting your search filters.
                     @else
-                        Transactions will appear here when users start using L33t Bytes.
+                        Transactions will appear here when users start using tokens.
                     @endif
                 </p>
             </div>

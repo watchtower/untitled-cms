@@ -106,20 +106,101 @@ class TransactionAnalyticsController extends Controller
         $stats = $this->influxService->getTransactionStats('both', $timeRange);
 
         // Get recent transactions from both types
-        $recentTokenTransactions = $this->formatTokenTransactions(
-            $this->influxService->queryTokenTransactions(null, $timeRange, null, 10)
-        );
+        // Try InfluxDB first, fall back to MySQL if needed
+        if ($this->influxService->isAvailable()) {
+            $recentTokenTransactions = $this->formatTokenTransactions(
+                $this->influxService->queryTokenTransactions(null, $timeRange, null, 10)
+            );
 
-        $recentCounterTransactions = $this->formatCounterTransactions(
-            $this->influxService->queryCounterTransactions(null, $timeRange, null, 10)
-        );
+            $recentCounterTransactions = $this->formatCounterTransactions(
+                $this->influxService->queryCounterTransactions(null, $timeRange, null, 10)
+            );
+        } else {
+            // Fallback to MySQL data
+            $recentTokenTransactions = $this->getTokenTransactionsFromMySQL($timeRange, 10);
+            $recentCounterTransactions = $this->getCounterTransactionsFromMySQL($timeRange, 10);
+        }
 
         return view('admin.analytics.dashboard', compact(
             'stats',
             'recentTokenTransactions',
             'recentCounterTransactions',
             'timeRange'
-        ))->with('isInfluxConnected', $this->influxService->isConnected());
+        ))->with([
+            'isInfluxConnected' => $this->influxService->isAvailable(),
+            'isInfluxEnabled' => $this->influxService->isEnabled(),
+            'isHybridMode' => $this->influxService->isHybridMode()
+        ]);
+    }
+
+    /**
+     * Get token transactions from MySQL as fallback
+     */
+    private function getTokenTransactionsFromMySQL(string $timeRange, int $limit): array
+    {
+        $query = \App\Models\TokenTransaction::with(['user', 'admin', 'token'])
+            ->orderBy('created_at', 'desc')
+            ->limit($limit);
+
+        // Apply time range filter
+        if ($timeRange !== '-1h') {
+            $hours = (int) str_replace(['-', 'h', 'd'], '', $timeRange);
+            if (str_contains($timeRange, 'd')) {
+                $hours *= 24;
+            }
+            $query->where('created_at', '>=', now()->subHours($hours));
+        }
+
+        return $query->get()->map(function ($transaction) {
+            return [
+                'time' => $transaction->created_at?->toISOString(),
+                'user_id' => $transaction->user_id,
+                'admin_id' => $transaction->admin_id,
+                'token_slug' => $transaction->token?->slug ?? 'unknown',
+                'amount' => $transaction->amount,
+                'balance_before' => $transaction->balance_before,
+                'balance_after' => $transaction->balance_after,
+                'reason' => $transaction->reason,
+                'type' => $transaction->type,
+                'user_name' => $transaction->user?->name ?? 'Unknown',
+                'admin_name' => $transaction->admin?->name ?? 'System',
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get counter transactions from MySQL as fallback
+     */
+    private function getCounterTransactionsFromMySQL(string $timeRange, int $limit): array
+    {
+        $query = \App\Models\CounterTransaction::with(['user', 'admin', 'counterType'])
+            ->orderBy('created_at', 'desc')
+            ->limit($limit);
+
+        // Apply time range filter
+        if ($timeRange !== '-1h') {
+            $hours = (int) str_replace(['-', 'h', 'd'], '', $timeRange);
+            if (str_contains($timeRange, 'd')) {
+                $hours *= 24;
+            }
+            $query->where('created_at', '>=', now()->subHours($hours));
+        }
+
+        return $query->get()->map(function ($transaction) {
+            return [
+                'time' => $transaction->created_at?->toISOString(),
+                'user_id' => $transaction->user_id,
+                'admin_id' => $transaction->admin_id,
+                'counter_slug' => $transaction->counterType?->slug ?? 'unknown',
+                'count_change' => $transaction->count_change,
+                'count_before' => $transaction->count_before,
+                'count_after' => $transaction->count_after,
+                'reason' => $transaction->reason,
+                'type' => $transaction->type,
+                'user_name' => $transaction->user?->name ?? 'Unknown',
+                'admin_name' => $transaction->admin?->name ?? 'System',
+            ];
+        })->toArray();
     }
 
     /**

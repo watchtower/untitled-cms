@@ -1,6 +1,17 @@
 @extends('admin.layout')
 
 @section('content')
+@if(session('success'))
+    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-green-700">{{ session('success') }}</span>
+        </div>
+    </div>
+@endif
+
 <div class="space-y-6" x-data="tokenManagement()" x-init="init()">
     <!-- Header with Actions -->
     <div class="bg-white shadow-sm border border-gray-200 rounded-lg">
@@ -9,7 +20,7 @@
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 flex items-center">
                         <span class="text-4xl mr-3">🚀</span>
-                        L33t Bytes Management
+                        Token Management
                     </h1>
                     <p class="text-sm text-gray-600 mt-2">Advanced token economy management with real-time analytics</p>
                 </div>
@@ -108,6 +119,16 @@
                         </svg>
                     </button>
                 </div>
+                
+                @if($errors->any())
+                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <ul class="text-red-600 text-sm">
+                            @foreach($errors->all() as $error)
+                                <li>• {{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 
                 <form method="POST" action="{{ route('admin.token-management.bulk-operation') }}" class="space-y-4">
                     @csrf
@@ -295,6 +316,15 @@
                                 </svg>
                                 View Details
                             </button>
+                            <form action="{{ route('admin.token-management.reset-token', $stat['token']) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to reset {{ $stat['token']->name }} for all users? This will set all user balances to the default amount ({{ $stat['token']->default_count }}). This cannot be undone.')">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 border border-orange-200 rounded-lg hover:bg-orange-200 transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    Reset Now
+                                </button>
+                            </form>
                             <button class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-100 border border-indigo-200 rounded-lg hover:bg-indigo-200 transition-colors">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -420,7 +450,7 @@ function tokenManagement() {
         
         init() {
             // Initialize any charts or real-time updates here
-            console.log('L33t Bytes Management System initialized');
+            console.log('Token Management System initialized');
         },
         
         refreshData() {

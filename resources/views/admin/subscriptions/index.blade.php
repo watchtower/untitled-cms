@@ -86,18 +86,18 @@
         </div>
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                @foreach($subscriptionStats as $level)
-                <div class="border rounded-lg p-4 {{ $level->level === 1 ? 'border-green-200 bg-green-50' : ($level->level === 2 ? 'border-blue-200 bg-blue-50' : 'border-purple-200 bg-purple-50') }}">
+                @foreach($subscriptionStats as $stat)
+                <div class="border rounded-lg p-4 {{ $stat['level']->level === 1 ? 'border-green-200 bg-green-50' : ($stat['level']->level === 2 ? 'border-blue-200 bg-blue-50' : 'border-purple-200 bg-purple-50') }}">
                     <div class="flex items-center justify-between mb-2">
-                        <h3 class="font-semibold text-gray-900">{{ $level->name }}</h3>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $level->level === 1 ? 'bg-green-100 text-green-800' : ($level->level === 2 ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800') }}">
-                            Level {{ $level->level }}
+                        <h3 class="font-semibold text-gray-900">{{ $stat['level']->name }}</h3>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $stat['level']->level === 1 ? 'bg-green-100 text-green-800' : ($stat['level']->level === 2 ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800') }}">
+                            Level {{ $stat['level']->level }}
                         </span>
                     </div>
-                    <div class="text-2xl font-bold text-gray-900 mb-1">{{ number_format($level->users_count) }}</div>
-                    <div class="text-sm text-gray-600">{{ $level->formatted_price }}</div>
-                    @if($level->description)
-                        <p class="text-sm text-gray-500 mt-2">{{ $level->description }}</p>
+                    <div class="text-2xl font-bold text-gray-900 mb-1">{{ number_format($stat['total_users']) }}</div>
+                    <div class="text-sm text-gray-600">{{ $stat['level']->formatted_price }}</div>
+                    @if($stat['level']->description)
+                        <p class="text-sm text-gray-500 mt-2">{{ $stat['level']->description }}</p>
                     @endif
                 </div>
                 @endforeach

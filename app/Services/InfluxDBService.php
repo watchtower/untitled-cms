@@ -14,25 +14,67 @@ class InfluxDBService
 
     public function __construct()
     {
+        // Skip InfluxDB initialization if disabled
+        if (!config('services.influxdb.enabled', false)) {
+            \Log::info('InfluxDB is disabled, using MySQL-only mode');
+            $this->client = null;
+            $this->database = null;
+            return;
+        }
+
         try {
             $this->client = new Client(
                 config('services.influxdb.url', 'http://localhost:8086'),
                 config('services.influxdb.port', 8086),
                 config('services.influxdb.username', ''),
                 config('services.influxdb.password', ''),
-                config('services.influxdb.ssl', false)
+                config('services.influxdb.ssl', false),
+                config('services.influxdb.timeout', 5.0)
             );
 
             $this->database = $this->client->selectDB(config('services.influxdb.database', 'l33t_economy'));
+            \Log::info('InfluxDB client initialized successfully');
         } catch (\Exception $e) {
-            \Log::error('Failed to initialize InfluxDB client: '.$e->getMessage());
+            $message = 'Failed to initialize InfluxDB client: '.$e->getMessage();
+            \Log::warning($message);
+            
+            if (config('services.influxdb.hybrid_mode', true)) {
+                \Log::info('InfluxDB hybrid mode enabled, falling back to MySQL-only mode');
+            } else {
+                \Log::error('InfluxDB hybrid mode disabled, analytics may be limited');
+            }
+            
             $this->client = null;
             $this->database = null;
         }
     }
 
     /**
-     * Record a token transaction (L33t Bytes)
+     * Check if InfluxDB is available and enabled
+     */
+    public function isAvailable(): bool
+    {
+        return $this->client !== null && $this->database !== null;
+    }
+
+    /**
+     * Check if hybrid mode is enabled (MySQL fallback)
+     */
+    public function isHybridMode(): bool
+    {
+        return config('services.influxdb.hybrid_mode', true);
+    }
+
+    /**
+     * Check if InfluxDB is enabled in configuration
+     */
+    public function isEnabled(): bool
+    {
+        return config('services.influxdb.enabled', false);
+    }
+
+    /**
+     * Record a token transaction
      */
     public function writeTokenTransaction(
         int $userId,
@@ -83,7 +125,7 @@ class InfluxDBService
     }
 
     /**
-     * Record a counter transaction (L33t Bits)
+     * Record a counter transaction
      */
     public function writeCounterTransaction(
         int $userId,

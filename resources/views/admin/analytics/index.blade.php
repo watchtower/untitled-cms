@@ -9,7 +9,7 @@
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 flex items-center">
                         <span class="text-4xl mr-3">📊</span>
-                        L33t Economy Analytics
+                        Economy Analytics
                     </h1>
                     <p class="text-sm text-gray-600 mt-2">Comprehensive analytics and insights for your token economy</p>
                 </div>

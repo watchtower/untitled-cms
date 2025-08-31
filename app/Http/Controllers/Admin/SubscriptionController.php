@@ -24,16 +24,73 @@ class SubscriptionController extends Controller
         $totalUsers = User::count();
         $subscribedUsers = User::whereNotNull('subscription_level_id')->count();
 
+        // Enhanced subscription statistics with detailed breakdowns
         $subscriptionStats = SubscriptionLevel::active()
-            ->withCount('users')
+            ->withCount(['users' => function ($query) {
+                $query->whereNotNull('email_verified_at'); // Only verified users
+            }])
             ->orderBy('level')
+            ->get()
+            ->map(function ($level) use ($totalUsers) {
+                $levelTotalUsers = $level->users()->count();
+                $activeUsers = $level->users()->whereNotNull('email_verified_at')->count();
+                $inactiveUsers = $levelTotalUsers - $activeUsers;
+                
+                // Calculate growth metrics (last 30 days)
+                $newUsersThisMonth = $level->users()
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->count();
+                    
+                $previousMonthUsers = $level->users()
+                    ->where('created_at', '>=', now()->subDays(60))
+                    ->where('created_at', '<', now()->subDays(30))
+                    ->count();
+                    
+                $growthRate = $previousMonthUsers > 0 
+                    ? (($newUsersThisMonth - $previousMonthUsers) / $previousMonthUsers) * 100 
+                    : ($newUsersThisMonth > 0 ? 100 : 0);
+
+                // Calculate revenue potential (if pricing is available)
+                $monthlyRevenue = $level->price * $activeUsers;
+
+                return [
+                    'level' => $level,
+                    'total_users' => $levelTotalUsers,
+                    'active_users' => $activeUsers,
+                    'inactive_users' => $inactiveUsers,
+                    'activation_rate' => $levelTotalUsers > 0 ? ($activeUsers / $levelTotalUsers) * 100 : 0,
+                    'new_users_this_month' => $newUsersThisMonth,
+                    'growth_rate' => $growthRate,
+                    'monthly_revenue' => $monthlyRevenue,
+                    'percentage_of_total' => $totalUsers > 0 ? ($levelTotalUsers / $totalUsers) * 100 : 0,
+                ];
+            });
+
+        // Overall metrics
+        $metrics = [
+            'total_users' => $totalUsers,
+            'subscribed_users' => $subscribedUsers,
+            'free_users' => $totalUsers - $subscribedUsers,
+            'subscription_rate' => $totalUsers > 0 ? ($subscribedUsers / $totalUsers) * 100 : 0,
+            'total_monthly_revenue' => $subscriptionStats->sum('monthly_revenue'),
+            'average_revenue_per_user' => $subscribedUsers > 0 ? $subscriptionStats->sum('monthly_revenue') / $subscribedUsers : 0,
+        ];
+
+        // Recent subscription changes (last 30 days)
+        $recentChanges = User::with(['subscriptionLevel'])
+            ->whereNotNull('subscription_level_id')
+            ->where('updated_at', '>=', now()->subDays(30))
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
             ->get();
 
         return view('admin.subscriptions.index', compact(
             'subscriptionLevels',
+            'subscriptionStats',
+            'metrics',
+            'recentChanges',
             'totalUsers',
-            'subscribedUsers',
-            'subscriptionStats'
+            'subscribedUsers'
         ));
     }
 
@@ -176,7 +233,7 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Initialize user's L33t economy (tokens and counters) based on subscription level
+     * Initialize user's economy (tokens and counters) based on subscription level
      */
     private function initializeUserEconomy(User $user)
     {

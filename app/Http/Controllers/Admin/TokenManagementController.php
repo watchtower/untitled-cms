@@ -17,7 +17,7 @@ class TokenManagementController extends Controller
     }
 
     /**
-     * Display the L33t Bytes management dashboard
+     * Display the Token management dashboard
      */
     public function index(Request $request)
     {
@@ -202,7 +202,7 @@ class TokenManagementController extends Controller
             'operation' => 'required|in:grant_to_all,grant_to_subscription,reset_balances',
             'token_id' => 'required|exists:tokens,id',
             'amount' => 'required_if:operation,grant_to_all,grant_to_subscription|integer|min:0',
-            'subscription_level_id' => 'required_if:operation,grant_to_subscription|exists:subscription_levels,id',
+            'subscription_level_id' => 'required_if:operation,grant_to_subscription|nullable|exists:subscription_levels,id',
             'reason' => 'required|string|max:255',
         ]);
 
@@ -250,6 +250,112 @@ class TokenManagementController extends Controller
         }
 
         return redirect()->back()->with('success', "Bulk operation completed. Affected {$affectedUsers} users.");
+    }
+
+    /**
+     * Reset a specific token type for all users (Reset Scheduler functionality)
+     */
+    public function resetToken(Token $token)
+    {
+        $admin = auth()->user();
+        $startTime = now();
+        $affectedUsers = 0;
+        $errors = [];
+
+        \Log::info('Token Reset Scheduler: Starting manual reset for token type', [
+            'token_name' => $token->name,
+            'token_id' => $token->id,
+            'token_slug' => $token->slug,
+            'admin_id' => $admin->id,
+            'admin_name' => $admin->name,
+            'start_time' => $startTime,
+        ]);
+
+        try {
+            // Get all user tokens for this token type
+            $userTokens = UserToken::where('token_id', $token->id)
+                ->with('user')
+                ->get();
+
+            foreach ($userTokens as $userToken) {
+                try {
+                    $oldBalance = $userToken->balance;
+                    
+                    // Reset to the default count for this token
+                    $newBalance = $token->default_count;
+                    
+                    if ($userToken->setBalance($newBalance, "Manual reset via Token Reset Scheduler", $admin)) {
+                        $affectedUsers++;
+                        
+                        \Log::info('Token Reset Scheduler: Successfully reset user token balance', [
+                            'user_id' => $userToken->user_id,
+                            'user_name' => $userToken->user->name,
+                            'token_name' => $token->name,
+                            'old_balance' => $oldBalance,
+                            'new_balance' => $newBalance,
+                        ]);
+                    } else {
+                        $errors[] = "Failed to reset token balance for user: {$userToken->user->name}";
+                        
+                        \Log::error('Token Reset Scheduler: Failed to reset user token balance', [
+                            'user_id' => $userToken->user_id,
+                            'user_name' => $userToken->user->name,
+                            'token_name' => $token->name,
+                            'old_balance' => $oldBalance,
+                            'attempted_new_balance' => $newBalance,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Error resetting token balance for user {$userToken->user->name}: " . $e->getMessage();
+                    
+                    \Log::error('Token Reset Scheduler: Exception during user token reset', [
+                        'user_id' => $userToken->user_id,
+                        'user_name' => $userToken->user->name,
+                        'token_name' => $token->name,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            }
+
+            $endTime = now();
+            $duration = $endTime->diffInSeconds($startTime);
+
+            \Log::info('Token Reset Scheduler: Completed manual reset for token type', [
+                'token_name' => $token->name,
+                'token_id' => $token->id,
+                'affected_users' => $affectedUsers,
+                'total_users_processed' => $userTokens->count(),
+                'errors_count' => count($errors),
+                'duration_seconds' => $duration,
+                'end_time' => $endTime,
+                'success' => true,
+            ]);
+
+            if (count($errors) > 0) {
+                return redirect()->back()->with([
+                    'success' => "Reset completed for {$token->name}. Affected {$affectedUsers} users.",
+                    'warning' => 'Some errors occurred: ' . implode(', ', array_slice($errors, 0, 3)) . (count($errors) > 3 ? ' and ' . (count($errors) - 3) . ' more...' : ''),
+                ]);
+            }
+
+            return redirect()->back()->with('success', "Successfully reset {$token->name} for {$affectedUsers} users.");
+
+        } catch (\Exception $e) {
+            $endTime = now();
+            
+            \Log::error('Token Reset Scheduler: Fatal error during token reset', [
+                'token_name' => $token->name,
+                'token_id' => $token->id,
+                'affected_users' => $affectedUsers,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'duration_seconds' => $endTime->diffInSeconds($startTime),
+                'success' => false,
+            ]);
+
+            return redirect()->back()->with('error', "Failed to reset {$token->name}: " . $e->getMessage());
+        }
     }
 
     /**

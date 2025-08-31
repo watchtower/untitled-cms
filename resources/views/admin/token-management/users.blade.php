@@ -6,7 +6,7 @@
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">User Token Balances</h1>
-                <p class="text-sm text-gray-600 mt-1">Manage individual user L33t Bytes balances</p>
+                <p class="text-sm text-gray-600 mt-1">Manage individual user token balances</p>
             </div>
         </div>
 

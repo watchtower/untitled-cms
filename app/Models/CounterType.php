@@ -17,12 +17,14 @@ class CounterType extends Model
         'color',
         'is_active',
         'last_reset_at',
+        'next_reset_at',
     ];
 
     protected $casts = [
         'default_allocation' => 'integer',
         'is_active' => 'boolean',
         'last_reset_at' => 'datetime',
+        'next_reset_at' => 'datetime',
     ];
 
     /**
@@ -81,5 +83,67 @@ class CounterType extends Model
         return $this->counterTransactions()
             ->where('created_at', '>=', now()->subDays($days))
             ->count();
+    }
+
+    /**
+     * Calculate and update the next reset time based on reset frequency
+     */
+    public function updateNextResetTime(): void
+    {
+        $now = now();
+        
+        $nextResetTime = match($this->reset_frequency) {
+            'daily' => $now->copy()->addDay()->startOfDay(),
+            'weekly' => $now->copy()->addWeek()->startOfWeek(),
+            'monthly' => $now->copy()->addMonth()->startOfMonth(),
+            'yearly' => $now->copy()->addYear()->startOfYear(),
+            default => null,
+        };
+
+        $this->update([
+            'last_reset_at' => $now,
+            'next_reset_at' => $nextResetTime,
+        ]);
+    }
+
+    /**
+     * Check if this counter type is due for reset
+     */
+    public function isDueForReset(): bool
+    {
+        if (!$this->next_reset_at) {
+            return false;
+        }
+
+        return $this->next_reset_at <= now();
+    }
+
+    /**
+     * Get formatted next reset time for display
+     */
+    public function getFormattedNextResetAttribute(): string
+    {
+        if (!$this->next_reset_at) {
+            return 'Not scheduled';
+        }
+
+        return $this->next_reset_at->format('M j, g:i A');
+    }
+
+    /**
+     * Get time until next reset in human readable format
+     */
+    public function getTimeUntilResetAttribute(): string
+    {
+        if (!$this->next_reset_at) {
+            return 'Never';
+        }
+
+        $now = now();
+        if ($this->next_reset_at <= $now) {
+            return 'Overdue';
+        }
+
+        return $now->diffForHumans($this->next_reset_at, true);
     }
 }

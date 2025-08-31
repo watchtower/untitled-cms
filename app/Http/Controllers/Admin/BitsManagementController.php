@@ -196,11 +196,13 @@ class BitsManagementController extends Controller
      */
     public function bulkOperation(Request $request)
     {
+        \Log::info('Bulk operation started', $request->all());
+        
         $request->validate([
             'operation' => 'required|in:grant_to_all,grant_to_subscription,reset_counters',
             'counter_type_id' => 'required|exists:counter_types,id',
             'amount' => 'required_if:operation,grant_to_all,grant_to_subscription|integer|min:0',
-            'subscription_level_id' => 'required_if:operation,grant_to_subscription|exists:subscription_levels,id',
+            'subscription_level_id' => 'required_if:operation,grant_to_subscription|nullable|exists:subscription_levels,id',
             'reason' => 'required|string|max:255',
         ]);
 
@@ -211,14 +213,19 @@ class BitsManagementController extends Controller
         switch ($request->operation) {
             case 'grant_to_all':
                 $users = User::all();
+                \Log::info('Processing grant_to_all for ' . $users->count() . ' users');
                 foreach ($users as $user) {
                     $userCounter = UserCounter::firstOrCreate([
                         'user_id' => $user->id,
                         'counter_type_id' => $counterType->id,
                     ], ['current_count' => 0]);
 
+                    \Log::info('Adding count for user', ['user_id' => $user->id, 'amount' => $request->amount]);
                     if ($userCounter->addCount($request->amount, $request->reason, $admin, 'bulk_grant')) {
                         $affectedUsers++;
+                        \Log::info('Successfully added count for user ' . $user->id);
+                    } else {
+                        \Log::error('Failed to add count for user ' . $user->id);
                     }
                 }
                 break;
@@ -247,6 +254,7 @@ class BitsManagementController extends Controller
                 break;
         }
 
+        \Log::info('Bulk operation completed', ['affected_users' => $affectedUsers]);
         return redirect()->back()->with('success', "Bulk operation completed. Affected {$affectedUsers} users.");
     }
 
@@ -283,6 +291,116 @@ class BitsManagementController extends Controller
     }
 
     /**
+     * Reset a specific counter type for all users (Reset Scheduler functionality)
+     */
+    public function resetCounterType(CounterType $counterType)
+    {
+        $admin = auth()->user();
+        $startTime = now();
+        $affectedUsers = 0;
+        $errors = [];
+
+        \Log::info('Reset Scheduler: Starting manual reset for counter type', [
+            'counter_type' => $counterType->name,
+            'counter_type_id' => $counterType->id,
+            'admin_id' => $admin->id,
+            'admin_name' => $admin->name,
+            'reset_frequency' => $counterType->reset_frequency,
+            'start_time' => $startTime,
+        ]);
+
+        try {
+            // Get all user counters for this counter type
+            $userCounters = UserCounter::where('counter_type_id', $counterType->id)
+                ->with('user')
+                ->get();
+
+            foreach ($userCounters as $userCounter) {
+                try {
+                    $oldCount = $userCounter->current_count;
+                    
+                    // Reset to the user's default allocation based on subscription level
+                    $newCount = $this->getDefaultAllocationForUser($userCounter->user, $counterType);
+                    
+                    if ($userCounter->setCount($newCount, "Manual reset via Reset Scheduler", $admin)) {
+                        $affectedUsers++;
+                        
+                        \Log::info('Reset Scheduler: Successfully reset user counter', [
+                            'user_id' => $userCounter->user_id,
+                            'user_name' => $userCounter->user->name,
+                            'counter_type' => $counterType->name,
+                            'old_count' => $oldCount,
+                            'new_count' => $newCount,
+                        ]);
+                    } else {
+                        $errors[] = "Failed to reset counter for user: {$userCounter->user->name}";
+                        
+                        \Log::error('Reset Scheduler: Failed to reset user counter', [
+                            'user_id' => $userCounter->user_id,
+                            'user_name' => $userCounter->user->name,
+                            'counter_type' => $counterType->name,
+                            'old_count' => $oldCount,
+                            'attempted_new_count' => $newCount,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Error resetting counter for user {$userCounter->user->name}: " . $e->getMessage();
+                    
+                    \Log::error('Reset Scheduler: Exception during user counter reset', [
+                        'user_id' => $userCounter->user_id,
+                        'user_name' => $userCounter->user->name,
+                        'counter_type' => $counterType->name,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            }
+
+            // Update the next reset time based on frequency
+            $counterType->updateNextResetTime();
+
+            $endTime = now();
+            $duration = $endTime->diffInSeconds($startTime);
+
+            \Log::info('Reset Scheduler: Completed manual reset for counter type', [
+                'counter_type' => $counterType->name,
+                'counter_type_id' => $counterType->id,
+                'affected_users' => $affectedUsers,
+                'total_users_processed' => $userCounters->count(),
+                'errors_count' => count($errors),
+                'duration_seconds' => $duration,
+                'end_time' => $endTime,
+                'success' => true,
+            ]);
+
+            if (count($errors) > 0) {
+                return redirect()->back()->with([
+                    'success' => "Reset completed for {$counterType->name}. Affected {$affectedUsers} users.",
+                    'warning' => 'Some errors occurred: ' . implode(', ', array_slice($errors, 0, 3)) . (count($errors) > 3 ? ' and ' . (count($errors) - 3) . ' more...' : ''),
+                ]);
+            }
+
+            return redirect()->back()->with('success', "Successfully reset {$counterType->name} for {$affectedUsers} users. Next reset scheduled for " . 
+                ($counterType->next_reset_at ? $counterType->next_reset_at->format('M j, g:i A') : 'unscheduled'));
+
+        } catch (\Exception $e) {
+            $endTime = now();
+            
+            \Log::error('Reset Scheduler: Fatal error during counter reset', [
+                'counter_type' => $counterType->name,
+                'counter_type_id' => $counterType->id,
+                'affected_users' => $affectedUsers,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'duration_seconds' => $endTime->diffInSeconds($startTime),
+                'success' => false,
+            ]);
+
+            return redirect()->back()->with('error', "Failed to reset {$counterType->name}: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Get the default allocation for a user based on their subscription level
      */
     private function getDefaultAllocationForUser(User $user, CounterType $counterType): int
@@ -291,11 +409,11 @@ class BitsManagementController extends Controller
             return $counterType->default_allocation;
         }
 
-        // L33t gaming tier-based allocations
+        // Tier-based allocations
         return match ($user->subscriptionLevel->level) {
-            1 => $counterType->default_allocation, // L33t Padawan (free)
-            2 => $counterType->default_allocation * 2, // L33t Jedi (2x)
-            3 => $counterType->default_allocation * 5, // L33t Master (5x)
+            1 => $counterType->default_allocation, // Padawan (free)
+            2 => $counterType->default_allocation * 2, // Jedi (2x)
+            3 => $counterType->default_allocation * 5, // Master (5x)
             default => $counterType->default_allocation,
         };
     }

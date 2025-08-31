@@ -21,17 +21,17 @@
                             </div>
                             <div>
                                 <h1 class="text-2xl font-bold text-gray-900">Profile Settings</h1>
-                                <p class="text-sm text-gray-600 mt-1">Manage your account information and L33t economy status</p>
+                                <p class="text-sm text-gray-600 mt-1">Manage your account information and economy status</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- L33t Economy Section -->
+                    <!-- Economy Section -->
                     <div class="mb-8">
                         <div class="bg-gray-50 rounded-lg p-6">
                             <div class="flex justify-between items-center mb-6">
                                 <div>
-                                    <h2 class="text-lg font-semibold text-gray-900">L33t Economy</h2>
+                                    <h2 class="text-lg font-semibold text-gray-900">Economy</h2>
                                     <p class="text-sm text-gray-600 mt-1">Your subscription level and currency balances</p>
                                 </div>
                                 @if($user->subscriptionLevel)
@@ -54,7 +54,7 @@
                             </div>
 
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                <!-- L33t Bytes -->
+                                <!-- Bytes -->
                                 <div class="bg-white rounded-lg border border-gray-200 p-4">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
@@ -65,11 +65,11 @@
                                             </div>
                                         </div>
                                         <div class="ml-3 flex-1">
-                                            <p class="text-sm font-medium text-gray-900">L33t Bytes</p>
+                                            <p class="text-sm font-medium text-gray-900">Bytes</p>
                                             <p class="text-xs text-gray-500">Permanent tokens</p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="text-lg font-semibold text-gray-900">{{ number_format($l33tBytesBalance) }}</p>
+                                            <p class="text-lg font-semibold text-gray-900">{{ number_format($bytesBalance) }}</p>
                                         </div>
                                     </div>
                                 </div>

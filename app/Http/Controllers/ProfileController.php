@@ -26,13 +26,13 @@ class ProfileController extends Controller
         ]);
 
         // Get specific economy data
-        $l33tBytesBalance = $user->getL33tBytesBalance();
+        $bytesBalance = $user->getBytesBalance();
         $dailyBitsBalance = $user->getDailyBitsBalance();
         $weeklyPowerBitsBalance = $user->getWeeklyPowerBitsBalance();
 
         return view('profile.edit', [
             'user' => $user,
-            'l33tBytesBalance' => $l33tBytesBalance,
+            'bytesBalance' => $bytesBalance,
             'userCounters' => $user->userCounters,
         ]);
     }
