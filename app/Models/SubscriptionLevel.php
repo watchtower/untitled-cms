@@ -70,4 +70,20 @@ class SubscriptionLevel extends Model
     {
         return $this->isFree() ? 'Free' : '$'.number_format($this->price, 2).'/month';
     }
+
+    /**
+     * Get the monthly credit allocation for this subscription level.
+     */
+    public function getMonthlyCreditAllocation(): int
+    {
+        return $this->features['bits'] ?? 0;
+    }
+
+    /**
+     * Get the permanent token allocation for this subscription level.
+     */
+    public function getPermanentTokenAllocation(): int
+    {
+        return $this->features['bytes'] ?? 0;
+    }
 }

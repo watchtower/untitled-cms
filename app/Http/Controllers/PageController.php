@@ -29,4 +29,11 @@ class PageController extends Controller
         // If no home page exists, show a default welcome page
         return view('welcome');
     }
+
+    public function pricing()
+    {
+        $subscriptionLevels = \App\Models\SubscriptionLevel::active()->byLevel()->get();
+
+        return view('pages.pricing', compact('subscriptionLevels'));
+    }
 }

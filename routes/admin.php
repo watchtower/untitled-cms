@@ -6,10 +6,12 @@ use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\NavigationController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SiteMonitorController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\TaxonomyController;
 use App\Http\Controllers\Admin\TokenManagementController;
+use App\Http\Controllers\Admin\TransactionAnalyticsController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +65,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
+    // Site Monitor Management (Disabled)
+    // Route::resource('site-monitors', SiteMonitorController::class);
+    // Route::post('/site-monitors/{siteMonitor}/check', [SiteMonitorController::class, 'check'])->name('site-monitors.check');
+
     // L33t Bytes Token Management
     Route::prefix('token-management')->name('token-management.')->group(function () {
         Route::get('/', [TokenManagementController::class, 'index'])->name('index');
@@ -88,5 +94,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         Route::post('/users/{user}/downgrade', [SubscriptionController::class, 'downgrade'])->name('downgrade');
         Route::post('/users/{user}/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
         Route::post('/bulk-operation', [SubscriptionController::class, 'bulkOperation'])->name('bulk-operation');
+    });
+
+    // Transaction Analytics (InfluxDB-powered)
+    Route::prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/', [TransactionAnalyticsController::class, 'dashboard'])->name('dashboard');
+        Route::get('/token-transactions', [TransactionAnalyticsController::class, 'tokenTransactions'])->name('token-transactions');
+        Route::get('/counter-transactions', [TransactionAnalyticsController::class, 'counterTransactions'])->name('counter-transactions');
+        Route::get('/export', [TransactionAnalyticsController::class, 'export'])->name('transactions.export');
     });
 });

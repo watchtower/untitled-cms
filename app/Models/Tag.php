@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Tag extends Model
 {
@@ -14,7 +15,7 @@ class Tag extends Model
     /**
      * Get all of the pages that are assigned this tag.
      */
-    public function pages()
+    public function pages(): MorphToMany
     {
         return $this->morphedByMany(Page::class, 'taggable');
     }

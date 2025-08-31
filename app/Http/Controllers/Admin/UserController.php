@@ -99,18 +99,8 @@ class UserController extends Controller
             'email_verified' => ['boolean'],
         ]);
 
-        // Check if user can assign this role - bypass for fresh database user
-        $currentUser = auth()->user();
-
-        // Fresh check from database to avoid session caching
-        $freshUser = User::find($currentUser->id);
-
-        if (! $freshUser->isSuperAdmin()) {
-            $policy = new \App\Policies\UserPolicy;
-            if (! $policy->assignRole($freshUser, $validated['role'])) {
-                return back()->withErrors(['role' => "You do not have permission to assign the '{$validated['role']}' role. Your current role: {$freshUser->role}"]);
-            }
-        }
+        // Check if user can assign this role
+        $this->authorize('assignRole', [User::class, $validated['role']]);
 
         $updateData = [
             'name' => $validated['name'],

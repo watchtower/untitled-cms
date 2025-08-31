@@ -15,44 +15,44 @@ class UserSubscriptionSeeder extends Seeder
     public function run(): void
     {
         // Get subscription levels
-        $padawan = SubscriptionLevel::where('slug', 'padawan')->first();
-        $jedi = SubscriptionLevel::where('slug', 'jedi')->first();
-        $master = SubscriptionLevel::where('slug', 'master')->first();
+        $starter = SubscriptionLevel::where('slug', 'starter')->first();
+        $pro = SubscriptionLevel::where('slug', 'pro')->first();
+        $elite = SubscriptionLevel::where('slug', 'elite')->first();
 
         // Create demo users with different subscription levels
         $demoUsers = [
             [
-                'name' => 'John Padawan',
-                'email' => 'padawan@example.com',
+                'name' => 'Starter User',
+                'email' => 'starter@example.com',
                 'password' => bcrypt('password'),
                 'role' => 'editor',
-                'subscription_level_id' => $padawan?->id,
+                'subscription_level_id' => $starter?->id,
                 'subscription_active' => true,
                 'email_verified_at' => now(),
                 'status' => 'active',
             ],
             [
-                'name' => 'Jane Jedi',
-                'email' => 'jedi@example.com',
+                'name' => 'Pro User',
+                'email' => 'pro@example.com',
                 'password' => bcrypt('password'),
                 'role' => 'editor',
-                'subscription_level_id' => $jedi?->id,
+                'subscription_level_id' => $pro?->id,
                 'subscription_active' => true,
                 'email_verified_at' => now(),
                 'status' => 'active',
             ],
             [
-                'name' => 'Bob Master',
-                'email' => 'master@example.com',
+                'name' => 'Elite User',
+                'email' => 'elite@example.com',
                 'password' => bcrypt('password'),
                 'role' => 'admin',
-                'subscription_level_id' => $master?->id,
+                'subscription_level_id' => $elite?->id,
                 'subscription_active' => true,
                 'email_verified_at' => now(),
                 'status' => 'active',
             ],
             [
-                'name' => 'Free User',
+                'name' => 'No Subscription User',
                 'email' => 'free@example.com',
                 'password' => bcrypt('password'),
                 'role' => 'editor',
@@ -72,75 +72,75 @@ class UserSubscriptionSeeder extends Seeder
             // Initialize user's economy based on subscription level
             $this->initializeUserEconomy($user);
 
-            echo "Created/Updated user: {$user->name} with subscription: ".
+            echo "Created/Updated user: {$user->name} with subscription: " .
                  ($user->subscriptionLevel?->name ?? 'No Subscription')."\n";
         }
     }
 
     /**
-     * Initialize user's L33t economy based on subscription level
+     * Initialize user's economy based on subscription level
      */
     private function initializeUserEconomy(User $user): void
     {
-        // Initialize tokens (L33t Bytes)
+        // Initialize tokens (Permanent Tokens)
         $tokens = Token::active()->get();
         foreach ($tokens as $token) {
-            if ($token->default_count > 0) {
-                $userToken = UserToken::updateOrCreate([
-                    'user_id' => $user->id,
-                    'token_id' => $token->id,
-                ], [
-                    'balance' => $this->getDefaultTokenAllocation($user, $token),
-                ]);
+            $userToken = UserToken::updateOrCreate([
+                'user_id' => $user->id,
+                'token_id' => $token->id,
+            ], [
+                'balance' => $this->getTokenAllocation($user, $token),
+            ]);
 
-                echo "  - Initialized {$token->name}: {$userToken->balance}\n";
-            }
+            echo "  - Initialized {$token->name}: {$userToken->balance}\n";
         }
 
-        // Initialize counters (Bits)
+        // Initialize counters (Monthly Credits)
         $counterTypes = CounterType::active()->get();
         foreach ($counterTypes as $counterType) {
-            if ($counterType->default_allocation > 0) {
-                $userCounter = UserCounter::updateOrCreate([
-                    'user_id' => $user->id,
-                    'counter_type_id' => $counterType->id,
-                ], [
-                    'current_count' => $this->getDefaultCounterAllocation($user, $counterType),
-                    'last_reset_at' => now(),
-                ]);
+            $userCounter = UserCounter::updateOrCreate([
+                'user_id' => $user->id,
+                'counter_type_id' => $counterType->id,
+            ], [
+                'current_count' => $this->getCounterAllocation($user, $counterType),
+                'last_reset_at' => now(),
+            ]);
 
-                echo "  - Initialized {$counterType->name}: {$userCounter->current_count}\n";
-            }
+            echo "  - Initialized {$counterType->name}: {$userCounter->current_count}\n";
         }
     }
 
     /**
-     * Get default token allocation based on user's subscription level
+     * Get token allocation based on user's subscription level
      */
-    private function getDefaultTokenAllocation(User $user, Token $token): int
+    private function getTokenAllocation(User $user, Token $token): int
     {
         if (! $user->subscriptionLevel) {
-            return $token->default_count;
+            return $token->slug === 'permanent-tokens' ? 10 : 0;
         }
 
-        // Multiply base allocation by subscription level
-        return $token->default_count * $user->subscriptionLevel->level;
+        return match ($user->subscriptionLevel->slug) {
+            'starter' => 10,
+            'pro' => 30,
+            'elite' => 90,
+            default => 10,
+        };
     }
 
     /**
-     * Get default counter allocation based on user's subscription level
+     * Get counter allocation based on user's subscription level
      */
-    private function getDefaultCounterAllocation(User $user, CounterType $counterType): int
+    private function getCounterAllocation(User $user, CounterType $counterType): int
     {
         if (! $user->subscriptionLevel) {
-            return $counterType->default_allocation;
+            return $counterType->slug === 'monthly-credits' ? 100 : 0;
         }
 
-        return match ($user->subscriptionLevel->level) {
-            1 => $counterType->default_allocation, // Padawan: base allocation
-            2 => $counterType->default_allocation * 5, // Jedi: 5x allocation
-            3 => 999999, // Master: unlimited
-            default => $counterType->default_allocation,
+        return match ($user->subscriptionLevel->slug) {
+            'starter' => 100,
+            'pro' => 1000,
+            'elite' => 10000,
+            default => 100,
         };
     }
 }

@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'influxdb' => [
+        'url' => env('INFLUXDB_URL', 'http://localhost:8086'),
+        'port' => env('INFLUXDB_PORT', 8086),
+        'username' => env('INFLUXDB_USERNAME', ''),
+        'password' => env('INFLUXDB_PASSWORD', ''),
+        'database' => env('INFLUXDB_DATABASE', 'l33t_economy'),
+        'ssl' => env('INFLUXDB_SSL', false),
+    ],
+
 ];

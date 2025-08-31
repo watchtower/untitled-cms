@@ -19,10 +19,11 @@ class ProcessSubscriptionBenefits extends Command
         $this->info('Processing monthly subscription benefits...');
 
         // Get active paid subscribers (Jedi and Master levels)
-        $subscribers = User::whereHas('subscriptionLevel', function ($query) {
-            $query->where('level', '>', 1) // Above Padawan (free tier)
-                ->where('is_active', true);
-        })->where('subscription_active', true)->get();
+        $subscribers = User::with('subscriptionLevel')
+            ->whereHas('subscriptionLevel', function ($query) {
+                $query->where('level', '>', 1) // Above Padawan (free tier)
+                    ->where('is_active', true);
+            })->where('subscription_active', true)->get();
 
         if ($subscribers->isEmpty()) {
             $this->info('No active paid subscribers found.');
@@ -53,9 +54,10 @@ class ProcessSubscriptionBenefits extends Command
                     ], ['balance' => 0]);
 
                     // Add monthly allocation
+                    $levelName = $user->subscriptionLevel->name ?? 'Unknown';
                     $success = $userToken->addTokens(
                         $allocation,
-                        "Monthly {$user->subscriptionLevel->name} subscription benefit",
+                        "Monthly {$levelName} subscription benefit",
                         null,
                         'subscription_benefit'
                     );
@@ -64,7 +66,7 @@ class ProcessSubscriptionBenefits extends Command
                         $totalProcessed++;
                         $totalTokensGranted += $allocation;
 
-                        $this->info("✓ {$user->name} ({$user->subscriptionLevel->name}): +{$allocation} L33t Bytes");
+                        $this->info("✓ {$user->name} ({$levelName}): +{$allocation} L33t Bytes");
                     } else {
                         $this->error("✗ Failed to process {$user->name}");
                     }

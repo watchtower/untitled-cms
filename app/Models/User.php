@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property SubscriptionLevel|null $subscriptionLevel
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -42,6 +45,26 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    /**
+     * Boot the model
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When a user's role is updated, clear their session if they are currently authenticated
+        static::updated(function ($user) {
+            if ($user->wasChanged('role')) {
+                // If the updated user is currently authenticated, we need to refresh their session
+                $currentUser = auth()->user();
+                if ($currentUser && $currentUser->id === $user->id) {
+                    // Re-authenticate the user to refresh their session data
+                    auth()->login($user);
+                }
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -187,6 +210,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Get user's site monitors
+     */
+    public function siteMonitors(): HasMany
+    {
+        return $this->hasMany(SiteMonitor::class);
+    }
+
+    /**
+     * Get user's lookups
+     */
+    public function lookups(): HasMany
+    {
+        return $this->hasMany(Lookup::class);
+    }
+
+    /**
      * Check if user has an active subscription
      */
     public function hasActiveSubscription(): bool
@@ -213,27 +252,27 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is L33t Padawan (Level 1)
+     * Check if user is on the Starter plan
      */
-    public function isPadawan(): bool
+    public function isStarter(): bool
     {
-        return $this->subscriptionLevel?->level === 1;
+        return $this->subscriptionLevel?->slug === 'starter';
     }
 
     /**
-     * Check if user is L33t Jedi (Level 2)
+     * Check if user is on the Pro plan
      */
-    public function isJedi(): bool
+    public function isPro(): bool
     {
-        return $this->subscriptionLevel?->level === 2;
+        return $this->subscriptionLevel?->slug === 'pro';
     }
 
     /**
-     * Check if user is L33t Master (Level 3)
+     * Check if user is on the Elite plan
      */
-    public function isMaster(): bool
+    public function isElite(): bool
     {
-        return $this->subscriptionLevel?->level === 3;
+        return $this->subscriptionLevel?->slug === 'elite';
     }
 
     /**
@@ -241,19 +280,21 @@ class User extends Authenticatable
      */
     public function getTokenBalance(string $tokenSlug): int
     {
-        return $this->userTokens()
+        $userToken = $this->userTokens()
             ->whereHas('token', function ($query) use ($tokenSlug) {
                 $query->where('slug', $tokenSlug);
             })
-            ->first()?->balance ?? 0;
+            ->first();
+
+        return $userToken?->balance ?? 0;
     }
 
     /**
-     * Get L33t Bytes balance
+     * Get Permanent Tokens balance
      */
-    public function getL33tBytesBalance(): int
+    public function getPermanentTokenBalance(): int
     {
-        return $this->getTokenBalance('l33t-bytes');
+        return $this->getTokenBalance('permanent-tokens');
     }
 
     /**
@@ -261,26 +302,20 @@ class User extends Authenticatable
      */
     public function getCounterBalance(string $counterSlug): int
     {
-        return $this->userCounters()
-            ->whereHas('counter', function ($query) use ($counterSlug) {
+        $userCounter = $this->userCounters()
+            ->whereHas('counterType', function ($query) use ($counterSlug) {
                 $query->where('slug', $counterSlug);
             })
-            ->first()?->current_count ?? 0;
+            ->first();
+
+        return $userCounter?->current_count ?? 0;
     }
 
     /**
-     * Get Daily Bits balance
+     * Get Monthly Credits balance
      */
-    public function getDailyBitsBalance(): int
+    public function getMonthlyCreditsBalance(): int
     {
-        return $this->getCounterBalance('daily-bits');
-    }
-
-    /**
-     * Get Weekly Power Bits balance
-     */
-    public function getWeeklyPowerBitsBalance(): int
-    {
-        return $this->getCounterBalance('weekly-power-bits');
+        return $this->getCounterBalance('monthly-credits');
     }
 }

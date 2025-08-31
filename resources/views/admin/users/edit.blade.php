@@ -6,10 +6,6 @@
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-gray-900">Edit User: {{ $user->name }}</h1>
             <div class="flex space-x-2">
-                <a href="{{ route('admin.users.show', $user) }}" 
-                   class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-                    View User
-                </a>
                 <a href="{{ route('admin.users.index') }}" 
                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
                     Back to Users

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Category extends Model
 {
@@ -14,7 +15,7 @@ class Category extends Model
     /**
      * Get all of the pages that are assigned this category.
      */
-    public function pages()
+    public function pages(): MorphToMany
     {
         return $this->morphedByMany(Page::class, 'categorizable');
     }
