@@ -45,7 +45,7 @@ class LookupService
             ]);
 
             // Record successful lookup in InfluxDB
-            $this->influxService->recordCounterTransaction(
+            $this->influxService->writeCounterTransaction(
                 $user->id,
                 'monthly-credits',
                 -1, // Deduct 1 credit
@@ -76,7 +76,7 @@ class LookupService
             ]);
 
             // Record failed lookup in InfluxDB (still consumes credit)
-            $this->influxService->recordCounterTransaction(
+            $this->influxService->writeCounterTransaction(
                 $user->id,
                 'monthly-credits',
                 -1,

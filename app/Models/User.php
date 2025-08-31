@@ -318,4 +318,28 @@ class User extends Authenticatable
     {
         return $this->getCounterBalance('monthly-credits');
     }
+
+    /**
+     * Get L33t Bytes balance (alias for permanent tokens)
+     */
+    public function getL33tBytesBalance(): int
+    {
+        return $this->getPermanentTokenBalance();
+    }
+
+    /**
+     * Get daily bits balance (alias for monthly credits)
+     */
+    public function getDailyBitsBalance(): int
+    {
+        return $this->getMonthlyCreditsBalance();
+    }
+
+    /**
+     * Get weekly power bits balance (alias for monthly credits)
+     */
+    public function getWeeklyPowerBitsBalance(): int
+    {
+        return $this->getMonthlyCreditsBalance();
+    }
 }

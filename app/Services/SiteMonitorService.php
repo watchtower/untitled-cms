@@ -33,7 +33,7 @@ class SiteMonitorService
         ]);
 
         // Record monitor creation in InfluxDB
-        $this->influxService->recordCounterTransaction(
+        $this->influxService->writeCounterTransaction(
             $user->id,
             'site-monitors',
             1,
@@ -86,7 +86,7 @@ class SiteMonitorService
             $monitor->update($updateData);
 
             // Record check in InfluxDB for analytics
-            $this->influxService->recordCounterTransaction(
+            $this->influxService->writeCounterTransaction(
                 $monitor->user_id,
                 'monitor-checks',
                 1,
