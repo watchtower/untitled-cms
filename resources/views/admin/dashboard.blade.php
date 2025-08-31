@@ -104,8 +104,8 @@
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Media Files</dt>
-                                <dd class="text-2xl font-bold text-gray-900">{{ $stats['media_files'] }}</dd>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Navigation</dt>
+                                <dd class="text-2xl font-bold text-gray-900">{{ $stats['navigation_items'] }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -130,7 +130,7 @@
                             <div class="text-xs text-gray-500">Add content to your site</div>
                         </div>
                     </a>
-                    <a href="{{ route('admin.media.index') }}" 
+                    <a href="/filemanager" target="_blank"
                        class="flex items-center gap-3 p-3 rounded-md bg-white hover:bg-gray-50 transition-colors duration-200 border border-gray-200">
                         <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
                             <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,7 +138,7 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="text-sm font-medium text-gray-900">Upload Media</div>
+                            <div class="text-sm font-medium text-gray-900">File Manager</div>
                             <div class="text-xs text-gray-500">Manage images and files</div>
                         </div>
                     </a>

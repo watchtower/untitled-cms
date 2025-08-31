@@ -46,7 +46,7 @@
                             <!-- CMS Dropdown -->
                             <div class="relative inline-flex items-center" x-data="{ open: false }">
                                 <button @click="open = !open" 
-                                        class="{{ request()->routeIs('admin.pages.*') || request()->routeIs('admin.taxonomy.*') || request()->routeIs('admin.navigation.*') || request()->routeIs('admin.media.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                        class="{{ request()->routeIs('admin.pages.*') || request()->routeIs('admin.taxonomy.*') || request()->routeIs('admin.navigation.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                     CMS
                                     <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -60,16 +60,16 @@
                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Taxonomy</a>
                                     <a href="{{ route('admin.navigation.index') }}" 
                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Navigation</a>
-                                    <a href="{{ route('admin.media.index') }}" 
-                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Media</a>
+                                    <a href="/filemanager" target="_blank"
+                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">File Manager</a>
                                 </div>
                             </div>
 
-                            <!-- Economy Dropdown -->
+                            <!-- Billing Dropdown -->
                             <div class="relative inline-flex items-center" x-data="{ open: false }">
                                 <button @click="open = !open" 
                                         class="{{ request()->routeIs('admin.token-management.*') || request()->routeIs('admin.bits-management.*') || request()->routeIs('admin.subscriptions.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                    Economy
+                                    Billing
                                     <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                     </svg>

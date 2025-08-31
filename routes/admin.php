@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\BitsManagementController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\NavigationController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -23,7 +22,6 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
             'draft_pages' => \App\Models\Page::where('status', 'draft')->count(),
             'total_users' => \App\Models\User::count(),
             'navigation_items' => \App\Models\NavigationItem::count(),
-            'media_files' => \App\Models\Media::count(),
         ];
 
         return view('admin.dashboard', compact('stats'));
@@ -52,7 +50,6 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/navigation/{navigation}/toggle-visibility', [NavigationController::class, 'toggleVisibility'])->name('navigation.toggle-visibility');
     Route::post('/navigation/{navigation}/duplicate', [NavigationController::class, 'duplicate'])->name('navigation.duplicate');
 
-    Route::resource('media', MediaController::class)->except(['create', 'edit']);
 
     Route::resource('users', UserController::class);
     Route::patch('/users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');

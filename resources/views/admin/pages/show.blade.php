@@ -122,7 +122,7 @@
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">Published Date</dt>
                                     <dd class="mt-1 text-sm text-gray-900">
-                                        {{ $page->published_at->format('M j, Y g:i A') }}
+                                        {{ $page->published_at?->format('M j, Y g:i A') ?? 'Not published' }}
                                     </dd>
                                 </div>
                             @endif

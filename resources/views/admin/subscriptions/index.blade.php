@@ -6,7 +6,7 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-semibold text-gray-900">L33t Subscription Management</h1>
+        <h1 class="text-2xl font-semibold text-gray-900">Subscription Management</h1>
     </div>
 
     <!-- Debug Info (temporary) -->
@@ -133,7 +133,7 @@
                     <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                     </svg>
-                    Manage L33t Bytes
+                    Manage Bytes
                 </a>
             </div>
         </div>
@@ -148,13 +148,13 @@
                 </svg>
             </div>
             <div class="ml-3">
-                <h3 class="text-sm font-medium text-blue-800">L33t Subscription System</h3>
+                <h3 class="text-sm font-medium text-blue-800">Subscription System</h3>
                 <div class="mt-2 text-sm text-blue-700">
-                    <p>The L33t subscription system includes three tiers:</p>
+                    <p>The subscription system includes three tiers:</p>
                     <ul class="mt-2 space-y-1">
-                        <li><strong>Padawan:</strong> Entry-level access with base L33t Bytes and Bits allocation</li>
-                        <li><strong>Jedi:</strong> Enhanced access with 5x Bits allocation and 2x L33t Bytes</li>
-                        <li><strong>Master:</strong> Unlimited access with 999,999 Bits and 3x L33t Bytes</li>
+                        <li><strong>Starter:</strong> Entry-level access with base Bytes and Bits allocation</li>
+                        <li><strong>Pro:</strong> Enhanced access with 10x Bits allocation and 3x Bytes</li>
+                        <li><strong>Elite:</strong> Premium access with 100x Bits allocation and 9x Bytes</li>
                     </ul>
                     <p class="mt-2">To upgrade/downgrade users, edit individual users or use bulk operations in the user management section.</p>
                 </div>

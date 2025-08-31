@@ -282,6 +282,10 @@ document.addEventListener('DOMContentLoaded', function() {
         format_tags: 'p;h1;h2;h3;h4;h5;h6;pre',
         allowedContent: true,
         extraAllowedContent: 'div(*);span(*);p(*);h1(*);h2(*);h3(*);h4(*);h5(*);h6(*)',
+        filebrowserBrowseUrl: '/filemanager?type=Files',
+        filebrowserImageBrowseUrl: '/filemanager?type=Images',
+        filebrowserUploadUrl: '/filemanager/upload?type=Files&_token=',
+        filebrowserImageUploadUrl: '/filemanager/upload?type=Images&_token='
     });
 
     // Auto-generate slug from title (only if slug is empty)
