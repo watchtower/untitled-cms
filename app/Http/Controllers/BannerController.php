@@ -1,0 +1,127 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Banner;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class BannerController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        // $this->authorize('viewAny', Banner::class);
+
+        $banners = Banner::orderBy('order', 'asc')->get();
+
+        return Inertia::render('Banners/Index', [
+            'banners' => $banners,
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        // $this->authorize('create', Banner::class);
+
+        return Inertia::render('Banners/Create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        // $this->authorize('create', Banner::class);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'slides' => 'nullable|array',
+            'slides.*.image' => 'required_with:slides|string',
+            'slides.*.url' => 'nullable|string',
+            'slides.*.sequence' => 'nullable|numeric',
+            'slides.*.title' => 'nullable|string',
+            'slides.*.subtitle' => 'nullable|string',
+            'slides.*.caption' => 'nullable|string',
+            'is_active' => 'boolean',
+        ]);
+
+        $banner = Banner::create($validated);
+
+        \App\Services\ActivityLogger::log('create', "Created banner: {$banner->title}", $banner);
+
+        return redirect()->route('banners.index')->with('success', 'Banner created successfully.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $banner = Banner::findOrFail($id);
+        // $this->authorize('update', $banner);
+
+        return Inertia::render('Banners/Edit', [
+            'banner' => $banner,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $banner = Banner::findOrFail($id);
+        // $this->authorize('update', $banner);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'slides' => 'nullable|array',
+            'slides.*.image' => 'required_with:slides|string',
+            'slides.*.url' => 'nullable|string',
+            'slides.*.sequence' => 'nullable|numeric',
+            'slides.*.title' => 'nullable|string',
+            'slides.*.subtitle' => 'nullable|string',
+            'slides.*.caption' => 'nullable|string',
+            'is_active' => 'boolean',
+        ]);
+
+        $banner->update($validated);
+
+        \App\Services\ActivityLogger::log('update', "Updated banner: {$banner->title}", $banner);
+
+        if ($request->has('stay')) {
+            return redirect()->back()->with('success', 'Banner status updated successfully.');
+        }
+
+        return redirect()->route('banners.index')->with('success', 'Banner updated successfully.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Banner $banner)
+    {
+        // $this->authorize('delete', $banner);
+
+        $title = $banner->title;
+        $banner->delete();
+
+        \App\Services\ActivityLogger::log('delete', "Deleted banner: {$title}", $banner);
+
+        return redirect()->route('banners.index')->with('success', 'Banner deleted successfully.');
+    }
+}

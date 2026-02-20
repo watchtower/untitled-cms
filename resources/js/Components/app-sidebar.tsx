@@ -1,0 +1,119 @@
+import * as React from "react"
+import {
+  BookOpen,
+  Bot,
+  Command,
+  Frame,
+  LayoutDashboard,
+  LifeBuoy,
+  Map,
+  PieChart,
+  Send,
+  Settings2,
+  SquareTerminal,
+  FileText,
+  Users,
+  Shield,
+  ImageIcon,
+  LayoutPanelLeft,
+  Activity,
+  ExternalLink
+} from "lucide-react"
+
+import { NavMain } from "@/Components/nav-main"
+import { NavProjects } from "@/Components/nav-projects"
+import { NavUser } from "@/Components/nav-user"
+import { TeamSwitcher } from "@/Components/team-switcher"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+} from "@/Components/ui/sidebar"
+import { usePage } from "@inertiajs/react"
+import { User } from '@/types';
+
+import { NavSecondary } from "@/Components/nav-secondary"
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { appName } = usePage().props;
+  const user = usePage().props.auth.user;
+  const { url } = usePage();
+
+  // Helper to determine if a route is active
+  const isActive = (pattern: string) => {
+    if (pattern === 'dashboard') return url === '/dashboard';
+    // Simple check for now, can be improved with regex
+    return url.startsWith('/' + pattern);
+  };
+
+  const data = {
+    navMain: [
+      {
+        title: "Platform",
+        url: route('dashboard'),
+        icon: LayoutDashboard,
+        isActive: true,
+        items: [
+          { title: "Dashboard", url: route('dashboard') },
+        ],
+      },
+      {
+        title: "Content",
+        url: "#",
+        icon: BookOpen,
+        isActive: true,
+        items: [
+          { title: "Pages", url: route('pages.index') },
+          { title: "Banners", url: route('banners.index') },
+          { title: "Vault", url: route('vault.index') },
+        ]
+      },
+      {
+        title: "Administration",
+        url: "#",
+        icon: Settings2,
+        isActive: true,
+        items: [
+          { title: "Users", url: route('users.index') },
+          { title: "Roles", url: route('roles.index') },
+          { title: "Activity", url: route('activity-log.index') },
+          { title: "Settings", url: route('settings.index') },
+        ]
+      }
+    ],
+    navSecondary: [],
+    projects: [] // Can be used for "Quick Access" later
+  };
+
+  const userData = {
+    name: user.name,
+    email: user.email,
+    avatar: `https://ui-avatars.com/api/?name=${user.name}`,
+  };
+
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-2 py-2">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <LayoutDashboard className="size-4" />
+          </div>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">{appName}</span>
+            <span className="truncate text-xs">v0.1.0</span>
+          </div>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain items={data.navMain} />
+        <NavSecondary items={data.navSecondary} className="mt-auto" />
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={userData} />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  )
+}
