@@ -29,22 +29,38 @@ class VaultFolderController extends Controller
 
         $parentId = $request->query('parent_id') ?? null;
 
-        $folders = VaultFolder::where('parent_id', $parentId)
+        $folders = VaultFolder::with(['owner', 'permissions'])->where('parent_id', $parentId)
             ->orderBy('name')
             ->get();
+
+        $folderIds = $folders->pluck('_id')->toArray();
+        $filesStats = \App\Models\VaultFile::whereIn('folder_id', $folderIds)
+            ->get(['folder_id', 'size_bytes'])
+            ->groupBy('folder_id');
+
+        $folders->transform(function (VaultFolder $folder) use ($filesStats) {
+            $folderFiles = $filesStats->get((string) $folder->_id, collect());
+
+            $folder->files_count = $folderFiles->count();
+            $folder->files_size = $folderFiles->sum('size_bytes');
+            $folder->is_restricted = $folder->permissions->isNotEmpty();
+            unset($folder->permissions);
+
+            return $folder;
+        });
 
         return response()->json($folders);
     }
 
     public function store(Request $request)
     {
-        if (! auth()->user()->hasRole('Super Admin') && ! auth()->user()->hasPermission('media.create')) {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.create')) {
             abort(403);
         }
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|string|exists:'.VaultFolder::class.',_id',
+            'parent_id' => 'nullable|string|exists:' . VaultFolder::class . ',_id',
         ]);
 
         // Check permission on parent

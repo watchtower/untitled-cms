@@ -22,6 +22,10 @@ export interface VaultFolder {
     path_slug?: string;
     children?: VaultFolder[];
     files?: VaultFile[];
+    files_count?: number;
+    files_size?: number;
+    is_restricted?: boolean;
+    owner?: { id: string; name: string };
     created_at: string;
     updated_at: string;
 }

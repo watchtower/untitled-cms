@@ -12,6 +12,11 @@ import { ScrollArea } from '@/Components/ui/scroll-area';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/Components/ui/popover';
+import {
     ContextMenu,
     ContextMenuContent,
     ContextMenuItem,
@@ -47,6 +52,34 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+
+// Info Popover Component
+function VaultFolderInfoPopover({ folder, side = "right" }: { folder: VaultFolder, side?: "left" | "right" | "top" | "bottom" }) {
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className={side === "right" ? "h-6 w-6 rounded-full hover:bg-background/80" : "h-8 w-8 rounded-full"}>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 z-[100]" side={side} align={side === "right" ? "start" : "center"} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                <div className="space-y-2">
+                    <h4 className="font-semibold text-sm break-all" title={folder.name}>{folder.name}</h4>
+                    <div className="grid grid-cols-2 gap-1 text-sm text-muted-foreground">
+                        <span>Total Items:</span>
+                        <span className="text-foreground text-right">{folder.files_count || 0}</span>
+                        <span>Total Size:</span>
+                        <span className="text-foreground text-right">{((folder.files_size || 0) / 1024).toFixed(1)} KB</span>
+                        <span>Access:</span>
+                        <span className="text-foreground text-right">{folder.is_restricted ? 'Restricted' : 'Global'}</span>
+                        <span>Owned By:</span>
+                        <span className="text-foreground text-right truncate" title={folder.owner?.name}>{folder.owner?.name || 'Unknown'}</span>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+}
 
 export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { maxUploadSize?: number, phpIniPath?: string }) {
     const [folders, setFolders] = useState<VaultFolder[]>([]);
@@ -330,8 +363,8 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                 <ResizablePanelGroup id="vault-panel-group" orientation="horizontal" className="flex-1 h-full w-full max-w-full">
                     {/* Left Sidebar (Folder Tree) */}
                     <ResizablePanel id="vault-sidebar" defaultSize="20" minSize="10" maxSize="50" className="bg-muted/10">
-                        <div className="h-full min-w-0">
-                            <ScrollArea className="h-full">
+                        <div className="h-full min-w-0 flex flex-col">
+                            <ScrollArea className="flex-1">
                                 <div className="p-2 space-y-1">
                                     <div
                                         className={cn(
@@ -347,25 +380,29 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                         <Folder className="h-4 w-4 shrink-0 fill-current text-blue-500/80" />
                                         <span>All Files</span>
                                     </div>
-                                    <div
-                                        className={cn(
-                                            "flex items-center gap-2 px-2 py-1.5 hover:bg-accent rounded-sm cursor-pointer text-sm",
-                                            isTrashView && "bg-accent text-accent-foreground font-medium text-red-600"
-                                        )}
-                                        onClick={() => {
-                                            setIsTrashView(true);
-                                            setCurrentFolder(null); // Clear folder selection in trash view
-                                            refresh(null, true);
-                                        }}
-                                    >
-                                        <Trash2 className="h-4 w-4 shrink-0 fill-current text-red-500/80" />
-                                        <span>Trash</span>
-                                    </div>
                                     <div className="pt-2">
                                         {renderFolderTree(null, 0)}
                                     </div>
                                 </div>
                             </ScrollArea>
+
+                            {/* Trash Pinned to Bottom */}
+                            <div className="p-2 border-t mt-auto shrink-0 bg-muted/10">
+                                <div
+                                    className={cn(
+                                        "flex items-center gap-2 px-2 py-1.5 hover:bg-accent rounded-sm cursor-pointer text-sm",
+                                        isTrashView && "bg-accent text-accent-foreground font-medium text-red-600"
+                                    )}
+                                    onClick={() => {
+                                        setIsTrashView(true);
+                                        setCurrentFolder(null); // Clear folder selection in trash view
+                                        refresh(null, true);
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4 shrink-0 fill-current text-red-500/80" />
+                                    <span>Trash</span>
+                                </div>
+                            </div>
                         </div>
                     </ResizablePanel>
 
@@ -421,11 +458,16 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                             <ContextMenu key={folder.id}>
                                                 <ContextMenuTrigger>
                                                     <div
-                                                        className="flex flex-col items-center gap-2 p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                                                        className="group relative flex flex-col items-center gap-2 p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                                                         onClick={() => setCurrentFolder(folder)}
                                                     >
-                                                        <Folder className="h-10 w-10 fill-blue-100 text-blue-500" />
-                                                        <span className="text-sm font-medium truncate w-full text-center">{folder.name}</span>
+                                                        <div className="absolute top-2 right-2 z-10" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                                            <VaultFolderInfoPopover folder={folder} side="right" />
+                                                        </div>
+                                                        <div className="aspect-square w-full relative overflow-hidden flex items-center justify-center">
+                                                            <Folder className="h-16 w-16 fill-blue-100 text-blue-500" />
+                                                        </div>
+                                                        <span className="text-sm font-medium truncate w-full text-center" title={folder.name}>{folder.name}</span>
                                                     </div>
                                                 </ContextMenuTrigger>
                                                 <ContextMenuContent>
@@ -491,6 +533,9 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                     >
                                                         <Folder className="h-8 w-8 fill-blue-100 text-blue-500 shrink-0" />
                                                         <span className="text-sm font-medium flex-1 truncate">{folder.name}</span>
+                                                        <div className="shrink-0" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                                            <VaultFolderInfoPopover folder={folder} side="left" />
+                                                        </div>
                                                     </div>
                                                 </ContextMenuTrigger>
                                                 <ContextMenuContent>

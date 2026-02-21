@@ -41,4 +41,9 @@ class VaultFolder extends Model
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
+
+    public function permissions()
+    {
+        return $this->hasMany(VaultFolderPermission::class, 'folder_id');
+    }
 }
