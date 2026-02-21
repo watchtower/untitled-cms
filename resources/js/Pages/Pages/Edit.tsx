@@ -12,12 +12,11 @@ import { Switch } from '@/Components/ui/switch';
 import Editor from '@/Components/Editor';
 import { FormSplitLayout, StickyFormFooter } from '@/Components/Common/FormLayouts';
 import { SlugInput } from '@/Components/SlugInput';
-import ImagePicker from '@/Components/ImagePicker';
 import { SerpPreview } from '@/Components/SerpPreview';
 import { Separator } from '@/Components/ui/separator';
 import { CharacterCounter } from '@/Components/CharacterCounter';
 import { UrlPreview } from '@/Components/UrlPreview';
-import { Sparkles, Loader2, ArrowRight, Maximize2, Minimize2 } from 'lucide-react';
+import { Sparkles, Loader2, ArrowRight, Maximize2, Minimize2, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/table";
 
 interface PageModel {
@@ -406,11 +405,24 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                     <CardDescription>Upload multiple images for this page gallery</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <ImagePicker
-                                        value={data.featured_images}
-                                        multiple={true}
-                                        onChange={(urls) => setData('featured_images', urls as string[])}
-                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            window.dispatchEvent(new CustomEvent('open-vault-picker', {
+                                                detail: {
+                                                    mode: 'multiple',
+                                                    type: 'image',
+                                                    onSelect: (files: any[]) => {
+                                                        const newUrls = files.map(f => f.url);
+                                                        setData('featured_images', [...data.featured_images, ...newUrls]);
+                                                    }
+                                                }
+                                            }));
+                                        }}
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" /> Add Images from Vault
+                                    </Button>
                                     {data.featured_images && data.featured_images.length > 0 && (
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                                             {data.featured_images.map((url, index) => (

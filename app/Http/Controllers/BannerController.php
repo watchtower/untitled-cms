@@ -13,7 +13,7 @@ class BannerController extends Controller
      */
     public function index()
     {
-        // $this->authorize('viewAny', Banner::class);
+        $this->authorize('viewAny', Banner::class);
 
         $banners = Banner::orderBy('order', 'asc')->get();
 
@@ -27,7 +27,7 @@ class BannerController extends Controller
      */
     public function create()
     {
-        // $this->authorize('create', Banner::class);
+        $this->authorize('create', Banner::class);
 
         return Inertia::render('Banners/Create');
     }
@@ -37,7 +37,7 @@ class BannerController extends Controller
      */
     public function store(Request $request)
     {
-        // $this->authorize('create', Banner::class);
+        $this->authorize('create', Banner::class);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -49,6 +49,8 @@ class BannerController extends Controller
             'slides.*.subtitle' => 'nullable|string',
             'slides.*.caption' => 'nullable|string',
             'is_active' => 'boolean',
+            'start_at' => 'nullable|date',
+            'end_at' => 'nullable|date|after_or_equal:start_at',
         ]);
 
         $banner = Banner::create($validated);
@@ -72,7 +74,7 @@ class BannerController extends Controller
     public function edit(string $id)
     {
         $banner = Banner::findOrFail($id);
-        // $this->authorize('update', $banner);
+        $this->authorize('update', $banner);
 
         return Inertia::render('Banners/Edit', [
             'banner' => $banner,
@@ -85,19 +87,26 @@ class BannerController extends Controller
     public function update(Request $request, string $id)
     {
         $banner = Banner::findOrFail($id);
-        // $this->authorize('update', $banner);
+        $this->authorize('update', $banner);
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slides' => 'nullable|array',
-            'slides.*.image' => 'required_with:slides|string',
-            'slides.*.url' => 'nullable|string',
-            'slides.*.sequence' => 'nullable|numeric',
-            'slides.*.title' => 'nullable|string',
-            'slides.*.subtitle' => 'nullable|string',
-            'slides.*.caption' => 'nullable|string',
-            'is_active' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'slides' => 'nullable|array',
+                'slides.*.image' => 'required_with:slides|string',
+                'slides.*.url' => 'nullable|string',
+                'slides.*.sequence' => 'nullable|numeric',
+                'slides.*.title' => 'nullable|string',
+                'slides.*.subtitle' => 'nullable|string',
+                'slides.*.caption' => 'nullable|string',
+                'is_active' => 'boolean',
+                'start_at' => 'nullable|date',
+                'end_at' => 'nullable|date|after_or_equal:start_at',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Banner Validation Failed', $e->errors());
+            throw $e;
+        }
 
         $banner->update($validated);
 
@@ -115,7 +124,7 @@ class BannerController extends Controller
      */
     public function destroy(Banner $banner)
     {
-        // $this->authorize('delete', $banner);
+        $this->authorize('delete', $banner);
 
         $title = $banner->title;
         $banner->delete();

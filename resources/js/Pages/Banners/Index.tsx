@@ -19,7 +19,7 @@ import {
 interface BannerModel {
     id: string;
     title: string;
-    image_url: string;
+    slides: { image: string }[];
     order: number;
     is_active: boolean;
     start_at: string | null;
@@ -44,15 +44,16 @@ export default function Index({ auth, banners }: BannersIndexProps) {
             ),
         },
         {
-            accessorKey: "image_url",
+            id: "preview",
             header: "Preview",
             cell: ({ row }) => {
                 const banner = row.original;
+                const previewImage = banner.slides?.[0]?.image;
                 return (
                     <div className="h-10 w-16 bg-muted rounded overflow-hidden relative">
-                        {banner.image_url ? (
+                        {previewImage ? (
                             <img
-                                src={banner.image_url}
+                                src={previewImage}
                                 alt={banner.title}
                                 className="h-full w-full object-cover"
                             />
@@ -145,8 +146,8 @@ export default function Index({ auth, banners }: BannersIndexProps) {
             <div className="flex items-start justify-between">
                 <div className="flex gap-3">
                     <div className="h-12 w-12 bg-muted rounded overflow-hidden flex-shrink-0">
-                        {banner.image_url ? (
-                            <img src={banner.image_url} alt={banner.title} className="h-full w-full object-cover" />
+                        {banner.slides?.[0]?.image ? (
+                            <img src={banner.slides[0].image} alt={banner.title} className="h-full w-full object-cover" />
                         ) : (
                             <div className="flex items-center justify-center h-full"><ImageIcon className="h-5 w-5" /></div>
                         )}
@@ -165,14 +166,14 @@ export default function Index({ auth, banners }: BannersIndexProps) {
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t">
                 {canEdit && (
-                    <Link href={route('banners.edit', banner.id)}>
-                        <Button variant="outline" size="sm">Edit</Button>
-                    </Link>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={route('banners.edit', banner.id)}>Edit</Link>
+                    </Button>
                 )}
                 {canDelete && (
-                    <Link href={route('banners.destroy', banner.id)} method="delete" as="button">
-                        <Button variant="outline" size="sm" className="text-destructive border-dashed border-red-200">Delete</Button>
-                    </Link>
+                    <Button variant="outline" size="sm" className="text-destructive border-dashed border-red-200" asChild>
+                        <Link href={route('banners.destroy', banner.id)} method="delete" as="button">Delete</Link>
+                    </Button>
                 )}
             </div>
         </div>

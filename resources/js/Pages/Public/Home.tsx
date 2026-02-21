@@ -15,6 +15,7 @@ interface Page {
     title: string;
     slug: string;
     seo_description?: string;
+    featured_images?: string[];
     published_at: string;
 }
 
@@ -84,10 +85,17 @@ export default function Home({ banners, recentPages }: Props) {
                             recentPages.map((page) => (
                                 <article key={page.id} className="flex flex-col items-start justify-between">
                                     <div className="relative w-full">
-                                        {/* Placeholder or extracted image if we had one */}
-                                        <div className="aspect-[16/9] w-full rounded-2xl bg-gray-100 object-cover sm:aspect-[2/1] lg:aspect-[3/2] flex items-center justify-center text-gray-400">
-                                            <span>No Image</span>
-                                        </div>
+                                        {page.featured_images && page.featured_images.length > 0 ? (
+                                            <img
+                                                src={page.featured_images[0]}
+                                                alt={page.title}
+                                                className="aspect-[16/9] w-full rounded-2xl object-cover sm:aspect-[2/1] lg:aspect-[3/2]"
+                                            />
+                                        ) : (
+                                            <div className="aspect-[16/9] w-full rounded-2xl bg-gray-100 object-cover sm:aspect-[2/1] lg:aspect-[3/2] flex items-center justify-center text-gray-400">
+                                                <span>No Image</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="max-w-xl">
                                         <div className="mt-8 flex items-center gap-x-4 text-xs">

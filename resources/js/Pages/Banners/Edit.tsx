@@ -92,8 +92,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
 
     const updateSlide = (index: number, field: string, value: any) => {
         const newSlides = [...data.slides];
-        // @ts-ignore
-        newSlides[index][field] = value;
+        newSlides[index] = { ...newSlides[index], [field]: value };
         setData('slides', newSlides);
     };
 
@@ -326,7 +325,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                         <div className="space-y-1.5 col-span-4">
                                                             <Label className="text-xs">Target URL</Label>
                                                             <Input
-                                                                value={data.slides[activeSlideIndex].url}
+                                                                value={data.slides[activeSlideIndex].url || ''}
                                                                 onChange={(e) => updateSlide(activeSlideIndex, 'url', e.target.value)}
                                                                 placeholder="https://..."
                                                                 className="h-9"
@@ -347,7 +346,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                     <div className="space-y-1.5">
                                                         <Label className="text-xs">Title (Overlay)</Label>
                                                         <Input
-                                                            value={data.slides[activeSlideIndex].title}
+                                                            value={data.slides[activeSlideIndex].title || ''}
                                                             onChange={(e) => updateSlide(activeSlideIndex, 'title', e.target.value)}
                                                             placeholder="Slide Title"
                                                             className="h-9"
@@ -359,7 +358,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                         <div className="space-y-1.5">
                                                             <Label className="text-xs">Subtitle</Label>
                                                             <Input
-                                                                value={data.slides[activeSlideIndex].subtitle}
+                                                                value={data.slides[activeSlideIndex].subtitle || ''}
                                                                 onChange={(e) => updateSlide(activeSlideIndex, 'subtitle', e.target.value)}
                                                                 placeholder="Slide Subtitle"
                                                                 className="h-9"
@@ -368,7 +367,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                         <div className="space-y-1.5">
                                                             <Label className="text-xs">Caption</Label>
                                                             <Input
-                                                                value={data.slides[activeSlideIndex].caption}
+                                                                value={data.slides[activeSlideIndex].caption || ''}
                                                                 onChange={(e) => updateSlide(activeSlideIndex, 'caption', e.target.value)}
                                                                 placeholder="Small text"
                                                                 className="h-9"
@@ -428,7 +427,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                 <div className="space-y-1.5 col-span-4">
                                                     <Label className="text-xs">Target URL</Label>
                                                     <Input
-                                                        value={slide.url}
+                                                        value={slide.url || ''}
                                                         onChange={(e) => updateSlide(index, 'url', e.target.value)}
                                                         placeholder="https://..."
                                                         className="h-9"
@@ -449,7 +448,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                             <div className="space-y-1.5">
                                                 <Label className="text-xs">Title (Overlay)</Label>
                                                 <Input
-                                                    value={slide.title}
+                                                    value={slide.title || ''}
                                                     onChange={(e) => updateSlide(index, 'title', e.target.value)}
                                                     placeholder="Slide Title"
                                                     className="h-9"
@@ -461,7 +460,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                 <div className="space-y-1.5">
                                                     <Label className="text-xs">Subtitle</Label>
                                                     <Input
-                                                        value={slide.subtitle}
+                                                        value={slide.subtitle || ''}
                                                         onChange={(e) => updateSlide(index, 'subtitle', e.target.value)}
                                                         placeholder="Slide Subtitle"
                                                         className="h-9"
@@ -470,7 +469,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                 <div className="space-y-1.5">
                                                     <Label className="text-xs">Caption</Label>
                                                     <Input
-                                                        value={slide.caption}
+                                                        value={slide.caption || ''}
                                                         onChange={(e) => updateSlide(index, 'caption', e.target.value)}
                                                         placeholder="Small text"
                                                         className="h-9"

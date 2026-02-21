@@ -16,13 +16,13 @@ class StoreMetadata
         $uuid = $payload['uuid'];
         $folderId = $payload['folder_id'] ?? null;
 
-        $extension = $file->getClientOriginalExtension();
-        $storageFilename = $uuid.'.'.$extension;
+        $extension = $file->extension() ?: $file->getClientOriginalExtension();
+        $storageFilename = $uuid . '.' . $extension;
 
         // Move from temp/sandbox to final public vault disk since it passed the pipeline
         $path = $file->storeAs('vault', $storageFilename, 'public');
 
-        if (! $path) {
+        if (!$path) {
             throw new \Exception('Failed to store file on public disk.');
         }
 
@@ -34,7 +34,7 @@ class StoreMetadata
             'uuid' => $uuid,
             'folder_id' => $folderId,
             'storage_path' => $path,
-            'original_name' => $file->getClientOriginalName(),
+            'original_name' => strip_tags($file->getClientOriginalName()),
             'mime_type' => $file->getMimeType(),
             'extension' => $extension,
             'size_bytes' => $file->getSize(),
@@ -42,7 +42,7 @@ class StoreMetadata
             'uploaded_by' => Auth::id(),
             'is_public' => true,
             'validation_status' => 'safe', // Passed all pipes
-            'alt_text' => $file->getClientOriginalName(), // Default
+            'alt_text' => strip_tags($file->getClientOriginalName()), // Default
         ]);
 
         // If it's an image, get dimensions

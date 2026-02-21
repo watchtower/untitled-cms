@@ -15,7 +15,7 @@ class PageController extends Controller
      */
     public function index()
     {
-        // $this->authorize('viewAny', Page::class);
+        $this->authorize('viewAny', Page::class);
 
         $pages = Page::orderBy('created_at', 'desc')->paginate(10);
 
@@ -29,7 +29,7 @@ class PageController extends Controller
      */
     public function create()
     {
-        // $this->authorize('create', Page::class);
+        $this->authorize('create', Page::class);
 
         return Inertia::render('Pages/Create');
     }
@@ -39,7 +39,7 @@ class PageController extends Controller
      */
     public function store(Request $request)
     {
-        // $this->authorize('create', Page::class);
+        $this->authorize('create', Page::class);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -52,7 +52,7 @@ class PageController extends Controller
             'featured_images' => 'nullable|array',
         ]);
 
-        if (! empty($validated['slug'])) {
+        if (!empty($validated['slug'])) {
             $slug = Str::slug($validated['slug']);
         } else {
             $slug = Str::slug($validated['title']);
@@ -61,10 +61,10 @@ class PageController extends Controller
         // Ensure unique slug (double check if unique validation handles it, but manual collision handling is good too)
         $count = Page::where('slug', $slug)->count();
         if ($count > 0) {
-            $slug .= '-'.($count + 1);
+            $slug .= '-' . ($count + 1);
         }
 
-        $slug = Str::slug($validated['title']).($count > 0 ? '-'.($count + 1) : '');
+        $slug = Str::slug($validated['title']) . ($count > 0 ? '-' . ($count + 1) : '');
 
         // Sanitize content
         $validated['content'] = clean($validated['content']);
@@ -95,7 +95,7 @@ class PageController extends Controller
     public function edit(string $id)
     {
         $page = Page::findOrFail($id);
-        // $this->authorize('update', $page);
+        $this->authorize('update', $page);
 
         // Get redirects pointing to this page's current slug
         $redirects = PageRedirect::where('to_path', $page->slug)
@@ -114,11 +114,11 @@ class PageController extends Controller
     public function update(Request $request, string $id)
     {
         $page = Page::findOrFail($id);
-        // $this->authorize('update', $page);
+        $this->authorize('update', $page);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:pages,slug,'.$id,
+            'slug' => 'nullable|string|max:255|unique:pages,slug,' . $id,
             'content' => 'required|string',
             'status' => 'required|in:draft,published',
             'seo_title' => 'nullable|string|max:255',
@@ -172,7 +172,7 @@ class PageController extends Controller
      */
     public function destroy(Page $page)
     {
-        // $this->authorize('delete', $page);
+        $this->authorize('delete', $page);
 
         $title = $page->title;
         $page->delete();

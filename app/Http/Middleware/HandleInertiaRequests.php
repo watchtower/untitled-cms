@@ -36,7 +36,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'permissions' => $request->user() ? $request->user()->getCachedPermissions() : [],
             ],
-            'tinymce_api_key' => env('TINYMCE_API_KEY'), // Keep env as fallback or remove if fully migrated
+            'tinymce_api_key' => config('services.tinymce.api_key'),
             'settings' => app(\App\Services\SettingsService::class)->getPublicSettings(),
         ];
     }

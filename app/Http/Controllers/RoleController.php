@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,7 +13,7 @@ class RoleController extends Controller
      */
     public function index()
     {
-        // $this->authorize('viewAny', Role::class);
+        $this->authorize('viewAny', Role::class);
 
         $roles = \App\Models\Role::all();
 
@@ -26,7 +27,7 @@ class RoleController extends Controller
      */
     public function create()
     {
-        // $this->authorize('create', Role::class);
+        $this->authorize('create', Role::class);
 
         return Inertia::render('Roles/Create', [
             'availablePermissions' => \App\Models\Role::availablePermissions(),
@@ -38,7 +39,7 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        // $this->authorize('create', Role::class);
+        $this->authorize('create', Role::class);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles',
@@ -56,7 +57,7 @@ class RoleController extends Controller
     public function edit(string $id)
     {
         $role = \App\Models\Role::findOrFail($id);
-        // $this->authorize('update', $role);
+        $this->authorize('update', $role);
 
         return Inertia::render('Roles/Edit', [
             'role' => $role,
@@ -67,18 +68,18 @@ class RoleController extends Controller
     public function update(Request $request, string $id)
     {
         $role = \App\Models\Role::findOrFail($id);
-        // $this->authorize('update', $role);
+        $this->authorize('update', $role);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
-            'slug' => 'required|string|max:255|unique:roles,slug,'.$role->id,
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'slug' => 'required|string|max:255|unique:roles,slug,' . $role->id,
             'permissions' => 'array',
             'permissions.*' => 'string',
             'is_active' => 'boolean',
         ]);
 
         // Protect Admin role from being deactivated
-        if ($role->slug === 'admin' && isset($validated['is_active']) && ! $validated['is_active']) {
+        if ($role->slug === 'admin' && isset($validated['is_active']) && !$validated['is_active']) {
             return redirect()->back()->with('error', 'The Admin role cannot be deactivated.');
         }
 
@@ -94,7 +95,7 @@ class RoleController extends Controller
     public function destroy(string $id)
     {
         $role = \App\Models\Role::findOrFail($id);
-        // $this->authorize('delete', $role);
+        $this->authorize('delete', $role);
 
         // Prevent deleting critical roles like Admin if desired, or if assigned to users
 

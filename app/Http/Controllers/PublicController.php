@@ -25,7 +25,7 @@ class PublicController extends Controller
         $recentPages = Page::where('status', 'published')
             ->orderBy('published_at', 'desc')
             ->take(6)
-            ->get(['id', 'title', 'slug', 'seo_description', 'published_at']);
+            ->get(['id', 'title', 'slug', 'seo_description', 'published_at', 'featured_images']);
 
         return Inertia::render('Public/Home', [
             'banners' => $banners,

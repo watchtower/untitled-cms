@@ -159,6 +159,20 @@ export default function VaultPicker({
         onOpenChange(false);
     };
 
+    const handleThumbnailDoubleClick = useCallback((file: VaultFile) => {
+        if (mode === 'single') {
+            const origin = window.location.origin;
+            const processedFile = {
+                ...file,
+                url: file.url?.replace(origin, '') || file.url
+            };
+            onSelect([processedFile]);
+            onOpenChange(false);
+        } else {
+            handleFileSelect(file);
+        }
+    }, [mode, onSelect, onOpenChange, handleFileSelect]);
+
     const handleUploadDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         const droppedFiles = Array.from(e.dataTransfer.files);
@@ -342,7 +356,7 @@ export default function VaultPicker({
                                             file={file}
                                             selected={selectedFiles.some(f => f.id === file.id)}
                                             onSelect={() => handleFileSelect(file)}
-                                            onDoubleClick={() => { handleFileSelect(file); handleConfirm(); }}
+                                            onDoubleClick={() => handleThumbnailDoubleClick(file)}
                                         />
                                     ))}
 
