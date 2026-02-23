@@ -10,7 +10,7 @@ class SanitizeImage
 {
     public function handle($payload, Closure $next)
     {
-        if (! config('vault.image_washing')) {
+        if (!config('vault.image_washing')) {
             return $next($payload);
         }
 
@@ -47,12 +47,18 @@ class SanitizeImage
                     }
 
                     imagedestroy($image);
+                } else {
+                    \Log::warning("Image sanitization failed for {$file->getClientOriginalName()}: Invalid image data.");
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'file' => "Security violation: Image sanitization failed. The file is corrupt or contains invalid data."
+                    ]);
                 }
             } catch (\Exception $e) {
-                // If sanitization fails, we might choose to reject the file or just log warning
-                // For high security, we should reject.
-                // throw ValidationException::withMessages(['file' => 'Image sanitization failed. File may be corrupt.']);
-                \Log::warning("Image sanitization failed for {$file->getClientOriginalName()}: ".$e->getMessage());
+                // If sanitization throws an exception, reject the file completely. 
+                \Log::warning("Image sanitization failed for {$file->getClientOriginalName()}: " . $e->getMessage());
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'file' => "Security violation: Image sanitization failed. The file is corrupt or contains invalid data."
+                ]);
             }
         }
 

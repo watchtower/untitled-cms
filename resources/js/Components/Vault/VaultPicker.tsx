@@ -69,38 +69,27 @@ export default function VaultPicker({
     const [filterType, setFilterType] = useState<'all' | 'image' | 'document'>(allowedTypes);
 
     // Fetch files and folders
-    const loadContent = useCallback(async (folderId: string | null = null) => {
+    const loadContent = useCallback(async (folderId: string | null = null, typeOverride?: 'all' | 'image' | 'document') => {
         setLoading(true);
+        const actualType = typeOverride !== undefined ? typeOverride : filterType;
         try {
-            // Load folders
-            // Ideally backend returns folders for current level. 
-            // Our VaultFolderController.list returns full tree or flat list? 
-            // The plan said "recursive Collapsible" for admin, but for Picker maybe just current level?
-            // Let's assume list endpoint supports parent_id filtering or we use what we have.
-            // If list returns all, we filter client side. For now, let's assume we fetch all folders for simplicity or update backend.
-            // Actually, we'll hit files.list with folder_id
-
             const [filesRes, foldersRes] = await Promise.all([
                 axios.get(route('vault.files.list'), {
-                    params: { folder_id: folderId, search, type: filterType === 'all' ? undefined : filterType }
+                    params: { folder_id: folderId, search, type: actualType === 'all' ? undefined : actualType }
                 }),
-                axios.get(route('vault.folders.list')) // Assuming this returns all, or we need to filter
+                axios.get(route('vault.folders.list'))
             ]);
 
             setFiles(filesRes.data.data); // Paginated response
 
-            // Simple client-side folder filtering if API returns all
-            // A better backend would be to filter by parent_id.
-            // For this MVP, let's assume folders.list returns all and we filter here.
             const allFolders = foldersRes.data;
             setFolders(allFolders.filter((f: any) => f.parent_id === folderId));
 
-            // Setup breadcrumb ancestors
-            // If we have full list of folders, we can build ancestry
             if (folderId) {
                 const current = allFolders.find((f: any) => f.id === folderId);
-                setCurrentFolder(current || null);
-                // ancestors...
+                // Prevent React re-render looping by retaining the exact memory reference if IDs match
+                setCurrentFolder(prev => prev?.id === folderId ? prev : (current || null));
+
                 const trail: VaultFolder[] = [];
                 let curr = current;
                 while (curr && curr.parent_id) {
@@ -126,16 +115,15 @@ export default function VaultPicker({
         }
     }, [search, filterType]);
 
-
-
     // Sync filterType with allowedTypes prop when opening
     useEffect(() => {
         if (open) {
             setFilterType(allowedTypes);
-            loadContent(currentFolder?.id || null);
+            loadContent(currentFolder?.id || null, allowedTypes);
             setSelectedFiles([]);
         }
-    }, [open, allowedTypes, loadContent, currentFolder]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, allowedTypes]);
 
     const handleFileSelect = useCallback((file: VaultFile) => {
         if (mode === 'single') {

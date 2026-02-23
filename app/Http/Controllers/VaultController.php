@@ -22,7 +22,7 @@ class VaultController extends Controller
     public function adminPage()
     {
         // Check global permission
-        if (! auth()->user()->hasRole('Super Admin') && ! auth()->user()->hasPermission('media.view')) {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.view')) {
             abort(403);
         }
 
@@ -38,7 +38,7 @@ class VaultController extends Controller
     public function list(Request $request)
     {
         // Check global permission
-        if (! auth()->user()->hasRole('Super Admin') && ! auth()->user()->hasPermission('media.view')) {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.view')) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -76,14 +76,14 @@ class VaultController extends Controller
     public function upload(Request $request)
     {
         // Check global permission
-        if (! auth()->user()->hasRole('Super Admin') && ! auth()->user()->hasPermission('media.create')) {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.create')) {
             abort(403, 'Unauthorized');
         }
 
         $request->validate([
             'files' => 'required|array',
             'files.*' => 'file', // Max size checked in VaultService/php.ini/config
-            'folder_id' => 'nullable|string|exists:'.VaultFolder::class.',_id',
+            'folder_id' => 'nullable|string|exists:' . VaultFolder::class . ',_id',
         ]);
 
         $uploadedFiles = [];
@@ -115,6 +115,97 @@ class VaultController extends Controller
         ]);
     }
 
+    /**
+     * Save an AI-generated image (base64 data URI or remote URL) into the Vault.
+     */
+    public function saveAiImage(Request $request)
+    {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.create')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $request->validate([
+            'image' => 'required|string',   // base64 data URI OR https:// URL
+            'filename' => 'nullable|string|max:255',
+            'folder_id' => 'nullable|string|exists:' . VaultFolder::class . ',_id',
+        ]);
+
+        $imageData = $request->input('image');
+        $folderId = $request->input('folder_id');
+        $customName = $request->input('filename');
+
+        // Determine if base64 data URI or a remote URL
+        if (str_starts_with($imageData, 'data:')) {
+            // base64 data URI: data:image/png;base64,XXXX
+            if (!preg_match('/^data:(image\/[a-zA-Z+]+);base64,(.+)$/', $imageData, $matches)) {
+                return response()->json(['error' => 'Invalid image data URI.'], 422);
+            }
+            $mimeType = $matches[1];
+            $extension = explode('/', $mimeType)[1] ?? 'png';
+            $extension = $extension === 'jpeg' ? 'jpg' : $extension;
+            $binaryData = base64_decode($matches[2]);
+        } else {
+            // Remote URL (e.g. OpenAI temporary URL)
+            $parsedUrl = parse_url($imageData);
+            if (!$parsedUrl || !isset($parsedUrl['host'])) {
+                return response()->json(['error' => 'Invalid image URL format.'], 422);
+            }
+
+            // Prevent SSRF by checking if the host resolves to a private or reserved IP
+            $ip = gethostbyname($parsedUrl['host']);
+            if ($ip === $parsedUrl['host'] && !filter_var($ip, FILTER_VALIDATE_IP)) {
+                return response()->json(['error' => 'Could not resolve image host.'], 422);
+            }
+
+            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                \Illuminate\Support\Facades\Log::warning('SSRF attempt blocked in saveAiImage', [
+                    'url' => $imageData,
+                    'resolved_ip' => $ip,
+                    'user_id' => auth()->id()
+                ]);
+                return response()->json(['error' => 'Fetching from internal or reserved IP addresses is forbidden.'], 422);
+            }
+
+            try {
+                $response = \Illuminate\Support\Facades\Http::timeout(10)->get($imageData);
+                if (!$response->successful()) {
+                    return response()->json(['error' => 'Failed to download remote image. Status: ' . $response->status()], 422);
+                }
+                $binaryData = $response->body();
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Exception occurred during remote download. ' . $e->getMessage()], 422);
+            }
+
+            $extension = 'png';
+            $mimeType = 'image/png';
+        }
+
+        // Write to a temp file
+        $tmpPath = tempnam(sys_get_temp_dir(), 'ai_vault_') . '.' . $extension;
+        file_put_contents($tmpPath, $binaryData);
+
+        $filename = $customName
+            ? preg_replace('/[^a-zA-Z0-9\-_\.]/', '-', $customName) . '.' . $extension
+            : 'ai-generated-' . now()->format('Ymd-His') . '.' . $extension;
+
+        $uploadedFile = new \Illuminate\Http\UploadedFile(
+            $tmpPath,
+            $filename,
+            $mimeType,
+            \UPLOAD_ERR_OK,
+            true // test mode — skips is_uploaded_file() check
+        );
+
+        try {
+            $vaultFile = $this->vaultService->upload($uploadedFile, $folderId);
+            return response()->json(['file' => $vaultFile], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        } finally {
+            @unlink($tmpPath);
+        }
+    }
+
     public function serve(string $uuid)
     {
         $file = VaultFile::withTrashed()->where('uuid', $uuid)->firstOrFail();
@@ -133,13 +224,13 @@ class VaultController extends Controller
 
         $path = Storage::disk($diskName)->path($storagePath);
 
-        if (! file_exists($path)) {
+        if (!file_exists($path)) {
             abort(404);
         }
 
         return response()->file($path, [
             'Content-Type' => $file->mime_type,
-            'Content-Disposition' => 'inline; filename="'.$file->original_name.'"',
+            'Content-Disposition' => 'inline; filename="' . $file->original_name . '"',
         ]);
 
         /*
@@ -166,6 +257,21 @@ class VaultController extends Controller
         return response()->json(['message' => 'Renamed successfully', 'file' => $file]);
     }
 
+    public function updateAltText(Request $request, string $uuid)
+    {
+        $file = VaultFile::where('uuid', $uuid)->firstOrFail();
+
+        if (Gate::denies('update', $file)) {
+            abort(403);
+        }
+
+        $request->validate(['alt_text' => 'nullable|string|max:500']);
+
+        $file->update(['alt_text' => $request->input('alt_text')]);
+
+        return response()->json(['message' => 'Alt text updated', 'alt_text' => $file->alt_text]);
+    }
+
     public function move(Request $request, string $uuid)
     {
         $file = VaultFile::where('uuid', $uuid)->firstOrFail();
@@ -174,7 +280,7 @@ class VaultController extends Controller
             abort(403);
         }
 
-        $request->validate(['folder_id' => 'nullable|string|exists:'.VaultFolder::class.',_id']);
+        $request->validate(['folder_id' => 'nullable|string|exists:' . VaultFolder::class . ',_id']);
 
         // Check write permission on target folder
         if ($request->folder_id) {
@@ -205,7 +311,7 @@ class VaultController extends Controller
     public function trash(Request $request)
     {
         // Check global permission
-        if (! auth()->user()->hasRole('Super Admin') && ! auth()->user()->hasPermission('media.view')) {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.view')) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 

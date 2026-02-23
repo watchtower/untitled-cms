@@ -22,6 +22,8 @@ class RoleSeeder extends Seeder
             'media.edit',
             'media.delete',
             'banners.manage',
+            'ai-integrations.view',
+            'ai-integrations.edit',
         ];
 
         // 2. Create Roles and Assign Permissions

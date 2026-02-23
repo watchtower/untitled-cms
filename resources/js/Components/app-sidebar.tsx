@@ -78,6 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           { title: "Users", url: route('users.index') },
           { title: "Roles", url: route('roles.index') },
+          { title: "AI Integrations", url: route('ai-hubs.index') },
           { title: "Activity", url: route('activity-log.index') },
           { title: "Settings", url: route('settings.index') },
         ]

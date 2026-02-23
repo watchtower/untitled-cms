@@ -30,6 +30,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/Components/ui/dialog';
+import { Textarea } from '@/Components/ui/textarea';
+import { Label } from '@/Components/ui/label';
 import { VaultFile, VaultFolder } from '@/types/vault';
 import VaultThumbnail from '@/Components/Vault/VaultThumbnail';
 import VaultBreadcrumb from '@/Components/Vault/VaultBreadcrumb';
@@ -48,7 +50,11 @@ import {
     Move,
     LayoutGrid,
     List,
-    Check
+    Check,
+    Sparkles,
+    ImagePlus,
+    Wand2,
+    Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -111,6 +117,87 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
     const [renameName, setRenameName] = useState('');
     const [renameTarget, setRenameTarget] = useState<'file' | 'folder' | null>(null);
     const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+    // AI Features State
+    const [isGeneratingAlt, setIsGeneratingAlt] = useState(false);
+    const [generatedAltText, setGeneratedAltText] = useState<string | null>(null);
+    const [isImageGenOpen, setIsImageGenOpen] = useState(false);
+    const [imageGenPrompt, setImageGenPrompt] = useState('');
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+    const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+
+    const handleGenerateAltText = async (fileUuid: string) => {
+        setIsGeneratingAlt(true);
+        setGeneratedAltText(null);
+        try {
+            const response = await axios.post('/ai/generate-alt-text', { vault_file_uuid: fileUuid });
+            setGeneratedAltText(response.data.alt_text);
+            toast.success('Alt text generated!');
+        } catch (e: any) {
+            toast.error(e.response?.data?.error || 'Failed to generate alt text. Check your active AI Hub.');
+        } finally {
+            setIsGeneratingAlt(false);
+        }
+    };
+
+    // Move dialog state
+    const [isMoveOpen, setIsMoveOpen] = useState(false);
+    const [moveTarget, setMoveTarget] = useState<string | null>(null); // selected folder id
+
+    const [isSavingImage, setIsSavingImage] = useState(false);
+
+    const handleMove = async () => {
+        if (!selectedFiles.length) return;
+        try {
+            await Promise.all(
+                selectedFiles.map(f =>
+                    axios.patch(route('vault.file.move', f.uuid), { folder_id: moveTarget || null })
+                )
+            );
+            const dest = moveTarget ? folders.find(f => f.id === moveTarget)?.name || 'folder' : 'Root';
+            toast.success(`Moved ${selectedFiles.length} item(s) to ${dest}`);
+            setIsMoveOpen(false);
+            setSelectedFiles([]);
+            setMoveTarget(null);
+            refresh(currentFolder?.id || null);
+        } catch (e: any) {
+            toast.error(e.response?.data?.message || 'Move failed.');
+        }
+    };
+
+    const handleGenerateImage = async () => {
+        if (!imageGenPrompt.trim()) return;
+        setIsGeneratingImage(true);
+        setGeneratedImageUrl(null);
+        try {
+            // Step 1: Generate the image
+            const genResponse = await axios.post('/ai/generate-image', { prompt: imageGenPrompt });
+            const imageData = genResponse.data.image_url;
+            setGeneratedImageUrl(imageData);
+            toast.success('Image generated — saving to Vault...');
+
+            // Step 2: Auto-save to vault at the current folder
+            setIsSavingImage(true);
+            const saveResponse = await axios.post('/vault/save-ai-image', {
+                image: imageData,
+                folder_id: currentFolder?.id || null,
+                filename: `ai-${imageGenPrompt.trim().slice(0, 40).replace(/[^a-zA-Z0-9]/g, '-')}`,
+            });
+
+            toast.success(`Saved to Vault: ${saveResponse.data.file?.original_name || 'ai-generated.png'}`);
+
+            // Step 3: Close dialog and refresh vault
+            setIsImageGenOpen(false);
+            setImageGenPrompt('');
+            setGeneratedImageUrl(null);
+            refresh(currentFolder?.id || null);
+        } catch (e: any) {
+            toast.error(e.response?.data?.error || 'Generation or save failed.');
+        } finally {
+            setIsGeneratingImage(false);
+            setIsSavingImage(false);
+        }
+    };
 
     // Trash Support
     const [isTrashView, setIsTrashView] = useState(false);
@@ -345,6 +432,15 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                         >
                             <Upload className="h-4 w-4" />
                             Upload Files
+                        </Button>
+                        <Button
+                            onClick={() => { setIsImageGenOpen(true); setGeneratedImageUrl(null); setImageGenPrompt(''); }}
+                            variant="outline"
+                            size="sm"
+                            className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                        >
+                            <Wand2 className="h-4 w-4" />
+                            AI Generate Image
                         </Button>
                     </div>
 
@@ -642,6 +738,59 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                 <p className="text-sm text-muted-foreground uppercase">{selectedFiles[0].extension}</p>
                                             </div>
 
+                                            {/* AI Alt-Text Generator — only for images */}
+                                            {selectedFiles[0].mime_type.startsWith('image/') && (() => {
+                                                const currentAlt = generatedAltText ?? (selectedFiles[0].alt_text || '');
+                                                return (
+                                                    <div className="space-y-2 bg-primary/5 border border-primary/20 rounded-lg p-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <Sparkles className="h-4 w-4 text-primary" />
+                                                                <span className="text-xs font-medium text-primary">Alt Text</span>
+                                                            </div>
+                                                        </div>
+                                                        <Textarea
+                                                            className="text-xs min-h-[60px] resize-none"
+                                                            placeholder="Describe this image for accessibility…"
+                                                            value={currentAlt}
+                                                            onChange={(e) => setGeneratedAltText(e.target.value)}
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="flex-1 h-7 text-xs"
+                                                                disabled={isGeneratingAlt}
+                                                                onClick={() => handleGenerateAltText(selectedFiles[0].uuid)}
+                                                            >
+                                                                {isGeneratingAlt ? (
+                                                                    <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Generating...</>
+                                                                ) : (
+                                                                    <><Sparkles className="mr-1 h-3 w-3" />AI Generate</>
+                                                                )}
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                className="flex-1 h-7 text-xs"
+                                                                disabled={!currentAlt.trim()}
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        await axios.patch(route('vault.file.alt_text', selectedFiles[0].uuid), { alt_text: currentAlt });
+                                                                        toast.success('Alt text saved!');
+                                                                        refresh(currentFolder?.id || null);
+                                                                    } catch {
+                                                                        toast.error('Failed to save alt text.');
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Save
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+
                                             <div className="grid gap-4 py-4 border-y text-sm">
                                                 <div className="grid grid-cols-2">
                                                     <span className="text-muted-foreground">Size</span>
@@ -713,6 +862,13 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                     </Button>
                                                 )}
                                                 <Button
+                                                    variant="outline"
+                                                    className="w-full"
+                                                    onClick={() => { setMoveTarget(null); setIsMoveOpen(true); }}
+                                                >
+                                                    <Move className="mr-2 h-4 w-4" /> Move to Folder
+                                                </Button>
+                                                <Button
                                                     variant="destructive"
                                                     onClick={() => {
                                                         if (confirm(`Are you sure you want to delete these ${selectedFiles.length} items?`)) {
@@ -771,6 +927,134 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                 onUploadComplete={() => refresh(currentFolder?.id || null)}
                 maxUploadSize={maxUploadSize}
             />
+
+            {/* Move to Folder Dialog */}
+            <Dialog open={isMoveOpen} onOpenChange={setIsMoveOpen}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Move className="h-5 w-5 text-primary" />
+                            Move {selectedFiles.length} Item{selectedFiles.length !== 1 ? 's' : ''} to Folder
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-2 max-h-72 overflow-y-auto py-2">
+                        {/* Root option */}
+                        <button
+                            onClick={() => setMoveTarget(null)}
+                            className={cn(
+                                'w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-left transition-colors',
+                                moveTarget === null
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'hover:bg-muted'
+                            )}
+                        >
+                            <Folder className="h-4 w-4 flex-shrink-0" />
+                            <span className="font-medium">Root</span>
+                        </button>
+                        {/* All folders */}
+                        {folders.map(folder => (
+                            <button
+                                key={folder.id}
+                                onClick={() => setMoveTarget(folder.id)}
+                                disabled={selectedFiles.some(f => f.folder_id === folder.id)}
+                                className={cn(
+                                    'w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed',
+                                    moveTarget === folder.id
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'hover:bg-muted'
+                                )}
+                            >
+                                <Folder className="h-4 w-4 flex-shrink-0" />
+                                {folder.name}
+                            </button>
+                        ))}
+                        {folders.length === 0 && (
+                            <p className="text-sm text-muted-foreground text-center py-4">No folders exist yet.</p>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsMoveOpen(false)}>Cancel</Button>
+                        <Button onClick={handleMove}>
+                            <Move className="mr-2 h-4 w-4" /> Move Here
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Text-to-Image Dialog */}
+            <Dialog open={isImageGenOpen} onOpenChange={setIsImageGenOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Wand2 className="h-5 w-5 text-primary" />
+                            AI Image Generation
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="image-gen-prompt">Describe the image you want to create</Label>
+                            <Textarea
+                                id="image-gen-prompt"
+                                placeholder="e.g. A minimalist product photo of a luxury watch on a marble surface, studio lighting, 4K..."
+                                value={imageGenPrompt}
+                                onChange={(e) => setImageGenPrompt(e.target.value)}
+                                rows={3}
+                                className="resize-none"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleGenerateImage();
+                                    }
+                                }}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Uses your <strong>active AI Hub</strong> to generate an image from your description.
+                                Supported providers: <strong>OpenAI</strong> (DALL-E 3), <strong>Gemini</strong> (Imagen 3), and <strong>Stability AI</strong> (SDXL).
+                            </p>
+                        </div>
+
+                        {generatedImageUrl && (
+                            <div className="space-y-3">
+                                <div className="rounded-lg overflow-hidden border aspect-square max-h-80 flex items-center justify-center bg-muted/20">
+                                    <img src={generatedImageUrl} alt="AI Generated" className="object-contain w-full h-full" />
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1"
+                                        onClick={() => window.open(generatedImageUrl, '_blank')}
+                                    >
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Open Full Size
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        className="flex-1"
+                                        onClick={() => { setGeneratedImageUrl(null); setImageGenPrompt(''); }}
+                                    >
+                                        Generate Another
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsImageGenOpen(false)}>Close</Button>
+                        <Button
+                            onClick={handleGenerateImage}
+                            disabled={isGeneratingImage || isSavingImage || !imageGenPrompt.trim()}
+                        >
+                            {isGeneratingImage ? (
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</>
+                            ) : isSavingImage ? (
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving to Vault...</>
+                            ) : (
+                                <><Sparkles className="mr-2 h-4 w-4" />Generate &amp; Save to Vault</>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AuthenticatedLayout>
     );
 }

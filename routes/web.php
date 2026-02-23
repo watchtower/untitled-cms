@@ -38,9 +38,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('pages', \App\Http\Controllers\PageController::class);
 
     Route::resource('banners', \App\Http\Controllers\BannerController::class);
+    Route::resource('ai-hubs', \App\Http\Controllers\AiHubController::class)->only(['index', 'update']);
+    Route::post('/ai-hubs/{aiHub}/activate', [\App\Http\Controllers\AiHubController::class, 'activate'])->name('ai-hubs.activate');
 
     Route::post('/ai/generate-seo', [\App\Http\Controllers\AiController::class, 'generateSeo'])->name('ai.seo');
     Route::post('/ai/generate-alt-text', [\App\Http\Controllers\AiController::class, 'generateAltText'])->name('ai.alt-text');
+    Route::post('/ai/generate', [\App\Http\Controllers\AiController::class, 'generate'])->name('ai.generate');
+    Route::post('/ai/generate-image', [\App\Http\Controllers\AiController::class, 'generateImage'])->name('ai.generate-image');
 
     Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-log.index');
 
@@ -53,12 +57,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/files', [\App\Http\Controllers\VaultController::class, 'list'])->name('files.list');
         Route::get('/trash', [\App\Http\Controllers\VaultController::class, 'trash'])->name('trash.list');
         Route::post('/upload', [\App\Http\Controllers\VaultController::class, 'upload'])->name('upload');
+        Route::post('/save-ai-image', [\App\Http\Controllers\VaultController::class, 'saveAiImage'])->name('save-ai-image');
         Route::get('/file/{uuid}', [\App\Http\Controllers\VaultController::class, 'serve'])->name('file.serve');
         Route::delete('/file/{uuid}', [\App\Http\Controllers\VaultController::class, 'destroy'])->name('file.destroy');
         Route::post('/file/{uuid}/restore', [\App\Http\Controllers\VaultController::class, 'restore'])->name('file.restore');
         Route::delete('/file/{uuid}/force', [\App\Http\Controllers\VaultController::class, 'forceDestroy'])->name('file.force_destroy');
         Route::patch('/file/{uuid}/rename', [\App\Http\Controllers\VaultController::class, 'rename'])->name('file.rename');
         Route::patch('/file/{uuid}/move', [\App\Http\Controllers\VaultController::class, 'move'])->name('file.move');
+        Route::patch('/file/{uuid}/alt-text', [\App\Http\Controllers\VaultController::class, 'updateAltText'])->name('file.alt_text');
 
         Route::get('/folders', [\App\Http\Controllers\VaultFolderController::class, 'list'])->name('folders.list');
         Route::post('/folders', [\App\Http\Controllers\VaultFolderController::class, 'store'])->name('folders.store');
@@ -67,7 +73,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // Public Routes (Must be last to allow {slug} wildcard)
 Route::controller(\App\Http\Controllers\PublicController::class)->group(function () {

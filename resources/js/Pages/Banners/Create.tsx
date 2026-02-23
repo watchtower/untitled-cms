@@ -11,6 +11,9 @@ import { FormSplitLayout, StickyFormFooter } from '@/Components/Common/FormLayou
 import { Trash2, Plus, GripVertical, Image as ImageIcon } from 'lucide-react';
 /* @ts-ignore */
 import ImagePicker from '@/Components/ImagePicker';
+import { AiInput } from '@/Components/Ai/AiInput';
+import { AiAssistButton } from '@/Components/Ai/AiAssistButton';
+import { toast } from 'sonner';
 
 export default function Create({ auth }: any) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
@@ -160,12 +163,34 @@ export default function Create({ auth }: any) {
                                     <Card key={index} className="relative overflow-hidden">
                                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/20" />
                                         <CardHeader className="pb-3 bg-muted/40 flex flex-row items-center justify-between space-y-0">
-                                            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                                <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs text-muted-foreground">
-                                                    {index + 1}
-                                                </div>
-                                                Slide #{index + 1}
-                                            </CardTitle>
+                                            <div className="flex items-center gap-4">
+                                                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                                    <div className="bg-background border rounded-full w-6 h-6 flex items-center justify-center text-xs text-muted-foreground">
+                                                        {index + 1}
+                                                    </div>
+                                                    Slide #{index + 1}
+                                                </CardTitle>
+                                                <AiAssistButton
+                                                    buttonText="Auto-Generate Content"
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    className="h-7 text-xs"
+                                                    aiPromptPlaceholder="e.g. A summer sale on shoes..."
+                                                    systemInstruction='You are an expert copywriter. Generate a banner slide title, subtitle, and short caption. Output MUST be strictly valid JSON only, example: {"title": "...", "subtitle": "...", "caption": "..."}. Do NOT include markdown fences or any other text.'
+                                                    onGeneration={(text) => {
+                                                        try {
+                                                            const jsonStr = text.replace(/```(?:json)?|```/g, '').trim();
+                                                            const parsed = JSON.parse(jsonStr);
+                                                            if (parsed.title) updateSlide(index, 'title', parsed.title);
+                                                            if (parsed.subtitle) updateSlide(index, 'subtitle', parsed.subtitle);
+                                                            if (parsed.caption) updateSlide(index, 'caption', parsed.caption);
+                                                            toast.success('Banner content generated!');
+                                                        } catch (e) {
+                                                            toast.error(`Failed to parse AI response: ${text.substring(0, 60)}`);
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
                                             <Button
                                                 type="button"
                                                 variant="ghost"
@@ -210,26 +235,32 @@ export default function Create({ auth }: any) {
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div className="space-y-2">
                                                     <Label>Title (Overlay)</Label>
-                                                    <Input
+                                                    <AiInput
                                                         value={slide.title}
                                                         onChange={(e) => updateSlide(index, 'title', e.target.value)}
-                                                        placeholder="Slide Title"
+                                                        onGeneration={(text) => updateSlide(index, 'title', text)}
+                                                        placeholder="Slide Title (generated via AI)"
+                                                        aiPromptLabel="What should this title be about?"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Subtitle</Label>
-                                                    <Input
+                                                    <AiInput
                                                         value={slide.subtitle}
                                                         onChange={(e) => updateSlide(index, 'subtitle', e.target.value)}
+                                                        onGeneration={(text) => updateSlide(index, 'subtitle', text)}
                                                         placeholder="Slide Subtitle"
+                                                        aiPromptLabel="What should the subtitle emphasize?"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Caption</Label>
-                                                    <Input
+                                                    <AiInput
                                                         value={slide.caption}
                                                         onChange={(e) => updateSlide(index, 'caption', e.target.value)}
+                                                        onGeneration={(text) => updateSlide(index, 'caption', text)}
                                                         placeholder="Small text"
+                                                        aiPromptLabel="Write a short call to action caption."
                                                     />
                                                 </div>
                                             </div>

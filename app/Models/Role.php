@@ -8,7 +8,7 @@ class Role extends Model
 {
     protected $connection = 'mongodb';
 
-    protected $fillable = ['name', 'slug', 'permissions', 'is_active'];
+    protected $fillable = ['name', 'slug', 'description', 'permissions', 'is_active'];
 
     protected $casts = [
         'is_active' => 'boolean',

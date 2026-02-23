@@ -18,6 +18,9 @@ import { CharacterCounter } from '@/Components/CharacterCounter';
 import { UrlPreview } from '@/Components/UrlPreview';
 import { Sparkles, Loader2, ArrowRight, Maximize2, Minimize2, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/table";
+import { AiInput } from '@/Components/Ai/AiInput';
+import { AiTextarea } from '@/Components/Ai/AiTextarea';
+import { AiAssistButton } from '@/Components/Ai/AiAssistButton';
 
 interface PageModel {
     id: string;
@@ -75,7 +78,6 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
     });
 
     const [lockedSlug, setLockedSlug] = useState(true);
-    const [isGeneratingAI, setIsGeneratingAI] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [editorHeight, setEditorHeight] = useState(() => {
         const saved = localStorage.getItem('page_editor_height');
@@ -122,31 +124,6 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
         if (confirm('Are you sure you want to delete this page?')) {
             router.delete(route('pages.destroy', page.id));
         }
-    };
-
-    // Auto-generate AI SEO with loading state
-    const generateSEO = () => {
-        if (!data.title || !data.content) {
-            alert('Please enter a title and content first.');
-            return;
-        }
-        setIsGeneratingAI(true);
-        // @ts-ignore
-        axios.post(route('ai.seo'), {
-            title: data.title,
-            content: data.content
-        }).then((response: any) => {
-            setData(data => ({
-                ...data,
-                seo_title: response.data.seo_title,
-                seo_description: response.data.seo_description
-            }));
-        }).catch((error: any) => {
-            console.error(error);
-            alert('Failed to generate SEO metadata.');
-        }).finally(() => {
-            setIsGeneratingAI(false);
-        });
     };
 
     // Format last saved time
@@ -235,11 +212,13 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                     <CardContent className="space-y-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="seo_title">SEO Title</Label>
-                                            <Input
+                                            <AiInput
                                                 id="seo_title"
                                                 value={data.seo_title}
                                                 onChange={(e) => setData('seo_title', e.target.value)}
+                                                onGeneration={(text) => setData('seo_title', text)}
                                                 placeholder={data.title || "Page Title"}
+                                                aiPromptLabel="What should the SEO title emphasize?"
                                             />
                                             <CharacterCounter
                                                 current={data.seo_title.length}
@@ -250,40 +229,22 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="seo_description">Meta Description</Label>
-                                            <Textarea
+                                            <AiTextarea
                                                 id="seo_description"
                                                 value={data.seo_description}
                                                 onChange={(e) => setData('seo_description', e.target.value)}
+                                                onGeneration={(text) => setData('seo_description', text)}
                                                 placeholder="Brief description for search results"
+                                                aiPromptLabel="What should the meta description highlight?"
                                                 className="h-24 resize-none"
                                             />
                                             <CharacterCounter
                                                 current={data.seo_description.length}
-                                                ideal={{ min: 150, max: 160 }}
+                                                ideal={{ min: 140, max: 160 }}
                                                 max={200}
                                             />
                                             {errors.seo_description && <p className="text-sm text-destructive">{errors.seo_description}</p>}
                                         </div>
-
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className="w-full"
-                                            onClick={generateSEO}
-                                            disabled={isGeneratingAI || !data.title || !data.content}
-                                        >
-                                            {isGeneratingAI ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                                    Generating...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Sparkles className="mr-2 h-3 w-3" /> Generate AI Metadata
-                                                </>
-                                            )}
-                                        </Button>
 
                                         <Separator className="my-2" />
 
@@ -342,12 +303,14 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                 <CardContent className="space-y-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="title">Page Title</Label>
-                                        <Input
+                                        <AiInput
                                             id="title"
                                             value={data.title}
                                             onChange={(e) => setData('title', e.target.value)}
+                                            onGeneration={(text) => setData('title', text)}
                                             className="text-lg font-medium"
                                             placeholder="Enter page title"
+                                            aiPromptLabel="What should the page title be about?"
                                             required
                                         />
                                         {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
@@ -367,8 +330,25 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <Label>Content</Label>
+                                        <div className="flex items-center justify-between pb-1">
+                                            <div className="flex items-center gap-4">
+                                                <Label>Content</Label>
+                                                <AiAssistButton
+                                                    onGeneration={(text) => {
+                                                        // Try to insert directly into the active TinyMCE instance if available
+                                                        if (typeof window !== 'undefined' && window.tinymce && window.tinymce.activeEditor) {
+                                                            const editor = window.tinymce.activeEditor;
+                                                            const spacing = editor.getContent() ? '<br><br>' : '';
+                                                            editor.execCommand('mceInsertContent', false, spacing + text);
+                                                        } else {
+                                                            // Fallback to React state append
+                                                            const spacing = data.content ? '<br><br>' : '';
+                                                            setData('content', data.content + spacing + text);
+                                                        }
+                                                    }}
+                                                    aiPromptPlaceholder="e.g. Write a detailed introduction about..."
+                                                />
+                                            </div>
                                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                 <button
                                                     type="button"

@@ -3,6 +3,8 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { useEffect, useRef, useState } from 'react';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 interface EditorProps {
     value: string;
@@ -88,6 +90,7 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
                     'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
                     'insertdatetime', 'media', 'table', 'help', 'wordcount'
                 ],
+                contextmenu: 'link image table | ai_menu',
                 toolbar: 'undo redo image | blocks | ' +
                     'bold italic | alignleft aligncenter alignright | ' +
                     'bullist numlist outdent indent | removeformat fullscreen',
@@ -109,6 +112,64 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
                     editor.on('Change', () => {
                         const content = editor.getContent();
                         onChangeRef.current(content);
+                    });
+
+                    // Add Custom AI Context Menu Items
+                    editor.ui.registry.addMenuItem('ai_rewrite', {
+                        text: '🪄 AI: Rewrite Selection',
+                        icon: 'highlight-bg-color',
+                        onAction: async () => {
+                            const selectedText = editor.selection.getContent({ format: 'text' });
+                            if (!selectedText) {
+                                toast.error('Please select some text to rewrite first.');
+                                return;
+                            }
+
+                            toast.loading('AI is rewriting...', { id: 'ai-gen' });
+                            try {
+                                const response = await axios.post('/ai/generate', {
+                                    prompt: `Rewrite the following text to be more professional, engaging, and concise. Do NOT add any extra conversational filler, just return the rewritten text directly:\n\n"${selectedText}"`
+                                });
+                                if (response.data?.generated_text) {
+                                    editor.execCommand('mceInsertContent', false, response.data.generated_text);
+                                    toast.success('Text rewritten successfully', { id: 'ai-gen' });
+                                }
+                            } catch (e: any) {
+                                toast.error('AI Generation failed. Check API key.', { id: 'ai-gen' });
+                            }
+                        }
+                    });
+
+                    editor.ui.registry.addMenuItem('ai_expand', {
+                        text: '➕ AI: Expand Selection',
+                        icon: 'plus',
+                        onAction: async () => {
+                            const selectedText = editor.selection.getContent({ format: 'text' });
+                            if (!selectedText) {
+                                toast.error('Please select some text to expand first.');
+                                return;
+                            }
+
+                            toast.loading('AI is expanding...', { id: 'ai-gen' });
+                            try {
+                                const response = await axios.post('/ai/generate', {
+                                    prompt: `Expand on the following text by adding 2-3 more sentences of relevant, detailed context. Do NOT add any extra conversational filler, just return the expanded text directly:\n\n"${selectedText}"`
+                                });
+                                if (response.data?.generated_text) {
+                                    editor.execCommand('mceInsertContent', false, response.data.generated_text);
+                                    toast.success('Text expanded successfully', { id: 'ai-gen' });
+                                }
+                            } catch (e: any) {
+                                toast.error('AI Generation failed. Check API key.', { id: 'ai-gen' });
+                            }
+                        }
+                    });
+
+                    editor.ui.registry.addContextMenu('ai_menu', {
+                        update: (element: any) => {
+                            // Only show if text is selected
+                            return editor.selection.isCollapsed() ? '' : 'ai_rewrite ai_expand';
+                        }
                     });
                 },
                 file_picker_callback: (callback: any, value: any, meta: any) => {
