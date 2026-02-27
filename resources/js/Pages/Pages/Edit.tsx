@@ -151,25 +151,59 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                 {data.status === 'published' ? 'Published' : 'Draft'}
                             </Badge>
                         </div>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            {isExpanded ? (
-                                <>
-                                    <Minimize2 className="h-4 w-4 mr-2" />
-                                    Collapse Sidebar
-                                </>
-                            ) : (
-                                <>
-                                    <Maximize2 className="h-4 w-4 mr-2" />
-                                    Expand Content
-                                </>
-                            )}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    window.open(route('public.page', page.slug), '_blank');
+                                }}
+                            >
+                                View Live
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    fetch(route('pages.show', page.id), {
+                                        headers: {
+                                            'Accept': 'text/markdown'
+                                        }
+                                    }).then(res => res.text()).then(text => {
+                                        // Open a new window and write the markdown content into it
+                                        const newWindow = window.open('', '_blank');
+                                        if (newWindow) {
+                                            newWindow.document.write(`<pre style="word-wrap: break-word; white-space: pre-wrap;">${text}</pre>`);
+                                            newWindow.document.title = `${page.title} - Markdown Preview`;
+                                            newWindow.document.close();
+                                        }
+                                    });
+                                }}
+                            >
+                                View Markdown
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                {isExpanded ? (
+                                    <>
+                                        <Minimize2 className="h-4 w-4 mr-2" />
+                                        Collapse Sidebar
+                                    </>
+                                ) : (
+                                    <>
+                                        <Maximize2 className="h-4 w-4 mr-2" />
+                                        Expand Content
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
 
                     <FormSplitLayout

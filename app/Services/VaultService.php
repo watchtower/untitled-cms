@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\VaultAuditLog;
 use App\Models\VaultFile;
 use App\Models\VaultFolder;
+use App\Jobs\OptimizeVaultImageJob;
 use App\Vault\Pipes\DetectDoubleExtension;
 use App\Vault\Pipes\GenerateUuid;
 use App\Vault\Pipes\SandboxedScan;
@@ -25,7 +26,7 @@ class VaultService
         $pipes = [
             DetectDoubleExtension::class,
             ValidateMimeType::class,
-            // SandboxedScan::class, // Optional ClamAV
+                // SandboxedScan::class, // Optional ClamAV
             SanitizeImage::class,
             GenerateUuid::class,
             StoreMetadata::class,
@@ -34,7 +35,7 @@ class VaultService
         // Ensure folder exists if provided
         if ($folderId) {
             $folder = VaultFolder::find($folderId);
-            if (! $folder) {
+            if (!$folder) {
                 throw new \InvalidArgumentException('Folder not found.');
             }
         }
@@ -55,6 +56,9 @@ class VaultService
             ->then(function ($payload) {
                 $file = $payload['created_file'];
                 $this->audit('file.upload', $file, null, $file->toArray());
+
+                // Dispatch async WebP conversion job for supported images
+                OptimizeVaultImageJob::dispatch($file);
 
                 return $file;
             });
@@ -108,7 +112,7 @@ class VaultService
 
         // Secure the file by appending .trashed so it's no longer publicly accessible
         if (Storage::disk($diskName)->exists($file->storage_path)) {
-            Storage::disk($diskName)->move($file->storage_path, $file->storage_path.'.trashed');
+            Storage::disk($diskName)->move($file->storage_path, $file->storage_path . '.trashed');
         }
 
         $file->delete(); // Soft delete
@@ -120,8 +124,8 @@ class VaultService
         $diskName = $file->is_public ? 'public' : 'vault';
 
         // Revert the .trashed extension
-        if (Storage::disk($diskName)->exists($file->storage_path.'.trashed')) {
-            Storage::disk($diskName)->move($file->storage_path.'.trashed', $file->storage_path);
+        if (Storage::disk($diskName)->exists($file->storage_path . '.trashed')) {
+            Storage::disk($diskName)->move($file->storage_path . '.trashed', $file->storage_path);
         }
 
         $file->restore();
@@ -134,8 +138,8 @@ class VaultService
         $diskName = $file->is_public ? 'public' : 'vault';
 
         // Remove the physical file (it might have .trashed appended if it was soft-deleted)
-        if (Storage::disk($diskName)->exists($file->storage_path.'.trashed')) {
-            Storage::disk($diskName)->delete($file->storage_path.'.trashed');
+        if (Storage::disk($diskName)->exists($file->storage_path . '.trashed')) {
+            Storage::disk($diskName)->delete($file->storage_path . '.trashed');
         } elseif (Storage::disk($diskName)->exists($file->storage_path)) {
             // Fallback just in case deleting an item that hasn't been soft-deleted first
             Storage::disk($diskName)->delete($file->storage_path);
@@ -189,7 +193,7 @@ class VaultService
                 'user_agent' => request()->userAgent(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to write audit log: '.$e->getMessage());
+            Log::error('Failed to write audit log: ' . $e->getMessage());
         }
     }
 
@@ -199,9 +203,9 @@ class VaultService
         if ($parentId) {
             $parent = VaultFolder::find($parentId);
 
-            return $parent ? $parent->path_slug.'/'.$slug : '/'.$slug;
+            return $parent ? $parent->path_slug . '/' . $slug : '/' . $slug;
         }
 
-        return '/'.$slug;
+        return '/' . $slug;
     }
 }

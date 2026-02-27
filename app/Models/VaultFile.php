@@ -31,6 +31,10 @@ class VaultFile extends Model
         'width',
         'height',
         'alt_text',
+        'optimized_path',
+        'optimized_size',
+        'is_optimized',
+        'use_original',
     ];
 
     protected $casts = [
@@ -38,6 +42,9 @@ class VaultFile extends Model
         'is_public' => 'boolean',
         'width' => 'integer',
         'height' => 'integer',
+        'optimized_size' => 'integer',
+        'is_optimized' => 'boolean',
+        'use_original' => 'boolean',
     ];
 
     public function folder()
@@ -52,8 +59,14 @@ class VaultFile extends Model
 
     public function getUrlAttribute()
     {
-        if ($this->is_public && ! $this->trashed()) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->storage_path);
+        $path = $this->storage_path;
+
+        if ($this->is_optimized && !$this->use_original && $this->optimized_path) {
+            $path = $this->optimized_path;
+        }
+
+        if ($this->is_public && !$this->trashed()) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
         }
 
         // Fallback for private files and trashed files

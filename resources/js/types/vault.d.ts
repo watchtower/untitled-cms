@@ -12,6 +12,10 @@ export interface VaultFile {
     width?: number;
     height?: number;
     alt_text?: string;
+    optimized_path?: string | null;
+    optimized_size?: number | null;
+    is_optimized?: boolean;
+    use_original?: boolean;
 }
 
 export interface VaultFolder {

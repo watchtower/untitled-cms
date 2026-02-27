@@ -63,17 +63,7 @@ export default function Login({
                             </div>
 
                             <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
-                                    {canResetPassword && (
-                                        <Link
-                                            href={route('password.request')}
-                                            className="ml-auto text-sm underline-offset-4 hover:underline"
-                                        >
-                                            Forgot your password?
-                                        </Link>
-                                    )}
-                                </div>
+                                <Label htmlFor="password">Password</Label>
                                 <Input
                                     id="password"
                                     type="password"
@@ -82,6 +72,16 @@ export default function Login({
                                     required
                                 />
                                 {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
+                                {canResetPassword && (
+                                    <div className="flex justify-end mt-1">
+                                        <Link
+                                            href={route('password.request')}
+                                            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+                                        >
+                                            Forgot your password?
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
 
                             <Button type="submit" className="w-full" disabled={processing}>

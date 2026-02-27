@@ -54,10 +54,12 @@ import {
     Sparkles,
     ImagePlus,
     Wand2,
-    Loader2
+    Loader2,
+    Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/Components/ui/switch';
 
 // Info Popover Component
 function VaultFolderInfoPopover({ folder, side = "right" }: { folder: VaultFolder, side?: "left" | "right" | "top" | "bottom" }) {
@@ -655,7 +657,14 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                     >
                                                         <div className="relative h-10 w-10 shrink-0 bg-muted/20 border rounded flex items-center justify-center overflow-hidden">
                                                             {file.mime_type.startsWith('image/') && file.url ? (
-                                                                <img src={file.url} alt={file.original_name} className="object-cover w-full h-full" />
+                                                                <>
+                                                                    <img src={file.url} alt={file.original_name} className="object-cover w-full h-full" />
+                                                                    {file.is_optimized && !file.use_original && (
+                                                                        <div className="absolute top-1 right-1 bg-black/60 backdrop-blur-sm rounded p-0.5 shadow-sm">
+                                                                            <Zap className="h-3 w-3 text-amber-400 fill-amber-400" />
+                                                                        </div>
+                                                                    )}
+                                                                </>
                                                             ) : (
                                                                 <VaultFileIcon mimeType={file.mime_type} className="h-6 w-6 text-muted-foreground" />
                                                             )}
@@ -793,9 +802,24 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
 
                                             <div className="grid gap-4 py-4 border-y text-sm">
                                                 <div className="grid grid-cols-2">
-                                                    <span className="text-muted-foreground">Size</span>
+                                                    <span className="text-muted-foreground">Original Size</span>
                                                     <span>{(selectedFiles[0].size_bytes / 1024).toFixed(1)} KB</span>
                                                 </div>
+
+                                                {selectedFiles[0].is_optimized && selectedFiles[0].optimized_size && (
+                                                    <div className="grid grid-cols-2">
+                                                        <span className="text-muted-foreground">Optimized (WebP)</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                                                                {(selectedFiles[0].optimized_size / 1024).toFixed(1)} KB
+                                                            </span>
+                                                            <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-sm">
+                                                                -{Math.round(((selectedFiles[0].size_bytes - selectedFiles[0].optimized_size) / selectedFiles[0].size_bytes) * 100)}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 <div className="grid grid-cols-2">
                                                     <span className="text-muted-foreground">Type</span>
                                                     <span className="truncate" title={selectedFiles[0].mime_type}>{selectedFiles[0].mime_type}</span>
@@ -808,6 +832,52 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                     <div className="grid grid-cols-2">
                                                         <span className="text-muted-foreground">Dimensions</span>
                                                         <span>{selectedFiles[0].width} x {selectedFiles[0].height}</span>
+                                                    </div>
+                                                )}
+
+                                                {/* Optimization Settings (Only for optimized images) */}
+                                                {selectedFiles[0].is_optimized && (
+                                                    <div className="pt-4 mt-2 border-t">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="space-y-0.5">
+                                                                <Label className="text-sm font-medium flex items-center gap-1.5">
+                                                                    <Zap className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                                                                    Serve Optimized
+                                                                </Label>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Load WebP format instead of original
+                                                                </p>
+                                                            </div>
+                                                            <Switch
+                                                                checked={!selectedFiles[0].use_original}
+                                                                onCheckedChange={async (checked) => {
+                                                                    try {
+                                                                        const res = await axios.patch(route('vault.file.toggle_optimization', selectedFiles[0].uuid), {
+                                                                            use_original: !checked
+                                                                        });
+
+                                                                        // Update local state without full refresh
+                                                                        const updatedFiles = [...files];
+                                                                        const fileIdx = updatedFiles.findIndex(f => f.id === selectedFiles[0].id);
+                                                                        if (fileIdx > -1) {
+                                                                            updatedFiles[fileIdx] = {
+                                                                                ...updatedFiles[fileIdx],
+                                                                                use_original: !checked,
+                                                                                url: res.data.url
+                                                                            };
+                                                                            setFiles(updatedFiles);
+                                                                            setSelectedFiles([updatedFiles[fileIdx]]);
+                                                                            if (lastSelectedFile?.id === selectedFiles[0].id) {
+                                                                                setLastSelectedFile(updatedFiles[fileIdx]);
+                                                                            }
+                                                                        }
+                                                                        toast.success(checked ? 'Serving optimized WebP' : 'Serving original image');
+                                                                    } catch (e: any) {
+                                                                        toast.error('Failed to change optimization setting');
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>

@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/file/{uuid}/rename', [\App\Http\Controllers\VaultController::class, 'rename'])->name('file.rename');
         Route::patch('/file/{uuid}/move', [\App\Http\Controllers\VaultController::class, 'move'])->name('file.move');
         Route::patch('/file/{uuid}/alt-text', [\App\Http\Controllers\VaultController::class, 'updateAltText'])->name('file.alt_text');
+        Route::patch('/file/{uuid}/toggle-optimization', [\App\Http\Controllers\VaultController::class, 'toggleOptimization'])->name('file.toggle_optimization');
 
         Route::get('/folders', [\App\Http\Controllers\VaultFolderController::class, 'list'])->name('folders.list');
         Route::post('/folders', [\App\Http\Controllers\VaultFolderController::class, 'store'])->name('folders.store');

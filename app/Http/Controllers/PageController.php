@@ -84,9 +84,38 @@ class PageController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        // Preview or public view logic
+        $page = Page::findOrFail($id);
+        $this->authorize('view', $page);
+
+        if ($request->prefers(['text/html', 'text/markdown']) === 'text/markdown') {
+            $converter = new \League\HTMLToMarkdown\HtmlConverter();
+            $markdownContent = $converter->convert($page->content ?? '');
+
+            $frontmatter = "---\n";
+            $title = str_replace('"', '\"', $page->seo_title ?: $page->title);
+            $frontmatter .= "title: \"{$title}\"\n";
+            if ($page->seo_description) {
+                $description = str_replace('"', '\"', $page->seo_description);
+                $frontmatter .= "description: \"{$description}\"\n";
+            }
+            if (!empty($page->featured_images)) {
+                $frontmatter .= "image: " . url($page->featured_images[0]) . "\n";
+            }
+            $frontmatter .= "---\n\n";
+
+            $markdown = $frontmatter . "# " . $page->title . "\n\n" . $markdownContent;
+
+            return response($markdown, 200)
+                ->header('Content-Type', 'text/markdown; charset=utf-8')
+                ->header('Content-Signal', 'ai-train=yes, search=yes, ai-input=yes')
+                ->header('x-markdown-tokens', round(strlen($markdown) / 4));
+        }
+
+        // Optional: Could return an Inertia view for a full admin preview,
+        // but for now, we just support the markdown preview endpoint.
+        abort(404, 'Preview only supports text/markdown currently.');
     }
 
     /**

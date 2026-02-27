@@ -222,15 +222,44 @@ class VaultController extends Controller
             $storagePath .= '.trashed';
         }
 
+        // Check if we should serve the optimized file
+        $isOptimizedRequest = $file->is_optimized && !$file->use_original && $file->optimized_path;
+
+        if ($isOptimizedRequest) {
+            $storagePath = $file->optimized_path;
+
+            // If the optimized file was trashed alongside the original, it would need '.trashed'
+            // For now, our deleteFile logic only trashes the original storage_path. 
+            // We should ensure the optimized file is also accessible or handled in delete, 
+            // but assuming the optimized path is intact if not trashed.
+            if ($file->trashed()) {
+                $storagePath .= '.trashed';
+            }
+        }
+
         $path = Storage::disk($diskName)->path($storagePath);
 
         if (!file_exists($path)) {
-            abort(404);
+            // Fallback to original if optimized is missing
+            if ($isOptimizedRequest) {
+                $path = Storage::disk($diskName)->path($file->storage_path);
+                $isOptimizedRequest = false;
+                if (!file_exists($path)) {
+                    abort(404);
+                }
+            } else {
+                abort(404);
+            }
         }
 
+        $contentType = $isOptimizedRequest ? 'image/webp' : $file->mime_type;
+        $filename = $isOptimizedRequest
+            ? pathinfo($file->original_name, PATHINFO_FILENAME) . '.webp'
+            : $file->original_name;
+
         return response()->file($path, [
-            'Content-Type' => $file->mime_type,
-            'Content-Disposition' => 'inline; filename="' . $file->original_name . '"',
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
         ]);
 
         /*
@@ -270,6 +299,25 @@ class VaultController extends Controller
         $file->update(['alt_text' => $request->input('alt_text')]);
 
         return response()->json(['message' => 'Alt text updated', 'alt_text' => $file->alt_text]);
+    }
+
+    public function toggleOptimization(Request $request, string $uuid)
+    {
+        $file = VaultFile::where('uuid', $uuid)->firstOrFail();
+
+        if (Gate::denies('update', $file)) {
+            abort(403);
+        }
+
+        $request->validate(['use_original' => 'required|boolean']);
+
+        $file->update(['use_original' => $request->boolean('use_original')]);
+
+        return response()->json([
+            'message' => 'Optimization preference updated',
+            'use_original' => $file->use_original,
+            'url' => $file->url // Return the new URL so the frontend can update instantly
+        ]);
     }
 
     public function move(Request $request, string $uuid)

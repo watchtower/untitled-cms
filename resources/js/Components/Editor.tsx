@@ -1,5 +1,3 @@
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { useEffect, useRef, useState } from 'react';

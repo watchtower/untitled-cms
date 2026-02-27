@@ -1,7 +1,7 @@
 import { VaultFile } from '@/types/vault';
 import VaultFileIcon from './VaultFileIcon';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
+import { Check, Zap } from 'lucide-react';
 
 interface VaultThumbnailProps {
     file: VaultFile;
@@ -40,12 +40,20 @@ export default function VaultThumbnail({
             {/* Thumbnail / Icon */}
             <div className="aspect-square w-full relative overflow-hidden rounded-md bg-muted/20 flex items-center justify-center">
                 {isImage && file.url ? (
-                    <img
-                        src={file.url}
-                        alt={file.alt_text || file.original_name}
-                        className="object-cover w-full h-full"
-                        loading="lazy"
-                    />
+                    <>
+                        <img
+                            src={file.url}
+                            alt={file.alt_text || file.original_name}
+                            className="object-cover w-full h-full"
+                            loading="lazy"
+                        />
+                        {/* WebP Indicator */}
+                        {file.is_optimized && !file.use_original && (
+                            <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-sm rounded p-0.5 shadow-sm">
+                                <Zap className="h-3 w-3 text-amber-400 fill-amber-400" />
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <VaultFileIcon mimeType={file.mime_type} className="h-12 w-12 text-muted-foreground" />
                 )}

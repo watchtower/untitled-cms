@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    container_name: laravel_app
+    volumes:
+      - .:/var/www/html
+
+  node:
+    image: node
+    container_name: laravel_node
+    working_dir: /var/www/html
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/node_modules
+    command: sh -c "npm install --verbose && npm run dev"

@@ -1,0 +1,28 @@
+FROM php:8.4-fpm-bookworm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libssl-dev \
+    pkg-config
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Install MongoDB extension
+RUN pecl install mongodb && docker-php-ext-enable mongodb
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Start PHP-FPM
+CMD ["php-fpm"]
