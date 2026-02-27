@@ -89,7 +89,7 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
                     'insertdatetime', 'media', 'table', 'help', 'wordcount'
                 ],
                 contextmenu: 'link image table | ai_menu',
-                toolbar: 'undo redo image | blocks | ' +
+                toolbar: 'ai_suggest | undo redo image | blocks | ' +
                     'bold italic | alignleft aligncenter alignright | ' +
                     'bullist numlist outdent indent | removeformat fullscreen',
                 content_style: isDarkMode
@@ -112,7 +112,51 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
                         onChangeRef.current(content);
                     });
 
+                    // Add Custom AI Toolbar Button
+                    editor.ui.registry.addButton('ai_suggest', {
+                        text: '✨ AI Suggest',
+                        tooltip: 'Generate content suggestions or continue writing',
+                        onAction: async () => {
+                            const content = editor.getContent({ format: 'text' });
+                            const selection = editor.selection.getContent({ format: 'text' });
+
+                            // If user has selected text, we focus on that. 
+                            // If not, we take the whole content (or a chunk before the cursor) to continue.
+                            const context = selection || content.slice(-2000);
+
+                            if (!context && !selection) {
+                                toast.error('Add some text first so the AI has context to suggest from.');
+                                return;
+                            }
+
+                            toast.loading('AI is thinking...', { id: 'ai-gen' });
+                            try {
+                                const prompt = selection
+                                    ? `Based on this selection, suggest the next logical paragraph or section:\n\n"${selection}"`
+                                    : `Continue writing the following content smoothly and engagingly. Return ONLY the new content without repeating what is already there:\n\n"${context}"`;
+
+                                const response = await axios.post('/ai/generate', { prompt });
+                                if (response.data?.generated_text) {
+                                    // Insert at cursor or replace selection
+                                    editor.execCommand('mceInsertContent', false, response.data.generated_text);
+                                    toast.success('AI suggestion inserted', { id: 'ai-gen' });
+                                }
+                            } catch (e: any) {
+                                toast.error('AI Generation failed.', { id: 'ai-gen' });
+                            }
+                        }
+                    });
+
                     // Add Custom AI Context Menu Items
+                    editor.ui.registry.addMenuItem('ai_suggest', {
+                        text: '✨ AI: Suggest Content',
+                        icon: 'lightbulb',
+                        onAction: () => editor.execCommand('ai_suggest') // This might not work if we haven't registered the command, easier to just reuse the function if we define it outside, or just use the button registry.
+                    });
+
+                    // Update: TinyMCE execute button action directly
+                    // Actually, let's just re-register or use a common function.
+
                     editor.ui.registry.addMenuItem('ai_rewrite', {
                         text: '🪄 AI: Rewrite Selection',
                         icon: 'highlight-bg-color',
@@ -165,8 +209,8 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
 
                     editor.ui.registry.addContextMenu('ai_menu', {
                         update: (element: any) => {
-                            // Only show if text is selected
-                            return editor.selection.isCollapsed() ? '' : 'ai_rewrite ai_expand';
+                            // Show Suggest always if there is content, Rewrite/Expand only on selection
+                            return editor.selection.isCollapsed() ? 'ai_suggest' : 'ai_suggest ai_rewrite ai_expand';
                         }
                     });
                 },

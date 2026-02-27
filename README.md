@@ -1,106 +1,114 @@
-# 🚀 Untitled CMS
+# 🧠 Untitled CMS
 
-> A modern, highly-capable Content Management System built on a powerful monolithic SPA architecture. Combines the robust backend of **Laravel 12** & **MongoDB** with the fluid, dynamic frontend of **React**, **Inertia.js**, and **Shadcn UI**.
+> A production-ready, AI-native Content Management System built on a modern monolithic SPA stack. Pairs the reliability of **Laravel 12 + MongoDB** with a fluid **React + Inertia.js** frontend, a full-featured **Media Vault**, a multi-provider **AI Hub**, and headless-ready public delivery — including native **Markdown-for-Agents** support.
 
 ---
 
-## ✨ Features
+## ✨ What's Inside
 
-### 🔐 Authentication & User Management
-- **Auth Flows**: Login, Registration, Password Reset, Email Verification
-- **Invitation System**: Invite users via email with token-based onboarding
-- **Profile Management**: Update name, email, avatar, and password
-- **Advanced RBAC**: Granular role-based permissions (Admin, Editor, Author, custom roles)
-- **User Policies**: Laravel Gate-based authorization across all controllers
-
-### 📄 Content Management
-- **Pages**: Full CRUD with CKEditor 5, SEO meta fields, Draft/Published workflow, dynamic public routing, banner gallery with Embla Carousel
-- **Banners**: Create/edit with drag-and-drop reordering (`@dnd-kit`), scheduling, and image upload
-
-### 🗄️ The Vault (Media Manager)
-- Hierarchical folder structure with drag-and-drop organization
-- Secure upload pipeline: MIME validation, double-extension detection, image sanitization
-- Resizable 3-panel layout (sidebar / grid / preview) via `react-resizable-panels`
-- Folder-level permissions per user
-- VaultPicker component for selecting media across the app
-- Audit logging for all Vault actions
-
-### 🤖 AI Hub
-- Multi-provider AI integration manager (OpenAI, Gemini, Stability AI)
-- Monthly usage tracking per active hub
-- **Text Generation**: SEO meta titles & descriptions, general content writing
-- **Vision**: Auto alt-text generation from uploaded images (Gemini, GPT-4o)
-- **Image Generation**: DALL-E 3 (OpenAI), Stable Diffusion XL (Stability), Imagen 3 / Gemini Flash Image
-
-### 📊 Dashboard & Analytics
-- Stats cards and activity charts using **Recharts**
-- Recent activity feed
-
-### 🔍 Activity Log
-- Comprehensive audit trail for all admin actions
-- Filterable log viewer in the admin panel
-
-### 🌐 Public Site
-- Headless-ready public page renderer
-- Full-width responsive image carousel for page banners
-- SEO meta tags, dynamic routing via `Redirect` model
-
-### ⚙️ Settings
-- Site-wide settings management via `Setting` model (`key/value` store)
-- Accessible via `SettingsService` for global config
+| Module | Highlights |
+|---|---|
+| 🔐 **Auth & RBAC** | Login · Registration · Email verification · Token-based invitations · Granular role/permission system with Laravel Gate policies |
+| 📄 **Pages** | CKEditor 5 rich text · Draft/Published workflow · SEO meta fields · AI-generated meta · Dynamic public routing · Scheduled publishing |
+| 🖼 **Banners** | Drag-and-drop reordering (`@dnd-kit`) · Active/inactive scheduling with `start_at / end_at` |
+| 🗄️ **The Vault** | Hierarchical media manager · 3-panel resizable layout · Secure upload pipeline (MIME validation → double-extension detection → image sanitization → metadata extraction) · Folder-level permissions · Full audit log · AI-generated alt text |
+| 🤖 **AI Hub** | Multi-provider manager (OpenAI, Gemini, Stability AI) · Per-hub monthly usage tracking · Text generation · SEO meta generation · Vision-based alt text · Image generation (DALL-E 3, Imagen 3, Stable Diffusion XL) |
+| 📡 **Markdown for Agents** | Public pages respond with clean Markdown + YAML frontmatter when `Accept: text/markdown` is sent — ready for AI crawlers, coding assistants, and Cloudflare AI Gateway |
+| 📊 **Dashboard** | Analytics cards + Recharts charts · Recent activity feed |
+| 🔍 **Activity Log** | Comprehensive audit trail for all admin actions, filterable in the admin panel |
+| ⚙️ **Settings** | Site-wide key/value settings store via `SettingsService` |
 
 ---
 
 ## 🛠 Tech Stack
 
 ### Backend
+
 | Package | Version | Purpose |
 |---|---|---|
 | [Laravel](https://laravel.com/) | `^12.0` | Core framework |
-| [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb) | `^5.5` | MongoDB ODM driver |
-| [laravel/sanctum](https://laravel.com/docs/sanctum) | `^4.0` | Session/token authentication |
+| [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb) | `^5.5` | MongoDB ODM — document-native data model |
+| [laravel/sanctum](https://laravel.com/docs/sanctum) | `^4.0` | Session & token authentication |
 | [laravel/ai](https://github.com/laravel/ai) | `^0.2.1` | LLM provider abstraction |
-| [inertiajs/inertia-laravel](https://inertiajs.com/) | `^2.0` | SPA bridge |
-| [mews/purifier](https://github.com/mewebstudio/Purifier) | `^3.4` | HTML sanitization |
-| [tightenco/ziggy](https://github.com/tighten/ziggy) | `^2.0` | Named routes in JS |
+| [inertiajs/inertia-laravel](https://inertiajs.com/) | `^2.0` | Server-side SPA bridge |
+| [intervention/image](https://image.intervention.io/v3) | `^3.11` | Image processing & sanitization |
+| [league/html-to-markdown](https://github.com/thephpleague/html-to-markdown) | `^5.1` | HTML → Markdown conversion for AI delivery |
+| [mews/purifier](https://github.com/mewebstudio/Purifier) | `^3.4` | HTML sanitization (HTMLPurifier wrapper) |
+| [tightenco/ziggy](https://github.com/tighten/ziggy) | `^2.0` | Named Laravel routes in JavaScript |
 
 ### Frontend
+
 | Package | Version | Purpose |
 |---|---|---|
 | [React](https://reactjs.org/) | `^18.2` | UI framework |
-| TypeScript | `^5.0` | Type safety |
-| [Tailwind CSS](https://tailwindcss.com/) | `v3/v4` | Utility-first styling |
+| TypeScript | `^5.0` | Type safety across all components |
+| [Tailwind CSS](https://tailwindcss.com/) | `v3 / v4` | Utility-first styling |
 | [Shadcn UI](https://ui.shadcn.com/) | latest | Accessible component library (Radix primitives) |
-| [CKEditor 5](https://ckeditor.com/) | `^41` | Rich text editor |
-| [@dnd-kit](https://dndkit.com/) | `^6` | Drag-and-drop |
-| [@tanstack/react-table](https://tanstack.com/table) | `^8` | Headless data tables |
-| [Recharts](https://recharts.org/) | `^2` | Analytics charts |
-| [Embla Carousel](https://www.embla-carousel.com/) | `^8` | Image carousel |
-| [react-resizable-panels](https://github.com/bvaughn/react-resizable-panels) | `^4` | Resizable panel layouts |
+| [CKEditor 5](https://ckeditor.com/) | `^41` | Rich text / WYSIWYG editor |
+| [@dnd-kit](https://dndkit.com/) | `^6` | Drag-and-drop (banners, vault) |
+| [@tanstack/react-table](https://tanstack.com/table) | `^8` | Headless, sortable data tables |
+| [Recharts](https://recharts.org/) | `^2` | Dashboard analytics charts |
+| [Embla Carousel](https://www.embla-carousel.com/) | `^8` | Public page banner carousel |
+| [react-resizable-panels](https://github.com/bvaughn/react-resizable-panels) | `^4` | Vault 3-panel layout |
 | [Sonner](https://sonner.emilkowal.ski/) | `^2` | Toast notifications |
-| [Zod](https://zod.dev/) | `^4` | Schema validation |
+| [Zod](https://zod.dev/) | `^4` | Frontend schema validation |
+
+---
+
+## 📐 Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Public Web                        │
+│  / → PublicController (HTML or Markdown response)   │
+│  /{slug} → Page with YAML frontmatter               │
+└──────────────────┬──────────────────────────────────┘
+                   │ Accept: text/markdown
+                   ▼
+          AI Crawlers / Agents
+
+┌──────────────────────────────────────────────────────┐
+│                  Admin SPA                            │
+│  Inertia.js + React + TypeScript                     │
+│                                                      │
+│  Routes → Controllers → MongoDB Models               │
+│                     ↓                                │
+│  AI Hub → AiService → OpenAI / Gemini / Stability    │
+│                     ↓                                │
+│  Vault Upload → Pipeline (6 pipes) → Storage         │
+└──────────────────────────────────────────────────────┘
+```
+
+**Key design decisions:**
+- **MongoDB throughout** — Flexible document model for pages (embedded SEO fields), vault metadata, activity logs, and AI usage tracking.
+- **Monolithic SPA** — Laravel renders the initial Inertia page; React handles all subsequent navigation. No separate API server.
+- **Upload Pipeline** — Vault uploads pass through an ordered `Pipe` chain: `ValidateMimeType → DetectDoubleExtension → SandboxedScan → SanitizeImage → GenerateUuid → StoreMetadata`.
+- **Single Active AI Hub** — One hub is "active" at a time; `AiService` dynamically patches Laravel AI's config at runtime so no restart is required when switching providers.
 
 ---
 
 ## 📦 Requirements
 
 - **PHP** >= 8.2 + **Composer**
-- **Node.js** v18+ & **NPM**
-- **MongoDB** Server (Local or [Atlas](https://www.mongodb.com/atlas))
+- **Node.js** v18+ & **npm**
+- **MongoDB** (local or [Atlas](https://www.mongodb.com/atlas))
+- Optional: **Redis** (for session/cache), **Docker** (compose files included)
 
 ---
 
-## 🚀 Installation & Setup
+## 🚀 Installation
 
 ### One-Command Setup
 ```bash
 composer run setup
 ```
-This runs: `composer install` → `.env` copy → `key:generate` → `migrate` → `npm install` → `npm run build`
+Runs: `composer install` → `.env` copy → `key:generate` → `migrate` → `npm install` → `npm run build`
+
+---
 
 ### Manual Setup
 
-1. **Clone & enter the repo**
+1. **Clone the repo**
    ```bash
    git clone <your-repo-url>
    cd untitled-cms
@@ -108,8 +116,7 @@ This runs: `composer install` → `.env` copy → `key:generate` → `migrate` �
 
 2. **Install dependencies**
    ```bash
-   composer install
-   npm install
+   composer install && npm install
    ```
 
 3. **Configure environment**
@@ -117,8 +124,9 @@ This runs: `composer install` → `.env` copy → `key:generate` → `migrate` �
    cp .env.example .env
    php artisan key:generate
    ```
-   Edit `.env` and set:
+   Set in `.env`:
    ```env
+   APP_URL=http://localhost:8000
    DB_CONNECTION=mongodb
    DB_HOST=127.0.0.1
    DB_PORT=27017
@@ -131,7 +139,7 @@ This runs: `composer install` → `.env` copy → `key:generate` → `migrate` �
    php artisan migrate --force
    php artisan db:seed
    ```
-   Populates default Roles, Permissions, and an Admin user.
+   Seeds default roles, permissions, and an admin user.
 
 5. **Build & serve**
    ```bash
@@ -139,11 +147,25 @@ This runs: `composer install` → `.env` copy → `key:generate` → `migrate` �
    php artisan serve
    ```
 
+---
+
+### Docker
+
+```bash
+# Development
+docker compose -f docker-compose-dev.yml up
+
+# Production
+docker compose up
+```
+
+---
+
 ### Development (all-in-one)
 ```bash
 composer run dev
 ```
-Starts: Laravel server + queue worker + Pail log viewer + Vite HMR — concurrently.
+Starts concurrently: Laravel server + queue worker + Pail log viewer + Vite HMR.
 
 ---
 
@@ -152,6 +174,35 @@ Starts: Laravel server + queue worker + Pail log viewer + Vite HMR — concurren
 | URL | Email | Password |
 |---|---|---|
 | `http://localhost:8000/login` | `admin@example.com` | `password` |
+
+> ⚠️ Change this immediately in production!
+
+---
+
+## 📡 Markdown for Agents
+
+Every public page responds with clean Markdown when `Accept: text/markdown` is present:
+
+```bash
+# Homepage — returns a Markdown index of recent pages
+curl -H "Accept: text/markdown" http://localhost:8000/
+
+# Individual page — returns YAML frontmatter + Markdown content
+curl -H "Accept: text/markdown" http://localhost:8000/your-page-slug
+```
+
+Response includes structured `Content-Signal` and `x-markdown-tokens` headers for AI pipeline compatibility.
+
+---
+
+## 🤖 AI Hub Setup
+
+1. Navigate to **Admin → AI Hubs**
+2. Enter your API key for the provider (OpenAI, Gemini, or Stability AI)
+3. Set a default text model and image model
+4. Click **Activate**
+
+The system supports one active hub at a time. Monthly API usage is tracked per hub.
 
 ---
 
@@ -169,102 +220,53 @@ Starts: Laravel server + queue worker + Pail log viewer + Vite HMR — concurren
 
 ## 🚢 Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed production instructions (DigitalOcean, Cloudflare, CI/CD).
+See [docs/implementation_plan.md](docs/implementation_plan.md) for deployment notes.
+
+Deployment scripts are available at the root:
+- `deploy.sh` — Git pull + asset build + cache clear
+- `backup.sh` — MongoDB backup script
 
 ---
 
-## 📋 Project TODO
+## 📋 Feature Roadmap
 
-> Tracks planned features, integrations, and architectural decisions.
+### ✅ Shipped
 
----
+- Authentication (Login, Register, Forgot/Reset Password, Email Verification)
+- Token-based user invitation flow
+- Granular RBAC — Roles, Permissions, Laravel Gate policies
+- Users module (CRUD, soft-delete, avatar, batch actions, logout all devices)
+- Pages module (CKEditor 5, SEO fields, Draft/Published, dynamic routing)
+- Banners module (drag-and-drop reorder, scheduling)
+- The Vault — hierarchical media manager with secure upload pipeline
+- VaultPicker — reusable media selection component across the app
+- Vault folder-level permissions + audit log
+- AI Hub — multi-provider manager with usage tracking
+- AI text generation, SEO meta generation, vision alt-text, image generation
+- Dashboard with Recharts analytics
+- Activity log — filterable audit trail
+- Markdown-for-Agents (`Accept: text/markdown` + YAML frontmatter)
+- Settings — admin-configurable key/value store
+- Dark mode, responsive layouts, Shadcn UI
 
-### ✅ Completed
+### 🔲 Planned
 
-- [x] **Authentication**
-  - [x] Login, Registration, Forgot/Reset Password
-  - [x] User invitation flow (token-based)
-  - [x] Email verification (base Laravel flow)
-- [x] **RBAC / Permissions**
-  - [x] Roles & Permissions CRUD
-  - [x] Laravel Gate authorization across all controllers
-  - [x] Granular per-user policies (`UserPolicy`, `PagePolicy`, `BannerPolicy`, `VaultFolderPolicy`, etc.)
-- [x] **Users Module**
-  - [x] Full CRUD with sortable/searchable table
-  - [x] Soft-delete & restore
-  - [x] Avatar upload
-- [x] **Pages Module**
-  - [x] CRUD with CKEditor 5 rich text editor
-  - [x] SEO meta fields (title, description)
-  - [x] Draft / Published workflow
-  - [x] Dynamic public page routing
-  - [x] Banner gallery (Embla Carousel) on public pages
-- [x] **Banners Module**
-  - [x] CRUD with image upload
-  - [x] Drag-and-drop reordering (`@dnd-kit`)
-  - [x] Active / Inactive scheduling
-- [x] **The Vault (Media Manager)**
-  - [x] Hierarchical folder structure
-  - [x] Secure upload (MIME validation, double-extension detection, image sanitization)
-  - [x] Resizable 3-panel layout
-  - [x] Context menu (rename, move, delete, download)
-  - [x] VaultPicker — reusable media selection component
-  - [x] Folder-level user permissions
-  - [x] Vault audit log
-- [x] **AI Hub**
-  - [x] Multi-provider hub manager (OpenAI, Gemini, Stability AI)
-  - [x] Monthly usage tracking per hub
-  - [x] SEO meta generation from page content
-  - [x] Alt-text generation for images (vision: Gemini, GPT-4o)
-  - [x] AI text generation (content writing assistant)
-  - [x] AI image generation (DALL-E 3, Imagen 3, Stable Diffusion XL)
-- [x] **Dashboard**
-  - [x] Analytics cards + Recharts graphs
-  - [x] Recent activity feed
-- [x] **Activity Log**
-  - [x] Audit trail for all admin actions
-  - [x] Log viewer in admin panel
-- [x] **Profile**
-  - [x] Update name, email, password
-  - [x] Avatar management
-- [x] **Settings**
-  - [x] Admin-configurable site settings (key/value store)
-- [x] **UI/UX**
-  - [x] Shadcn UI component library
-  - [x] Dark mode support
-  - [x] Sortable data tables with `@tanstack/react-table`
-  - [x] Toast notifications (Sonner)
-  - [x] Responsive layouts
-
----
-
-### 🔲 In Progress / Planned
-
-#### 🤖 AI Integrations — Expand Provider Support
-- [ ] **AI**
-  - [ ] [Cohere](https://dashboard.cohere.com) integration
-  - [ ] [AI21 Studio](https://studio.ai21.com/auth) integration
-  - [ ] [Hugging Face](https://huggingface.co) integration
-
-#### ✉️ Verification & Transactional Email
-- [ ] **Verification**
-  - [ ] Email resend functionality (resend verification email action)
-  - [ ] [Sent.dm](https://www.sent.dm/en) transactional email provider integration
-
-#### 🔔 Notifications
-- [ ] **Notifications**
-  - [ ] Notification system design (in-app / email / push?)
-  - [ ] Notification preferences per user
-  - [ ] Real-time notification delivery
-
-#### 🏗️ Admin Module Standard Template
-- [ ] **Admin module standard template**
-  - [ ] Document the standard module structure (Controller, Model, Policy, Frontend Pages, Routes)
-  - [ ] AI to reference this template before scaffolding any new module
-  - [ ] Create `/create_admin_module` workflow steps based on finalized template
+- [ ] **Page versioning** — revision history with diff viewer and restore
+- [ ] **Scheduled publishing** — `publish_at` timestamp + artisan cron
+- [ ] **Full-text search** — `Cmd+K` command palette across Pages, Users, Vault
+- [ ] **RSS / Atom feed** — `GET /feed.xml` for published pages
+- [ ] **Webhook system** — Trigger HTTP webhooks on `page.published`, `vault.uploaded`, etc.
+- [ ] **API layer** — Sanctum-protected REST API for headless consumption
+- [ ] **2FA** — TOTP two-factor authentication for admin accounts
+- [ ] **AI content tagging** — Auto-suggest tags from page body text
+- [ ] **AI content moderation** — Vision-based flagging in the Vault upload pipeline
+- [ ] **Additional AI providers** — Cohere, AI21 Studio, Hugging Face
+- [ ] **`/llms.txt`** — Emerging AI-discoverability standard for published pages
+- [ ] **Page view tracking** — Anonymous analytics surfaced in the dashboard
+- [ ] **Notification system** — In-app / email / push with per-user preferences
 
 ---
 
 ## 📄 License
 
-This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT license](LICENSE).
