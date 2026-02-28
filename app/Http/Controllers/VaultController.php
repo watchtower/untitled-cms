@@ -320,6 +320,76 @@ class VaultController extends Controller
         ]);
     }
 
+    public function batchMove(Request $request)
+    {
+        $request->validate([
+            'uuids' => 'required|array',
+            'uuids.*' => 'string|exists:vault_files,uuid',
+            'folder_id' => 'nullable|string|exists:vault_folders,_id',
+        ]);
+
+        $uuids = $request->input('uuids');
+        $folderId = $request->input('folder_id');
+
+        // Check target folder permission
+        if ($folderId) {
+            $targetFolder = VaultFolder::findOrFail($folderId);
+            if (Gate::denies('update', $targetFolder)) {
+                abort(403, 'Permission denied for target folder.');
+            }
+        }
+
+        $files = VaultFile::whereIn('uuid', $uuids)->get();
+        $movedCount = 0;
+
+        foreach ($files as $file) {
+            if (Gate::allows('update', $file)) {
+                $this->vaultService->moveFile($file, $folderId);
+                $movedCount++;
+            }
+        }
+
+        return response()->json([
+            'message' => "Successfully moved {$movedCount} item(s).",
+            'moved_count' => $movedCount,
+        ]);
+    }
+
+    public function batchDelete(Request $request)
+    {
+        $request->validate([
+            'uuids' => 'required|array',
+            'uuids.*' => 'string|exists:vault_files,uuid',
+        ]);
+
+        $uuids = $request->input('uuids');
+        $files = VaultFile::whereIn('uuid', $uuids)->get();
+        $deletedCount = 0;
+
+        foreach ($files as $file) {
+            if (Gate::allows('delete', $file)) {
+                $this->vaultService->deleteFile($file);
+                $deletedCount++;
+            }
+        }
+
+        return response()->json([
+            'message' => "Successfully deleted {$deletedCount} item(s).",
+            'deleted_count' => $deletedCount,
+        ]);
+    }
+
+    public function generateMissingAltText(Request $request)
+    {
+        $this->authorize('update', VaultFile::class);
+
+        \App\Jobs\GenerateMissingAltTextJob::dispatch();
+
+        return response()->json([
+            'message' => 'Alt-text generation job dispatched successfully. Images will be updated in the background.'
+        ]);
+    }
+
     public function move(Request $request, string $uuid)
     {
         $file = VaultFile::where('uuid', $uuid)->firstOrFail();

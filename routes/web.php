@@ -42,8 +42,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/ai-hubs/{aiHub}/activate', [\App\Http\Controllers\AiHubController::class, 'activate'])->name('ai-hubs.activate');
 
     Route::post('/ai/generate-seo', [\App\Http\Controllers\AiController::class, 'generateSeo'])->name('ai.seo');
+    Route::post('/ai/generate-tags', [\App\Http\Controllers\AiController::class, 'generateTags'])->name('ai.generate-tags');
+    Route::post('/ai/generate-social-image', [\App\Http\Controllers\AiController::class, 'generateSocialImage'])->name('ai.social-image');
     Route::post('/ai/generate-alt-text', [\App\Http\Controllers\AiController::class, 'generateAltText'])->name('ai.alt-text');
     Route::post('/ai/generate', [\App\Http\Controllers\AiController::class, 'generate'])->name('ai.generate');
+    Route::post('/ai/chat', [\App\Http\Controllers\AiController::class, 'chat'])->name('ai.chat');
     Route::post('/ai/generate-image', [\App\Http\Controllers\AiController::class, 'generateImage'])->name('ai.generate-image');
 
     Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-log.index');
@@ -59,6 +62,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/upload', [\App\Http\Controllers\VaultController::class, 'upload'])->name('upload');
         Route::post('/save-ai-image', [\App\Http\Controllers\VaultController::class, 'saveAiImage'])->name('save-ai-image');
         Route::get('/file/{uuid}', [\App\Http\Controllers\VaultController::class, 'serve'])->name('file.serve');
+        Route::post('/files/batch-move', [\App\Http\Controllers\VaultController::class, 'batchMove'])->name('files.batch_move');
+        Route::post('/files/batch-delete', [\App\Http\Controllers\VaultController::class, 'batchDelete'])->name('files.batch_delete');
+        Route::post('/generate-alt-text', [\App\Http\Controllers\VaultController::class, 'generateMissingAltText'])->name('generate-alt-text');
         Route::delete('/file/{uuid}', [\App\Http\Controllers\VaultController::class, 'destroy'])->name('file.destroy');
         Route::post('/file/{uuid}/restore', [\App\Http\Controllers\VaultController::class, 'restore'])->name('file.restore');
         Route::delete('/file/{uuid}/force', [\App\Http\Controllers\VaultController::class, 'forceDestroy'])->name('file.force_destroy');
@@ -75,6 +81,13 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+// Sitemap
+Route::get('/sitemap.md', [\App\Http\Controllers\SitemapController::class, 'markdown'])->name('sitemap.md');
+
+// RSS Feed
+Route::get('/rss', [\App\Http\Controllers\FeedController::class, 'rss'])->name('feed.rss');
+Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'rss']);
 
 // Public Routes (Must be last to allow {slug} wildcard)
 Route::controller(\App\Http\Controllers\PublicController::class)->group(function () {

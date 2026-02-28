@@ -19,6 +19,7 @@ import { ModeToggle } from '@/Components/mode-toggle';
 import { UIProvider } from '@/Contexts/UIContext';
 import { GlobalCommandPalette } from '@/Components/GlobalCommandPalette';
 import VaultPicker from '@/Components/Vault/VaultPicker';
+import AiChatSidebar from '@/Components/Ai/AiChatSidebar';
 import { useState, useEffect } from 'react';
 
 export default function AuthenticatedLayout({
@@ -91,6 +92,8 @@ export default function AuthenticatedLayout({
                     allowedTypes={vaultConfig.allowedTypes}
                     onSelect={vaultConfig.onSelect}
                 />
+
+                <AiChatSidebar />
             </SidebarProvider>
         </UIProvider>
     );

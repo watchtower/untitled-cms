@@ -89,6 +89,16 @@ class SettingSeeder extends Seeder
                 'label' => 'Maintenance Mode',
                 'is_public' => true, // Might need middleware logic for this
             ],
+
+            // Vault
+            [
+                'key' => 'vault.moderation_enabled',
+                'value' => false,
+                'group' => 'vault',
+                'type' => 'boolean',
+                'label' => 'Enable AI Image Moderation',
+                'is_public' => false,
+            ],
         ];
 
         foreach ($settings as $setting) {

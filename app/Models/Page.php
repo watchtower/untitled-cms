@@ -24,11 +24,13 @@ class Page extends Model
         'featured_images',
         'author_id',
         'published_at',
+        'tags',
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
         'featured_images' => 'array',
+        'tags' => 'array',
     ];
 
     public function author()

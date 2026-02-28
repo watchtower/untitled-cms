@@ -180,6 +180,119 @@ class AiService
         }
     }
 
+    public function moderateImage(string $base64Image, string $mimeType): array
+    {
+        try {
+            $activeHub = $this->configureActiveAi();
+
+            if (!$activeHub) {
+                return ['status' => 'pass', 'reason' => null];
+            }
+
+            $agent = new AnonymousAgent(
+                'You are a content moderator. Analyze the image and determine if it violates safety policies (Hate, Violence, Harassment, Sexual content). Return a JSON object with: "status" (either "pass" or "fail") and "reason" (a short description if fail, otherwise null). Return ONLY the JSON.',
+                [],
+                []
+            );
+
+            // Strip the data URI prefix if it was passed by ModerationCheck
+            // Although we can just change ModerationCheck to pass pure base64. Let's do that or strip it here.
+            $pureBase64 = preg_replace('/^data:image\/[a-zA-Z]+;base64,/', '', $base64Image);
+
+            $response = $agent->prompt(
+                "Moderate this image.",
+                [new \Laravel\Ai\Files\Base64Image($pureBase64, $mimeType)],
+                null,
+                $activeHub->default_model
+            );
+
+            $activeHub->increment('monthly_usage');
+
+            $jsonString = preg_replace('/```(?:json)?|```/', '', (string) $response);
+            $json = json_decode(trim($jsonString), true);
+
+            return [
+                'status' => $json['status'] ?? 'pass',
+                'reason' => $json['reason'] ?? null
+            ];
+
+        } catch (\Exception $e) {
+            return ['status' => 'pass', 'reason' => null];
+        }
+    }
+
+    public function generateChatResponse(array $messages): string
+    {
+        $activeHub = $this->configureActiveAi();
+
+        if (!$activeHub) {
+            throw new \Exception('No active AI Integration found with a configured API key.');
+        }
+
+        try {
+            // Convert message history to a single string prompt
+            $formattedHistory = "";
+            foreach ($messages as $msg) {
+                $role = ucfirst($msg['role'] ?? 'user');
+                $content = $msg['content'] ?? '';
+                $formattedHistory .= "{$role}: {$content}\n";
+            }
+
+            $agent = new AnonymousAgent(
+                'You are an expert AI Assistant integrated into the Untitled CMS dashboard. You help admin users with content strategy, technical questions about the CMS, and general writing tasks. Keep your answers helpful, concise, and relevant to the conversation history provided.',
+                [],
+                []
+            );
+
+            $response = $agent->prompt(
+                "Conversation History:\n{$formattedHistory}\nAssistant:",
+                [],
+                null,
+                $activeHub->default_model
+            );
+
+            $activeHub->increment('monthly_usage');
+
+            return (string) $response;
+        } catch (\Exception $e) {
+            throw new \Exception("Chat failed: " . $e->getMessage());
+        }
+    }
+
+    public function generateTags(string $title, string $content): array
+    {
+        try {
+            $activeHub = $this->configureActiveAi();
+
+            if (!$activeHub) {
+                return [];
+            }
+
+            $agent = new AnonymousAgent(
+                'You are a content taxonomist. Analyze the provided title and content, and return a JSON array of 3-5 lowercase, SEO-friendly content tags. Return ONLY a JSON array like ["tag1", "tag2"]. No other text or markdown formatting.',
+                [],
+                []
+            );
+
+            $response = $agent->prompt(
+                "Title: {$title}\n\nContent: " . Str::limit(strip_tags($content), 2000),
+                [],
+                null,
+                $activeHub->default_model
+            );
+
+            $activeHub->increment('monthly_usage');
+
+            $jsonString = preg_replace('/```(?:json)?|```/', '', (string) $response);
+            $json = json_decode(trim($jsonString), true);
+
+            return is_array($json) ? $json : [];
+
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
     /**
      * Generate an image from a text prompt.
      * Routes to the appropriate provider's image generation API based on the active AI Hub.

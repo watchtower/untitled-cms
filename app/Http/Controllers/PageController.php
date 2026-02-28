@@ -50,6 +50,7 @@ class PageController extends Controller
             'seo_description' => 'nullable|string|max:160',
             'featured_image' => 'nullable|string',
             'featured_images' => 'nullable|array',
+            'tags' => 'nullable|array',
         ]);
 
         if (!empty($validated['slug'])) {
@@ -154,6 +155,7 @@ class PageController extends Controller
             'seo_description' => 'nullable|string|max:160',
             'featured_image' => 'nullable|string',
             'featured_images' => 'nullable|array',
+            'tags' => 'nullable|array',
         ]);
 
         if (empty($validated['slug'])) {

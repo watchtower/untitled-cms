@@ -25,6 +25,10 @@ import { AiInput } from '@/Components/Ai/AiInput';
 import { AiTextarea } from '@/Components/Ai/AiTextarea';
 import { CharacterCounter } from '@/Components/CharacterCounter';
 import { AiAssistButton } from '@/Components/Ai/AiAssistButton';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { X, Loader2 } from 'lucide-react';
+import { Badge } from '@/Components/ui/badge';
 
 export default function Create({ auth }: any) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
@@ -34,7 +38,35 @@ export default function Create({ auth }: any) {
         status: 'draft',
         seo_title: '',
         seo_description: '',
+        tags: [] as string[],
     });
+
+    const [isSuggestingTags, setIsSuggestingTags] = useState(false);
+
+    const suggestTags = async () => {
+        if (!data.title && !data.content) {
+            toast.error('Enter a title or content first to get tag suggestions.');
+            return;
+        }
+
+        setIsSuggestingTags(true);
+        try {
+            const response = await axios.post(route('ai.generate-tags'), {
+                title: data.title,
+                content: data.content,
+            });
+            const suggestedTags = response.data;
+            if (Array.isArray(suggestedTags)) {
+                const merged = Array.from(new Set([...data.tags, ...suggestedTags]));
+                setData('tags', merged);
+                toast.success('Tags suggested successfully!');
+            }
+        } catch (error) {
+            toast.error('Failed to suggest tags.');
+        } finally {
+            setIsSuggestingTags(false);
+        }
+    };
 
     const [lockedSlug, setLockedSlug] = useState(true);
 
@@ -77,6 +109,55 @@ export default function Create({ auth }: any) {
                                             </Select>
                                             {errors.status && <p className="text-sm text-destructive">{errors.status}</p>}
                                         </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center justify-between">
+                                            Tags
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 text-xs text-primary"
+                                                onClick={suggestTags}
+                                                disabled={isSuggestingTags}
+                                            >
+                                                {isSuggestingTags ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                                                Suggest
+                                            </Button>
+                                        </CardTitle>
+                                        <CardDescription>Content classification</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {data.tags.map((tag, idx) => (
+                                                <Badge key={idx} variant="secondary" className="flex items-center gap-1">
+                                                    {tag}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setData('tags', data.tags.filter((_, i) => i !== idx))}
+                                                        className="hover:text-destructive"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                        <Input
+                                            placeholder="Add a tag and press Enter"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const val = (e.target as HTMLInputElement).value.trim();
+                                                    if (val && !data.tags.includes(val)) {
+                                                        setData('tags', [...data.tags, val]);
+                                                        (e.target as HTMLInputElement).value = '';
+                                                    }
+                                                }
+                                            }}
+                                        />
                                     </CardContent>
                                 </Card>
 

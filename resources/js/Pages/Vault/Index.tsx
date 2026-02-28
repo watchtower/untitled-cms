@@ -151,11 +151,10 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
     const handleMove = async () => {
         if (!selectedFiles.length) return;
         try {
-            await Promise.all(
-                selectedFiles.map(f =>
-                    axios.patch(route('vault.file.move', f.uuid), { folder_id: moveTarget || null })
-                )
-            );
+            await axios.post(route('vault.files.batch_move'), {
+                uuids: selectedFiles.map(f => f.uuid),
+                folder_id: moveTarget || null
+            });
             const dest = moveTarget ? folders.find(f => f.id === moveTarget)?.name || 'folder' : 'Root';
             toast.success(`Moved ${selectedFiles.length} item(s) to ${dest}`);
             setIsMoveOpen(false);
@@ -940,14 +939,18 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                 </Button>
                                                 <Button
                                                     variant="destructive"
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                         if (confirm(`Are you sure you want to delete these ${selectedFiles.length} items?`)) {
-                                                            Promise.all(selectedFiles.map(f => axios.delete(route('vault.file.destroy', f.uuid))))
-                                                                .then(() => {
-                                                                    toast.success(`${selectedFiles.length} items deleted`);
-                                                                    setSelectedFiles([]);
-                                                                    refresh(currentFolder?.id || null);
+                                                            try {
+                                                                await axios.post(route('vault.files.batch_delete'), {
+                                                                    uuids: selectedFiles.map(f => f.uuid)
                                                                 });
+                                                                toast.success(`${selectedFiles.length} items deleted`);
+                                                                setSelectedFiles([]);
+                                                                refresh(currentFolder?.id || null);
+                                                            } catch (e: any) {
+                                                                toast.error(e.response?.data?.message || 'Delete failed.');
+                                                            }
                                                         }
                                                     }}
                                                     className="w-full"

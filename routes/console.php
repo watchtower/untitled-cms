@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('vault:purge --days=30')->daily();
+Schedule::command('vault:generate-alt-text')->weekly();

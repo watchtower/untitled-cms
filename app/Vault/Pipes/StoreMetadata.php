@@ -41,7 +41,8 @@ class StoreMetadata
             'hash_sha256' => $hash,
             'uploaded_by' => Auth::id(),
             'is_public' => true,
-            'validation_status' => 'safe', // Passed all pipes
+            'validation_status' => $payload['validation_status'] ?? 'safe',
+            'moderation_reason' => $payload['moderation_reason'] ?? null,
             'alt_text' => strip_tags($file->getClientOriginalName()), // Default
         ]);
 

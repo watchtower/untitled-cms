@@ -35,6 +35,7 @@ class VaultFile extends Model
         'optimized_size',
         'is_optimized',
         'use_original',
+        'moderation_reason',
     ];
 
     protected $casts = [

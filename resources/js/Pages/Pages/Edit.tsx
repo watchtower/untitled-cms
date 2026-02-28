@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Badge } from '@/Components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
 import { Switch } from '@/Components/ui/switch';
 /* @ts-ignore */
@@ -21,6 +22,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AiInput } from '@/Components/Ai/AiInput';
 import { AiTextarea } from '@/Components/Ai/AiTextarea';
 import { AiAssistButton } from '@/Components/Ai/AiAssistButton';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { X } from 'lucide-react';
 
 interface PageModel {
     id: string;
@@ -66,6 +70,7 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
         seo_description: string;
         featured_image: string;
         featured_images: string[];
+        tags: string[];
     }>({
         title: page.title || '',
         slug: page.slug || '',
@@ -75,7 +80,62 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
         seo_description: page.seo_description || '',
         featured_image: page.featured_image || '',
         featured_images: page.featured_images || [] as string[],
+        tags: (page as any).tags || [] as string[],
     });
+
+    const [isSuggestingTags, setIsSuggestingTags] = useState(false);
+
+    const suggestTags = async () => {
+        if (!data.title && !data.content) {
+            toast.error('Enter a title or content first to get tag suggestions.');
+            return;
+        }
+
+        setIsSuggestingTags(true);
+        try {
+            const response = await axios.post(route('ai.generate-tags'), {
+                title: data.title,
+                content: data.content,
+            });
+            const suggestedTags = response.data;
+            if (Array.isArray(suggestedTags)) {
+                // Merge without duplicates
+                const merged = Array.from(new Set([...data.tags, ...suggestedTags]));
+                setData('tags', merged);
+                toast.success('Tags suggested successfully!');
+            }
+        } catch (error) {
+            toast.error('Failed to suggest tags.');
+        } finally {
+            setIsSuggestingTags(false);
+        }
+    };
+
+    const [isGeneratingSocialImage, setIsGeneratingSocialImage] = useState(false);
+
+    const generateSocialImage = async () => {
+        if (!data.title || !data.content) {
+            toast.error('Enter a title and content first to generate a social image.');
+            return;
+        }
+
+        setIsGeneratingSocialImage(true);
+        try {
+            const response = await axios.post(route('ai.social-image'), {
+                title: data.title,
+                content: data.content,
+            });
+            const { url } = response.data;
+            if (url) {
+                setData('featured_images', [url, ...data.featured_images]);
+                toast.success('Social image generated and added to gallery!');
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || 'Failed to generate social image.');
+        } finally {
+            setIsGeneratingSocialImage(false);
+        }
+    };
 
     const [lockedSlug, setLockedSlug] = useState(true);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -237,6 +297,54 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                     </CardContent>
                                 </Card>
 
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center justify-between">
+                                            Tags
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 text-xs text-primary"
+                                                onClick={suggestTags}
+                                                disabled={isSuggestingTags}
+                                            >
+                                                {isSuggestingTags ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                                                Suggest
+                                            </Button>
+                                        </CardTitle>
+                                        <CardDescription>Content classification</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {data.tags.map((tag, idx) => (
+                                                <Badge key={idx} variant="secondary" className="flex items-center gap-1">
+                                                    {tag}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setData('tags', data.tags.filter((_, i) => i !== idx))}
+                                                        className="hover:text-destructive"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                        <Input
+                                            placeholder="Add a tag and press Enter"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const val = (e.target as HTMLInputElement).value.trim();
+                                                    if (val && !data.tags.includes(val)) {
+                                                        setData('tags', [...data.tags, val]);
+                                                        (e.target as HTMLInputElement).value = '';
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                    </CardContent>
+                                </Card>
 
                                 <Card>
                                     <CardHeader>
@@ -465,6 +573,67 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                         </div>
                                     )}
                                     {errors.featured_images && <p className="text-sm text-destructive mt-1">{errors.featured_images}</p>}
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <CardTitle>Social Media Preview</CardTitle>
+                                            <CardDescription>How this page looks when shared on social networks</CardDescription>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={generateSocialImage}
+                                            disabled={isGeneratingSocialImage}
+                                        >
+                                            {isGeneratingSocialImage ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                                            ✨ Generate AI Banner
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <Tabs defaultValue="facebook" className="w-full">
+                                        <TabsList className="mb-4">
+                                            <TabsTrigger value="facebook">Facebook</TabsTrigger>
+                                            <TabsTrigger value="twitter">X (Twitter)</TabsTrigger>
+                                        </TabsList>
+                                        <TabsContent value="facebook">
+                                            <div className="border rounded-lg overflow-hidden max-w-md mx-auto bg-[#f0f2f5] dark:bg-zinc-900">
+                                                <div className="aspect-[1.91/1] bg-muted flex items-center justify-center overflow-hidden border-b">
+                                                    {data.featured_images[0] ? (
+                                                        <img src={data.featured_images[0]} className="w-full h-full object-cover" alt="Social" />
+                                                    ) : (
+                                                        <span className="text-muted-foreground">No image</span>
+                                                    )}
+                                                </div>
+                                                <div className="p-3 space-y-1">
+                                                    <p className="text-[12px] uppercase text-zinc-500 font-medium">Untitled CMS</p>
+                                                    <h3 className="font-bold text-[16px] leading-tight line-clamp-2">{data.seo_title || data.title}</h3>
+                                                    <p className="text-zinc-500 text-[14px] line-clamp-2">{data.seo_description || "Page description will appear here..."}</p>
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+                                        <TabsContent value="twitter">
+                                            <div className="border rounded-2xl overflow-hidden max-w-md mx-auto bg-white dark:bg-black">
+                                                <div className="aspect-[1.91/1] bg-muted flex items-center justify-center overflow-hidden border-b">
+                                                    {data.featured_images[0] ? (
+                                                        <img src={data.featured_images[0]} className="w-full h-full object-cover" alt="Social" />
+                                                    ) : (
+                                                        <span className="text-muted-foreground">No image</span>
+                                                    )}
+                                                </div>
+                                                <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border-t">
+                                                    <p className="text-[13px] text-zinc-500 mb-1">untitled-cms.test</p>
+                                                    <h3 className="font-medium text-[15px] leading-tight line-clamp-1">{data.seo_title || data.title}</h3>
+                                                    <p className="text-zinc-500 text-[13px] line-clamp-2">{data.seo_description || "Page description will appear here..."}</p>
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+                                    </Tabs>
                                 </CardContent>
                             </Card>
                         </div>

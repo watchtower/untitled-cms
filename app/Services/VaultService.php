@@ -12,6 +12,7 @@ use App\Vault\Pipes\SandboxedScan;
 use App\Vault\Pipes\SanitizeImage;
 use App\Vault\Pipes\StoreMetadata;
 use App\Vault\Pipes\ValidateMimeType;
+use App\Vault\Pipes\ModerationCheck;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,7 @@ class VaultService
             ValidateMimeType::class,
                 // SandboxedScan::class, // Optional ClamAV
             SanitizeImage::class,
+            ModerationCheck::class,
             GenerateUuid::class,
             StoreMetadata::class,
         ];
