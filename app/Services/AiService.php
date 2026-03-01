@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\AiContextService;
 use Illuminate\Support\Str;
 use Laravel\Ai\AnonymousAgent;
 
@@ -230,19 +231,54 @@ class AiService
         }
 
         try {
-            // Convert message history to a single string prompt
-            $formattedHistory = "";
+            // Extract page URL from system messages for context injection
+            $pageUrl = null;
             foreach ($messages as $msg) {
-                $role = ucfirst($msg['role'] ?? 'user');
-                $content = $msg['content'] ?? '';
-                $formattedHistory .= "{$role}: {$content}\n";
+                if ($msg['role'] === 'system' && str_contains($msg['content'] ?? '', 'CMS page:')) {
+                    preg_match('/CMS page:\s*(.+?)(?:\.|$)/i', $msg['content'], $m);
+                    $pageUrl = trim($m[1] ?? '');
+                    break;
+                }
             }
 
-            $agent = new AnonymousAgent(
-                'You are an expert AI Assistant integrated into the Untitled CMS dashboard. You help admin users with content strategy, technical questions about the CMS, and general writing tasks. Keep your answers helpful, concise, and relevant to the conversation history provided.',
-                [],
-                []
-            );
+            // Build live module context string
+            $contextService = app(AiContextService::class);
+            $liveContext = $pageUrl ? $contextService->buildContextString($pageUrl) : '';
+
+            // Supported AI actions for system prompt
+            $whitelist = implode(', ', app(\App\Services\AiActionService::class)->getWhitelist());
+
+            $systemPrompt = <<<PROMPT
+You are an expert AI Assistant integrated into the Untitled CMS admin dashboard.
+You help admin users with content management, SEO, writing tasks, and answering questions about their CMS data.
+
+You CAN perform the following CMS actions when the admin clearly requests them:
+{$whitelist}
+
+For any supported action, respond with a JSON block in this format (inline, not in a code fence):
+[ACTION]{"action":"action_key","params":{...}}[/ACTION]
+
+CONTENT WRITING RULES (critical):
+- When writing page or banner content, write the COMPLETE, FINAL, READY-TO-PUBLISH content in the "content" field.
+- Use proper HTML formatting (<h2>, <p>, <ul>, <strong> etc.).
+- NEVER write placeholder text like "insert review here", "provide text", or meta-instructions.
+- NEVER ask the user to supply content — use your knowledge to write it based on the title and context.
+- Write real, engaging copy. If asked for a review, write an actual review. If asked for a description, write one.
+
+General rules:
+- If no action is needed, answer conversationally. Keep answers concise and helpful.
+- DO NOT invent record IDs. Always refer to records by title/name only.
+
+{$liveContext}
+PROMPT;
+
+            // Format conversation (exclude system messages — replaced by our systemPrompt above)
+            $formattedHistory = collect($messages)
+                ->filter(fn($m) => $m['role'] !== 'system')
+                ->map(fn($m) => ucfirst($m['role']) . ': ' . ($m['content'] ?? ''))
+                ->join("\n");
+
+            $agent = new AnonymousAgent($systemPrompt, [], []);
 
             $response = $agent->prompt(
                 "Conversation History:\n{$formattedHistory}\nAssistant:",
@@ -257,6 +293,24 @@ class AiService
         } catch (\Exception $e) {
             throw new \Exception("Chat failed: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Low-level prompt for internal use (e.g. AiActionController intent parsing).
+     */
+    public function rawPrompt(string $systemInstruction, string $userMessage): mixed
+    {
+        $activeHub = $this->configureActiveAi();
+
+        if (!$activeHub) {
+            throw new \Exception('No active AI Integration found.');
+        }
+
+        $agent = new AnonymousAgent($systemInstruction, [], []);
+        $response = $agent->prompt($userMessage, [], null, $activeHub->default_model);
+        $activeHub->increment('monthly_usage');
+
+        return $response;
     }
 
     public function generateTags(string $title, string $content): array
