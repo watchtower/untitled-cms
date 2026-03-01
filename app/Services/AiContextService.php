@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Page;
+use App\Models\Banner;
+use App\Models\User;
+use App\Models\VaultFile;
+
+class AiContextService
+{
+    /**
+     * Return a lightweight summary for the given module slug.
+     * Called before each chat response to inject live data into the system prompt.
+     */
+    public function getModuleContext(string $module): array
+    {
+        return match ($module) {
+            'pages' => $this->pagesContext(),
+            'banners' => $this->bannersContext(),
+            'vault' => $this->vaultContext(),
+            'users' => $this->usersContext(),
+            default => [],
+        };
+    }
+
+    private function pagesContext(): array
+    {
+        return [
+            'module' => 'pages',
+            'stats' => [
+                'total' => Page::count(),
+                'published' => Page::where('status', 'published')->count(),
+                'draft' => Page::where('status', 'draft')->count(),
+            ],
+            'recent' => Page::latest()->limit(5)->get(['id', 'title', 'status', 'slug'])
+                ->map(fn($p) => ['id' => (string) $p->id, 'title' => $p->title, 'status' => $p->status, 'slug' => $p->slug])
+                ->toArray(),
+        ];
+    }
+
+    private function bannersContext(): array
+    {
+        return [
+            'module' => 'banners',
+            'stats' => [
+                'total' => Banner::count(),
+                'active' => Banner::where('status', 'active')->count(),
+                'inactive' => Banner::where('status', 'inactive')->count(),
+            ],
+            'recent' => Banner::latest()->limit(5)->get(['id', 'title', 'status'])
+                ->map(fn($b) => ['id' => (string) $b->id, 'title' => $b->title, 'status' => $b->status])
+                ->toArray(),
+        ];
+    }
+
+    private function vaultContext(): array
+    {
+        return [
+            'module' => 'vault',
+            'stats' => [
+                'total_files' => VaultFile::count(),
+                'images' => VaultFile::where('mime_type', 'like', 'image/%')->count(),
+                'documents' => VaultFile::where('mime_type', 'not like', 'image/%')->count(),
+            ],
+        ];
+    }
+
+    private function usersContext(): array
+    {
+        return [
+            'module' => 'users',
+            'stats' => [
+                'total' => User::count(),
+                'active' => User::where('is_active', true)->count(),
+                'inactive' => User::where('is_active', false)->count(),
+            ],
+        ];
+    }
+
+    /**
+     * Detect which module a URL belongs to.
+     */
+    public function detectModule(string $url): string
+    {
+        $segments = [
+            '/pages' => 'pages',
+            '/banners' => 'banners',
+            '/vault' => 'vault',
+            '/users' => 'users',
+            '/roles' => 'roles',
+        ];
+
+        foreach ($segments as $prefix => $module) {
+            if (str_contains($url, $prefix)) {
+                return $module;
+            }
+        }
+
+        return 'general';
+    }
+
+    /**
+     * Build a CMS context string injected into every AI system prompt.
+     * Always includes full stats so AI gives accurate answers from any page.
+     */
+    public function buildContextString(string $url): string
+    {
+        try {
+            $pagesTotal = Page::count();
+            $pagesPublished = Page::where('status', 'published')->count();
+            $pagesDraft = Page::where('status', 'draft')->count();
+
+            $bannersTotal = Banner::count();
+            $bannersActive = Banner::where('status', 'active')->count();
+
+            $module = $this->detectModule($url);
+            $moduleLine = $module !== 'general'
+                ? "The admin is currently on the **{$module}** module."
+                : "The admin is on the CMS dashboard.";
+
+            return "{$moduleLine}\n\nCurrent CMS data (accurate — use these exact numbers):\n- Pages: {$pagesTotal} total, {$pagesPublished} published, {$pagesDraft} draft\n- Banners: {$bannersTotal} total, {$bannersActive} active";
+
+        } catch (\Exception $e) {
+            return "The admin is on the CMS admin panel.";
+        }
+    }
+}

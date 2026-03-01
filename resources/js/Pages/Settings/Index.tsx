@@ -24,6 +24,13 @@ export default function SettingsIndex({ settings }: Props) {
     const [localSettings, setLocalSettings] = useState(settings);
     const groups = Object.keys(settings);
 
+    const formatGroupLabel = (group: string) => {
+        const labels: Record<string, string> = {
+            ai: 'AI Features',
+        };
+        return labels[group] ?? (group.charAt(0).toUpperCase() + group.slice(1));
+    };
+
     // Helper to update local state immediately for UI responsiveness
     const updateLocalSetting = (group: string, key: string, value: any) => {
         setLocalSettings((prev) => ({
@@ -66,8 +73,8 @@ export default function SettingsIndex({ settings }: Props) {
                     <Tabs defaultValue={groups[0]} className="w-full">
                         <TabsList className="mb-4">
                             {groups.map((group) => (
-                                <TabsTrigger key={group} value={group} className="capitalize">
-                                    {group}
+                                <TabsTrigger key={group} value={group}>
+                                    {formatGroupLabel(group)}
                                 </TabsTrigger>
                             ))}
                         </TabsList>
@@ -76,9 +83,9 @@ export default function SettingsIndex({ settings }: Props) {
                             <TabsContent key={group} value={group}>
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle className="capitalize">{group} Settings</CardTitle>
+                                        <CardTitle>{formatGroupLabel(group)} Settings</CardTitle>
                                         <CardDescription>
-                                            Manage your {group} configurations. Changes are saved automatically.
+                                            Manage your {formatGroupLabel(group)} configurations. Changes are saved automatically.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">

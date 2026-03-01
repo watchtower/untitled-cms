@@ -90,13 +90,23 @@ class SettingSeeder extends Seeder
                 'is_public' => true, // Might need middleware logic for this
             ],
 
-            // Vault
+            // AI Features
             [
                 'key' => 'vault.moderation_enabled',
                 'value' => false,
-                'group' => 'vault',
+                'group' => 'ai',
                 'type' => 'boolean',
                 'label' => 'Enable AI Image Moderation',
+                'description' => 'Automatically moderate uploaded images using the active AI Hub.',
+                'is_public' => false,
+            ],
+            [
+                'key' => 'ai.chat_enabled',
+                'value' => true,
+                'group' => 'ai',
+                'type' => 'boolean',
+                'label' => 'Enable AI Chat Assistant',
+                'description' => 'Show the AI chat assistant button for all admin users. Requires an active AI Hub.',
                 'is_public' => false,
             ],
         ];
