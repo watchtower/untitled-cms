@@ -83,8 +83,7 @@ export function FormSplitLayout({
                 {children}
             </div>
             <div className={cn(
-                "space-y-6",
-                !isExpanded && "md:col-span-1"
+                !isExpanded ? "space-y-6 md:col-span-1" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 items-start"
             )}>
                 {sidebar}
             </div>

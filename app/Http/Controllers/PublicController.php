@@ -12,17 +12,9 @@ class PublicController extends Controller
 {
     public function home(Request $request)
     {
-        $banners = Banner::where('is_active', true)
-            ->where(function ($query) {
-                $query->whereNull('start_at')
-                    ->orWhere('start_at', '<=', now());
-            })
-            ->where(function ($query) {
-                $query->whereNull('end_at')
-                    ->orWhere('end_at', '>=', now());
-            })
+        $banners = Banner::active()
             ->orderBy('order', 'asc')
-            ->get();
+            ->get(['id', 'title', 'slides', 'order']);
 
         $recentPages = Page::where('status', 'published')
             ->orderBy('published_at', 'desc')
@@ -33,7 +25,21 @@ class PublicController extends Controller
             $markdown = "# Welcome to " . config('app.name', 'CMS') . "\n\n";
             $markdown .= "## Featured\n\n";
             foreach ($banners as $banner) {
-                $markdown .= "- **" . $banner->title . "**: " . $banner->description . "\n";
+                $markdown .= "- **" . $banner->title . "**\n";
+                if (!empty($banner->slides)) {
+                    foreach ($banner->slides as $slide) {
+                        if (!empty($slide['title'])) {
+                            $line = '  - ' . $slide['title'];
+                            if (!empty($slide['subtitle'])) {
+                                $line .= ': ' . $slide['subtitle'];
+                            }
+                            if (!empty($slide['caption'])) {
+                                $line .= ' — ' . $slide['caption'];
+                            }
+                            $markdown .= $line . "\n";
+                        }
+                    }
+                }
             }
             $markdown .= "\n## Recent Pages\n\n";
             foreach ($recentPages as $page) {
@@ -54,9 +60,13 @@ class PublicController extends Controller
 
     public function show(Request $request, $slug)
     {
-        $page = Page::where('slug', $slug)
-            ->where('status', 'published')
-            ->firstOrFail();
+        $pageQuery = Page::where('slug', $slug);
+
+        if (!($request->has('preview') && auth()->check())) {
+            $pageQuery->where('status', 'published');
+        }
+
+        $page = $pageQuery->firstOrFail();
 
         if ($request->prefers(['text/html', 'text/markdown']) === 'text/markdown') {
             $converter = new HtmlConverter();

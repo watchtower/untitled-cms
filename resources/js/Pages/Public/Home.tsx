@@ -1,13 +1,19 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import { Head, Link } from '@inertiajs/react';
 
+interface Slide {
+    image: string;
+    url?: string;
+    sequence?: number;
+    title?: string;
+    subtitle?: string;
+    caption?: string;
+}
+
 interface Banner {
     id: string;
     title: string;
-    image_url: string;
-    alt_text?: string;
-    link_url?: string;
-    description?: string;
+    slides: Slide[];
 }
 
 interface Page {
@@ -33,29 +39,35 @@ export default function Home({ banners, recentPages }: Props) {
             {banners.length > 0 && (
                 <div className="relative bg-gray-900">
                     <div className="relative max-w-7xl mx-auto">
-                        {/* Simple Carousel Logic or just stacking for MVP */}
                         <div className="relative h-96 w-full overflow-hidden">
-                            {banners.map((banner, index) => (
-                                <div key={banner.id} className={`absolute inset-0 transition-opacity duration-1000 ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                            {banners.flatMap((b, bi) => (b.slides || []).map((slide, si) => ({ slide, key: `${b.id}-${si}`, isFirst: bi === 0 && si === 0 }))).map(({ slide, key, isFirst }) => (
+                                <div key={key} className={`absolute inset-0 transition-opacity duration-1000 ${isFirst ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                                     <img
-                                        src={banner.image_url}
-                                        alt={banner.alt_text || banner.title}
+                                        src={slide.image}
+                                        alt={slide.title || "Banner"}
                                         className="h-full w-full object-cover"
                                     />
                                     <div className="absolute inset-0 bg-gray-900 bg-opacity-40 flex items-center justify-center">
                                         <div className="text-center">
-                                            <h2 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-                                                {banner.title}
-                                            </h2>
-                                            {banner.description && (
+                                            {slide.title && (
+                                                <h2 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+                                                    {slide.title}
+                                                </h2>
+                                            )}
+                                            {slide.subtitle && (
                                                 <p className="mt-4 text-xl text-gray-300 max-w-2xl mx-auto">
-                                                    {banner.description}
+                                                    {slide.subtitle}
                                                 </p>
                                             )}
-                                            {banner.link_url && (
+                                            {slide.caption && (
+                                                <p className="mt-2 text-sm text-gray-400">
+                                                    {slide.caption}
+                                                </p>
+                                            )}
+                                            {slide.url && (
                                                 <div className="mt-8">
                                                     <a
-                                                        href={banner.link_url}
+                                                        href={slide.url}
                                                         className="inline-block rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700"
                                                     >
                                                         Learn more

@@ -24,7 +24,128 @@ import { AiTextarea } from '@/Components/Ai/AiTextarea';
 import { AiAssistButton } from '@/Components/Ai/AiAssistButton';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { X } from 'lucide-react';
+import { X, GripVertical } from 'lucide-react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+    useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { cn } from '@/lib/utils';
+
+interface PreviewData {
+    title: string;
+    seo_title?: string;
+    seo_description?: string;
+    featured_images?: string[];
+}
+
+const PreviewSection = ({ label, content }: { label: string; content: React.ReactNode }) => (
+    <div className="space-y-3">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        {content}
+    </div>
+);
+
+const FacebookPreview = ({ data }: { data: PreviewData }) => (
+    <div className="border rounded-lg overflow-hidden bg-[#f0f2f5] dark:bg-zinc-900">
+        <div className="aspect-[1.91/1] bg-muted overflow-hidden border-b flex items-center justify-center">
+            {data.featured_images && data.featured_images[0] ? (
+                <img src={data.featured_images[0]} className="w-full h-full object-cover" alt="Social" />
+            ) : (
+                <span className="text-muted-foreground text-xs">No image</span>
+            )}
+        </div>
+        <div className="p-3 space-y-1">
+            <p className="text-[10px] uppercase text-zinc-500 font-medium tracking-wider">Untitled CMS</p>
+            <h3 className="font-bold text-[14px] leading-tight line-clamp-1">{data.seo_title || data.title}</h3>
+            <p className="text-zinc-500 text-[12px] line-clamp-2">{data.seo_description || "Page description..."}</p>
+        </div>
+    </div>
+);
+
+const TwitterPreview = ({ data }: { data: PreviewData }) => (
+    <div className="border rounded-2xl overflow-hidden bg-white dark:bg-black">
+        <div className="aspect-[1.91/1] bg-muted overflow-hidden border-b flex items-center justify-center">
+            {data.featured_images && data.featured_images[0] ? (
+                <img src={data.featured_images[0]} className="w-full h-full object-cover" alt="Social" />
+            ) : (
+                <span className="text-muted-foreground text-xs">No image</span>
+            )}
+        </div>
+        <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border-t">
+            <p className="text-[11px] text-zinc-500 mb-0.5">untitled-cms.test</p>
+            <h3 className="font-medium text-[14px] leading-tight line-clamp-1">{data.seo_title || data.title}</h3>
+            <p className="text-zinc-500 text-[12px] line-clamp-2">{data.seo_description || "Page description..."}</p>
+        </div>
+    </div>
+);
+
+function SortableGalleryItem({
+    id,
+    url,
+    index,
+    onRemove
+}: {
+    id: string;
+    url: string;
+    index: number;
+    onRemove: () => void;
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className="aspect-video relative group rounded-md overflow-hidden border bg-background">
+            <img
+                src={url}
+                alt={`Gallery ${index + 1}`}
+                className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8 cursor-grab active:cursor-grabbing"
+                    {...attributes}
+                    {...listeners}
+                >
+                    <GripVertical className="h-4 w-4" />
+                </Button>
+                <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={onRemove}
+                >
+                    Remove
+                </Button>
+            </div>
+        </div>
+    );
+}
 
 interface PageModel {
     id: string;
@@ -111,32 +232,6 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
         }
     };
 
-    const [isGeneratingSocialImage, setIsGeneratingSocialImage] = useState(false);
-
-    const generateSocialImage = async () => {
-        if (!data.title || !data.content) {
-            toast.error('Enter a title and content first to generate a social image.');
-            return;
-        }
-
-        setIsGeneratingSocialImage(true);
-        try {
-            const response = await axios.post(route('ai.social-image'), {
-                title: data.title,
-                content: data.content,
-            });
-            const { url } = response.data;
-            if (url) {
-                setData('featured_images', [url, ...data.featured_images]);
-                toast.success('Social image generated and added to gallery!');
-            }
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Failed to generate social image.');
-        } finally {
-            setIsGeneratingSocialImage(false);
-        }
-    };
-
     const [lockedSlug, setLockedSlug] = useState(true);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [editorHeight, setEditorHeight] = useState(() => {
@@ -147,6 +242,24 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
     useEffect(() => {
         localStorage.setItem('page_editor_height', editorHeight.toString());
     }, [editorHeight]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            const oldIndex = data.featured_images.indexOf(active.id as string);
+            const newIndex = data.featured_images.indexOf(over.id as string);
+
+            setData('featured_images', arrayMove(data.featured_images, oldIndex, newIndex));
+        }
+    };
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -217,7 +330,11 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                    window.open(route('public.page', page.slug), '_blank');
+                                    const url = new URL(route('public.page', page.slug));
+                                    if (data.status === 'draft') {
+                                        url.searchParams.set('preview', 'true');
+                                    }
+                                    window.open(url.toString(), '_blank');
                                 }}
                             >
                                 View Live
@@ -346,62 +463,7 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                     </CardContent>
                                 </Card>
 
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>SEO Settings</CardTitle>
-                                        <CardDescription>Search Engine Optimization</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="seo_title">SEO Title</Label>
-                                            <AiInput
-                                                id="seo_title"
-                                                value={data.seo_title}
-                                                onChange={(e) => setData('seo_title', e.target.value)}
-                                                onGeneration={(text) => setData('seo_title', text)}
-                                                placeholder={data.title || "Page Title"}
-                                                aiPromptLabel="What should the SEO title emphasize?"
-                                            />
-                                            <CharacterCounter
-                                                current={data.seo_title.length}
-                                                ideal={{ min: 50, max: 60 }}
-                                                max={70}
-                                            />
-                                            {errors.seo_title && <p className="text-sm text-destructive">{errors.seo_title}</p>}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="seo_description">Meta Description</Label>
-                                            <AiTextarea
-                                                id="seo_description"
-                                                value={data.seo_description}
-                                                onChange={(e) => setData('seo_description', e.target.value)}
-                                                onGeneration={(text) => setData('seo_description', text)}
-                                                placeholder="Brief description for search results"
-                                                aiPromptLabel="What should the meta description highlight?"
-                                                className="h-24 resize-none"
-                                            />
-                                            <CharacterCounter
-                                                current={data.seo_description.length}
-                                                ideal={{ min: 140, max: 160 }}
-                                                max={200}
-                                            />
-                                            {errors.seo_description && <p className="text-sm text-destructive">{errors.seo_description}</p>}
-                                        </div>
 
-                                        <Separator className="my-2" />
-
-                                        <div className="space-y-2">
-                                            <Label>Preview</Label>
-                                            <div className="rounded-md border p-3 bg-muted/20">
-                                                <SerpPreview
-                                                    title={data.seo_title || data.title || 'Page Title'}
-                                                    description={data.seo_description || 'Page description will appear here...'}
-                                                    slug={data.slug || 'page-slug'}
-                                                />
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
                                 {redirects && redirects.length > 0 && (
                                     <Card>
                                         <CardHeader>
@@ -434,6 +496,7 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                         </CardContent>
                                     </Card>
                                 )}
+
                             </div>
                         }
                     >
@@ -546,94 +609,155 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                         <Plus className="mr-2 h-4 w-4" /> Add Images from Vault
                                     </Button>
                                     {data.featured_images && data.featured_images.length > 0 && (
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                            {data.featured_images.map((url, index) => (
-                                                <div key={index} className="aspect-video relative group rounded-md overflow-hidden border">
-                                                    <img
-                                                        src={url}
-                                                        alt={`Gallery ${index + 1}`}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                        <Button
-                                                            type="button"
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            onClick={() => {
+                                        <DndContext
+                                            sensors={sensors}
+                                            collisionDetection={closestCenter}
+                                            onDragEnd={handleDragEnd}
+                                        >
+                                            <SortableContext
+                                                items={data.featured_images}
+                                                strategy={rectSortingStrategy}
+                                            >
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                                    {data.featured_images.map((url, index) => (
+                                                        <SortableGalleryItem
+                                                            key={url}
+                                                            id={url}
+                                                            url={url}
+                                                            index={index}
+                                                            onRemove={() => {
                                                                 const newImages = [...data.featured_images];
                                                                 newImages.splice(index, 1);
                                                                 setData('featured_images', newImages);
                                                             }}
-                                                        >
-                                                            Remove
-                                                        </Button>
-                                                    </div>
+                                                        />
+                                                    ))}
                                                 </div>
-                                            ))}
-                                        </div>
+                                            </SortableContext>
+                                        </DndContext>
                                     )}
                                     {errors.featured_images && <p className="text-sm text-destructive mt-1">{errors.featured_images}</p>}
                                 </CardContent>
                             </Card>
 
+                            {/* Combined SEO Settings Card */}
                             <Card>
                                 <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <CardTitle>Social Media Preview</CardTitle>
-                                            <CardDescription>How this page looks when shared on social networks</CardDescription>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={generateSocialImage}
-                                            disabled={isGeneratingSocialImage}
-                                        >
-                                            {isGeneratingSocialImage ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                                            ✨ Generate AI Banner
-                                        </Button>
-                                    </div>
+                                    <CardTitle>SEO & Social Settings</CardTitle>
+                                    <CardDescription>Configure how your page appears in search results and social media</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <Tabs defaultValue="facebook" className="w-full">
-                                        <TabsList className="mb-4">
-                                            <TabsTrigger value="facebook">Facebook</TabsTrigger>
-                                            <TabsTrigger value="twitter">X (Twitter)</TabsTrigger>
-                                        </TabsList>
-                                        <TabsContent value="facebook">
-                                            <div className="border rounded-lg overflow-hidden max-w-md mx-auto bg-[#f0f2f5] dark:bg-zinc-900">
-                                                <div className="aspect-[1.91/1] bg-muted flex items-center justify-center overflow-hidden border-b">
-                                                    {data.featured_images[0] ? (
-                                                        <img src={data.featured_images[0]} className="w-full h-full object-cover" alt="Social" />
-                                                    ) : (
-                                                        <span className="text-muted-foreground">No image</span>
-                                                    )}
+                                    {isExpanded ? (
+                                        <div className="space-y-8">
+                                            {/* Expanded View: Inputs Row + Previews Row */}
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="seo_title">SEO Title</Label>
+                                                    <AiInput
+                                                        id="seo_title"
+                                                        value={data.seo_title}
+                                                        onChange={(e) => setData('seo_title', e.target.value)}
+                                                        onGeneration={(text) => setData('seo_title', text)}
+                                                        placeholder={data.title || "Page Title"}
+                                                        aiPromptLabel="What should the SEO title emphasize?"
+                                                    />
+                                                    <CharacterCounter current={data.seo_title.length} ideal={{ min: 50, max: 60 }} max={70} />
                                                 </div>
-                                                <div className="p-3 space-y-1">
-                                                    <p className="text-[12px] uppercase text-zinc-500 font-medium">Untitled CMS</p>
-                                                    <h3 className="font-bold text-[16px] leading-tight line-clamp-2">{data.seo_title || data.title}</h3>
-                                                    <p className="text-zinc-500 text-[14px] line-clamp-2">{data.seo_description || "Page description will appear here..."}</p>
-                                                </div>
-                                            </div>
-                                        </TabsContent>
-                                        <TabsContent value="twitter">
-                                            <div className="border rounded-2xl overflow-hidden max-w-md mx-auto bg-white dark:bg-black">
-                                                <div className="aspect-[1.91/1] bg-muted flex items-center justify-center overflow-hidden border-b">
-                                                    {data.featured_images[0] ? (
-                                                        <img src={data.featured_images[0]} className="w-full h-full object-cover" alt="Social" />
-                                                    ) : (
-                                                        <span className="text-muted-foreground">No image</span>
-                                                    )}
-                                                </div>
-                                                <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border-t">
-                                                    <p className="text-[13px] text-zinc-500 mb-1">untitled-cms.test</p>
-                                                    <h3 className="font-medium text-[15px] leading-tight line-clamp-1">{data.seo_title || data.title}</h3>
-                                                    <p className="text-zinc-500 text-[13px] line-clamp-2">{data.seo_description || "Page description will appear here..."}</p>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="seo_description">Meta Description</Label>
+                                                    <AiTextarea
+                                                        id="seo_description"
+                                                        value={data.seo_description}
+                                                        onChange={(e) => setData('seo_description', e.target.value)}
+                                                        onGeneration={(text) => setData('seo_description', text)}
+                                                        placeholder="Brief description for search results"
+                                                        aiPromptLabel="What should the meta description highlight?"
+                                                        className="h-24 resize-none"
+                                                    />
+                                                    <CharacterCounter current={data.seo_description.length} ideal={{ min: 140, max: 160 }} max={200} />
                                                 </div>
                                             </div>
-                                        </TabsContent>
-                                    </Tabs>
+
+                                            <Separator />
+
+                                            <div className="space-y-4">
+                                                <Label className="text-base font-semibold">Previews</Label>
+                                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                                    <PreviewSection label="Google Search" content={
+                                                        <div className="bg-white dark:bg-transparent">
+                                                            <SerpPreview
+                                                                title={data.seo_title || data.title || 'Page Title'}
+                                                                description={data.seo_description || 'Page description will appear here...'}
+                                                                slug={data.slug || 'page-slug'}
+                                                            />
+                                                        </div>
+                                                    } />
+                                                    <PreviewSection label="Facebook" content={
+                                                        <FacebookPreview data={data} />
+                                                    } />
+                                                    <PreviewSection label="X (Twitter)" content={
+                                                        <TwitterPreview data={data} />
+                                                    } />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-12">
+                                            {/* Collapsed View: 2x2 Layout */}
+                                            {/* Top Left: Inputs stacked */}
+                                            <div className="space-y-6">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="seo_title">SEO Title</Label>
+                                                    <AiInput
+                                                        id="seo_title"
+                                                        value={data.seo_title}
+                                                        onChange={(e) => setData('seo_title', e.target.value)}
+                                                        onGeneration={(text) => setData('seo_title', text)}
+                                                        placeholder={data.title || "Page Title"}
+                                                        aiPromptLabel="What should the SEO title emphasize?"
+                                                    />
+                                                    <CharacterCounter current={data.seo_title.length} ideal={{ min: 50, max: 60 }} max={70} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="seo_description">Meta Description</Label>
+                                                    <AiTextarea
+                                                        id="seo_description"
+                                                        value={data.seo_description}
+                                                        onChange={(e) => setData('seo_description', e.target.value)}
+                                                        onGeneration={(text) => setData('seo_description', text)}
+                                                        placeholder="Brief description for search results"
+                                                        aiPromptLabel="What should the meta description highlight?"
+                                                        className="h-24 resize-none"
+                                                    />
+                                                    <CharacterCounter current={data.seo_description.length} ideal={{ min: 140, max: 160 }} max={200} />
+                                                </div>
+                                            </div>
+
+                                            {/* Top Right: Google Preview */}
+                                            <div className="space-y-3">
+                                                <Label className="text-sm font-medium text-muted-foreground">Google Search Preview</Label>
+                                                <div className="bg-white dark:bg-transparent">
+                                                    <SerpPreview
+                                                        title={data.seo_title || data.title || 'Page Title'}
+                                                        description={data.seo_description || 'Page description will appear here...'}
+                                                        slug={data.slug || 'page-slug'}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Bottom Left: Facebook Preview */}
+                                            <div className="space-y-3">
+                                                <Label className="text-sm font-medium text-muted-foreground">Facebook Preview</Label>
+                                                <FacebookPreview data={data} />
+                                            </div>
+
+                                            {/* Bottom Right: X Preview */}
+                                            <div className="space-y-3">
+                                                <Label className="text-sm font-medium text-muted-foreground">X (Twitter) Preview</Label>
+                                                <TwitterPreview data={data} />
+                                            </div>
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router } from "@inertiajs/react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
 import SettingInput from "@/Components/Settings/SettingInput";
@@ -23,6 +22,7 @@ interface Props {
 export default function SettingsIndex({ settings }: Props) {
     const [localSettings, setLocalSettings] = useState(settings);
     const groups = Object.keys(settings);
+    const [activeGroup, setActiveGroup] = useState(groups[0]);
 
     const formatGroupLabel = (group: string) => {
         const labels: Record<string, string> = {
@@ -46,10 +46,6 @@ export default function SettingsIndex({ settings }: Props) {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
-                // specific toast for non-text inputs or just silent success?
-                // User asked for "no prompt", implying unobtrusive. 
-                // We'll show a small toast for confirmation but not block anything.
-                // toast.dismiss(); // Dismiss previous to avoid stacking
                 toast.success("Saved", { duration: 1500, position: 'bottom-right' });
             },
             onError: () => {
@@ -70,63 +66,72 @@ export default function SettingsIndex({ settings }: Props) {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <Tabs defaultValue={groups[0]} className="w-full">
-                        <TabsList className="mb-4">
-                            {groups.map((group) => (
-                                <TabsTrigger key={group} value={group}>
-                                    {formatGroupLabel(group)}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
+                    <div className="flex flex-col space-y-8 md:flex-row md:space-x-12 md:space-y-0">
+                        <aside className="w-full md:w-1/4 lg:w-1/5">
+                            <nav className="flex space-x-2 md:flex-col md:space-x-0 md:space-y-1">
+                                {groups.map((group) => (
+                                    <Button
+                                        key={group}
+                                        variant={activeGroup === group ? "secondary" : "ghost"}
+                                        className="justify-start w-full"
+                                        onClick={() => setActiveGroup(group)}
+                                    >
+                                        {formatGroupLabel(group)}
+                                    </Button>
+                                ))}
+                            </nav>
+                        </aside>
 
-                        {groups.map((group) => (
-                            <TabsContent key={group} value={group}>
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>{formatGroupLabel(group)} Settings</CardTitle>
-                                        <CardDescription>
-                                            Manage your {formatGroupLabel(group)} configurations. Changes are saved automatically.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-6">
-                                        {group === 'integrations' ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {localSettings[group].map((setting) => (
-                                                    <div
-                                                        key={setting.key}
-                                                        className={
-                                                            ['text', 'textarea', 'image'].includes(setting.type)
-                                                                ? 'col-span-1 md:col-span-2'
-                                                                : 'col-span-1'
-                                                        }
-                                                    >
-                                                        <SettingInput
-                                                            setting={setting}
-                                                            onChange={(val) => updateLocalSetting(group, setting.key, val)}
-                                                            onSave={(val) => handleSave(setting.key, val)}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            // Default listing for other groups
-                                            localSettings[group].map((setting) => (
-                                                <div key={setting.key} className="flex items-end gap-4 border-b pb-6 last:border-0 last:pb-0">
-                                                    <div className="flex-1">
-                                                        <SettingInput
-                                                            setting={setting}
-                                                            onChange={(val) => updateLocalSetting(group, setting.key, val)}
-                                                            onSave={(val) => handleSave(setting.key, val)}
-                                                        />
-                                                    </div>
+                        <div className="flex-1 lg:max-w-4xl">
+                            {groups.map((group) => (
+                                <div key={group} className={activeGroup === group ? "block" : "hidden"}>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>{formatGroupLabel(group)} Settings</CardTitle>
+                                            <CardDescription>
+                                                Manage your {formatGroupLabel(group)} configurations. Changes are saved automatically.
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-6">
+                                            {group === 'integrations' ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {localSettings[group]?.map((setting) => (
+                                                        <div
+                                                            key={setting.key}
+                                                            className={
+                                                                ['text', 'textarea', 'image'].includes(setting.type)
+                                                                    ? 'col-span-1 md:col-span-2'
+                                                                    : 'col-span-1'
+                                                            }
+                                                        >
+                                                            <SettingInput
+                                                                setting={setting}
+                                                                onChange={(val) => updateLocalSetting(group, setting.key, val)}
+                                                                onSave={(val) => handleSave(setting.key, val)}
+                                                            />
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        ))}
-                    </Tabs>
+                                            ) : (
+                                                // Default listing for other groups
+                                                localSettings[group]?.map((setting) => (
+                                                    <div key={setting.key} className="flex items-end gap-4 border-b pb-6 last:border-0 last:pb-0">
+                                                        <div className="flex-1">
+                                                            <SettingInput
+                                                                setting={setting}
+                                                                onChange={(val) => updateLocalSetting(group, setting.key, val)}
+                                                                onSave={(val) => handleSave(setting.key, val)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
