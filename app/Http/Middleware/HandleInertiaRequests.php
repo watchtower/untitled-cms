@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
             'tinymce_api_key' => config('services.tinymce.api_key'),
             'settings' => app(\App\Services\SettingsService::class)->getPublicSettings(),
             'aiChatEnabled' => (bool) \App\Models\Setting::get('ai.chat_enabled', true),
+            'menus' => \App\Models\Menu::active()->get()->keyBy('slug'),
         ];
     }
 }

@@ -26,6 +26,7 @@ interface BannerModel {
         title: string;
         subtitle: string;
         caption: string;
+        target: '_self' | '_blank';
     }[];
     is_active: boolean;
     start_at: string;
@@ -60,6 +61,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
             title: string;
             subtitle: string;
             caption: string;
+            target: '_self' | '_blank';
         }[],
         is_active: banner.is_active ?? true,
         start_at: banner.start_at ? new Date(banner.start_at).toISOString().split('T')[0] : '',
@@ -84,7 +86,8 @@ export default function Edit({ auth, banner }: BannerEditProps) {
             sequence: data.slides.length + 1,
             title: '',
             subtitle: '',
-            caption: ''
+            caption: '',
+            target: '_self'
         }]);
     };
 
@@ -356,13 +359,23 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                                 className="h-9"
                                                             />
                                                         </div>
+                                                        <div className="space-y-1.5 col-span-1 justify-center flex flex-col items-center">
+                                                            <Label className="text-xs">New Tab</Label>
+                                                            <div className="h-9 flex items-center">
+                                                                <Switch
+                                                                    checked={data.slides[activeSlideIndex].target === '_blank'}
+                                                                    onCheckedChange={(checked) => updateSlide(activeSlideIndex, 'target', checked ? '_blank' : '_self')}
+                                                                    className="scale-75"
+                                                                />
+                                                            </div>
+                                                        </div>
                                                         <div className="space-y-1.5 col-span-1">
-                                                            <Label className="text-xs">Sequence</Label>
+                                                            <Label className="text-xs">Seq</Label>
                                                             <Input
                                                                 type="number"
                                                                 value={data.slides[activeSlideIndex].sequence}
                                                                 onChange={(e) => updateSlide(activeSlideIndex, 'sequence', parseInt(e.target.value))}
-                                                                className="h-9"
+                                                                className="h-9 px-2"
                                                             />
                                                         </div>
                                                     </div>
@@ -486,13 +499,23 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                         className="h-9"
                                                     />
                                                 </div>
+                                                <div className="space-y-1.5 col-span-1 justify-center flex flex-col items-center">
+                                                    <Label className="text-xs">New Tab</Label>
+                                                    <div className="h-9 flex items-center">
+                                                        <Switch
+                                                            checked={slide.target === '_blank'}
+                                                            onCheckedChange={(checked) => updateSlide(index, 'target', checked ? '_blank' : '_self')}
+                                                            className="scale-75"
+                                                        />
+                                                    </div>
+                                                </div>
                                                 <div className="space-y-1.5 col-span-1">
-                                                    <Label className="text-xs">Sequence</Label>
+                                                    <Label className="text-xs">Seq</Label>
                                                     <Input
                                                         type="number"
                                                         value={slide.sequence}
                                                         onChange={(e) => updateSlide(index, 'sequence', parseInt(e.target.value))}
-                                                        className="h-9"
+                                                        className="h-9 px-2"
                                                     />
                                                 </div>
                                             </div>

@@ -16,6 +16,7 @@ class Banner extends Model
 
     protected $fillable = [
         'title',
+        'slug',
         'slides',
         'image_url', // Stores array of image URLs
         'alt_text',
@@ -28,6 +29,7 @@ class Banner extends Model
     ];
 
     protected $casts = [
+        'slug' => 'string',
         'slides' => 'array',
         'image_url' => 'array',
         'order' => 'integer',

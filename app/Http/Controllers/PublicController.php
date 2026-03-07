@@ -13,8 +13,12 @@ class PublicController extends Controller
     public function home(Request $request)
     {
         $banners = Banner::active()
+            ->where(function ($q) {
+                $q->where('slug', 'app_header')
+                    ->orWhere('title', 'app_header');
+            })
             ->orderBy('order', 'asc')
-            ->get(['id', 'title', 'slides', 'order']);
+            ->get(['id', 'title', 'slides', 'order', 'slug']);
 
         $recentPages = Page::where('status', 'published')
             ->orderBy('published_at', 'desc')
@@ -26,19 +30,21 @@ class PublicController extends Controller
             $markdown .= "## Featured\n\n";
             foreach ($banners as $banner) {
                 $markdown .= "- **" . $banner->title . "**\n";
-                if (!empty($banner->slides)) {
-                    foreach ($banner->slides as $slide) {
-                        if (!empty($slide['title'])) {
-                            $line = '  - ' . $slide['title'];
-                            if (!empty($slide['subtitle'])) {
-                                $line .= ': ' . $slide['subtitle'];
-                            }
-                            if (!empty($slide['caption'])) {
-                                $line .= ' — ' . $slide['caption'];
-                            }
-                            $markdown .= $line . "\n";
-                        }
+                if (empty($banner->slides))
+                    continue;
+
+                foreach ($banner->slides as $slide) {
+                    if (empty($slide['title']))
+                        continue;
+
+                    $line = '  - ' . $slide['title'];
+                    if (!empty($slide['subtitle'])) {
+                        $line .= ': ' . $slide['subtitle'];
                     }
+                    if (!empty($slide['caption'])) {
+                        $line .= ' — ' . $slide['caption'];
+                    }
+                    $markdown .= $line . "\n";
                 }
             }
             $markdown .= "\n## Recent Pages\n\n";

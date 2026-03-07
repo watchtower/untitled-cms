@@ -5,15 +5,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
-
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -38,6 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('pages', \App\Http\Controllers\PageController::class);
 
     Route::resource('banners', \App\Http\Controllers\BannerController::class);
+    Route::resource('menus', \App\Http\Controllers\MenuController::class)->except(['create', 'show']);
     Route::resource('ai-hubs', \App\Http\Controllers\AiHubController::class)->only(['index', 'update']);
     Route::post('/ai-hubs/{aiHub}/activate', [\App\Http\Controllers\AiHubController::class, 'activate'])->name('ai-hubs.activate');
 

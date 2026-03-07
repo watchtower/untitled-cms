@@ -41,9 +41,11 @@ class BannerController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:banners,slug',
             'slides' => 'nullable|array',
             'slides.*.image' => 'required_with:slides|string',
             'slides.*.url' => 'nullable|string',
+            'slides.*.target' => 'nullable|string|in:_self,_blank',
             'slides.*.sequence' => 'nullable|numeric',
             'slides.*.title' => 'nullable|string',
             'slides.*.subtitle' => 'nullable|string',
@@ -92,9 +94,11 @@ class BannerController extends Controller
         try {
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
+                'slug' => 'nullable|string|max:255|unique:banners,slug,' . $id . ',_id',
                 'slides' => 'nullable|array',
                 'slides.*.image' => 'required_with:slides|string',
                 'slides.*.url' => 'nullable|string',
+                'slides.*.target' => 'nullable|string|in:_self,_blank',
                 'slides.*.sequence' => 'nullable|numeric',
                 'slides.*.title' => 'nullable|string',
                 'slides.*.subtitle' => 'nullable|string',

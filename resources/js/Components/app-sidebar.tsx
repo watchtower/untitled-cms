@@ -66,6 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         isActive: true,
         items: [
           { title: "Pages", url: route('pages.index') },
+          { title: "Menus", url: route('menus.index') },
           { title: "Banners", url: route('banners.index') },
           { title: "Vault", url: route('vault.index') },
         ]

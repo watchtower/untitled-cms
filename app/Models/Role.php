@@ -54,6 +54,10 @@ class Role extends Model
             'roles.create',
             'roles.edit',
             'roles.delete',
+            'menus.view',
+            'menus.create',
+            'menus.edit',
+            'menus.delete',
         ];
     }
 }
