@@ -28,18 +28,18 @@ class AiService
             throw new \Exception('No active AI Integration found with a configured API key.');
         }
 
-        $modelName = strtolower($activeHub->name);
+        $providerName = strtolower($activeHub->name);
         $apiKey = $activeHub->api_key;
 
         $supportedProviders = array_keys(config('ai.providers'));
-        if (!in_array($modelName, $supportedProviders)) {
-            throw new \Exception("Unsupported AI Integration provider by laravel/ai: {$modelName}");
+        if (!in_array($providerName, $supportedProviders)) {
+            throw new \Exception("Unsupported AI Integration provider by laravel/ai: {$providerName}");
         }
 
         // Dynamically override the configuration
         config([
-            "ai.default" => $modelName,
-            "ai.providers.{$modelName}.key" => $apiKey,
+            "ai.default" => $providerName,
+            "ai.providers.{$providerName}.key" => $apiKey,
         ]);
 
         return $activeHub;
@@ -50,12 +50,8 @@ class AiService
         try {
             $activeHub = $this->configureActiveAi();
 
-            // Mock mode for local dev if no API key is active
             if (!$activeHub) {
-                return [
-                    'seo_title' => Str::limit($title, 60),
-                    'seo_description' => Str::limit(strip_tags($content), 160),
-                ];
+                return $this->getDefaultSeoMeta($title, $content);
             }
 
             $agent = new AnonymousAgent(
@@ -71,12 +67,9 @@ class AiService
                 $activeHub->default_model
             );
 
-            // Increment local tracking usage since an API request was successfully fulfilled
             $activeHub->increment('monthly_usage');
 
-            // Strip out markdown formatting such as "```json" and "```" if present
-            $jsonString = preg_replace('/```(?:json)?|```/', '', (string) $response);
-            $json = json_decode(trim($jsonString), true);
+            $json = $this->extractJsonFromResponse((string) $response);
 
             return [
                 'seo_title' => $json['seo_title'] ?? Str::limit($title, 60),
@@ -84,18 +77,18 @@ class AiService
             ];
 
         } catch (\Exception $e) {
-            // Fallback
-            return [
-                'seo_title' => Str::limit($title, 60),
-                'seo_description' => Str::limit(strip_tags($content), 160),
-            ];
+            return $this->getDefaultSeoMeta($title, $content);
         }
     }
 
-    /**
-     * Generate alt text for an image provided as a base64 data URI.
-     * Works with vision-capable models (Gemini, GPT-4o) without requiring a public URL.
-     */
+    private function getDefaultSeoMeta(string $title, string $content): array
+    {
+        return [
+            'seo_title' => Str::limit($title, 60),
+            'seo_description' => Str::limit(strip_tags($content), 160),
+        ];
+    }
+
     public function generateAltTextFromBase64(string $dataUri, string $mimeType): string
     {
         $activeHub = \App\Models\AiHub::where('is_active', true)->whereNotNull('api_key')->first();
@@ -105,56 +98,63 @@ class AiService
         }
 
         $provider = strtolower($activeHub->name);
-        $model = $activeHub->default_model;
+
+        return match ($provider) {
+            'gemini' => $this->generateAltTextGemini($activeHub, $dataUri, $mimeType),
+            'openai' => $this->generateAltTextOpenAi($activeHub, $dataUri),
+            default => throw new \Exception("Your active AI Hub \"{$activeHub->name}\" does not support vision. Please use Gemini or OpenAI.")
+        };
+    }
+
+    private function generateAltTextGemini(\App\Models\AiHub $hub, string $dataUri, string $mimeType): string
+    {
         $base64 = preg_replace('/^data:[^;]+;base64,/', '', $dataUri);
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$hub->default_model}:generateContent?key={$hub->api_key}";
 
-        if ($provider === 'gemini') {
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$activeHub->api_key}";
+        $response = \Illuminate\Support\Facades\Http::post($url, [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => 'Describe this image concisely in 15 words or less for use as HTML alt text. Return only the description, no punctuation at the end.'],
+                        ['inlineData' => ['mimeType' => $mimeType, 'data' => $base64]],
+                    ],
+                ]
+            ],
+        ]);
 
-            $response = \Illuminate\Support\Facades\Http::post($url, [
-                'contents' => [
+        if ($response->failed()) {
+            throw new \Exception('Gemini alt text generation failed: ' . $response->json('error.message', 'Unknown'));
+        }
+
+        $hub->increment('monthly_usage');
+        return trim($response->json('candidates.0.content.parts.0.text') ?? 'Image description');
+    }
+
+    private function generateAltTextOpenAi(\App\Models\AiHub $hub, string $dataUri): string
+    {
+        $model = $hub->default_model ?: 'gpt-4o';
+
+        $response = \Illuminate\Support\Facades\Http::withToken($hub->api_key)
+            ->post('https://api.openai.com/v1/chat/completions', [
+                'model' => $model,
+                'messages' => [
                     [
-                        'parts' => [
-                            ['text' => 'Describe this image concisely in 15 words or less for use as HTML alt text. Return only the description, no punctuation at the end.'],
-                            ['inlineData' => ['mimeType' => $mimeType, 'data' => $base64]],
+                        'role' => 'user',
+                        'content' => [
+                            ['type' => 'text', 'text' => 'Describe this image concisely in 15 words or less for alt text. Return only the description.'],
+                            ['type' => 'image_url', 'image_url' => ['url' => $dataUri]],
                         ],
                     ]
                 ],
+                'max_tokens' => 60,
             ]);
 
-            if ($response->failed()) {
-                throw new \Exception('Gemini alt text generation failed: ' . $response->json('error.message', 'Unknown'));
-            }
-
-            $activeHub->increment('monthly_usage');
-            return trim($response->json('candidates.0.content.parts.0.text') ?? 'Image description');
+        if ($response->failed()) {
+            throw new \Exception('OpenAI vision failed: ' . $response->json('error.message', 'Unknown'));
         }
 
-        if ($provider === 'openai') {
-            $response = \Illuminate\Support\Facades\Http::withToken($activeHub->api_key)
-                ->post('https://api.openai.com/v1/chat/completions', [
-                    'model' => $model ?: 'gpt-4o',
-                    'messages' => [
-                        [
-                            'role' => 'user',
-                            'content' => [
-                                ['type' => 'text', 'text' => 'Describe this image concisely in 15 words or less for alt text. Return only the description.'],
-                                ['type' => 'image_url', 'image_url' => ['url' => $dataUri]],
-                            ],
-                        ]
-                    ],
-                    'max_tokens' => 60,
-                ]);
-
-            if ($response->failed()) {
-                throw new \Exception('OpenAI vision failed: ' . $response->json('error.message', 'Unknown'));
-            }
-
-            $activeHub->increment('monthly_usage');
-            return trim($response->json('choices.0.message.content') ?? 'Image description');
-        }
-
-        throw new \Exception("Your active AI Hub \"{$activeHub->name}\" does not support vision. Please use Gemini or OpenAI.");
+        $hub->increment('monthly_usage');
+        return trim($response->json('choices.0.message.content') ?? 'Image description');
     }
 
     public function generateText(string $prompt): string
@@ -209,8 +209,7 @@ class AiService
 
             $activeHub->increment('monthly_usage');
 
-            $jsonString = preg_replace('/```(?:json)?|```/', '', (string) $response);
-            $json = json_decode(trim($jsonString), true);
+            $json = $this->extractJsonFromResponse((string) $response);
 
             return [
                 'status' => $json['status'] ?? 'pass',
@@ -231,52 +230,8 @@ class AiService
         }
 
         try {
-            // Extract page URL from system messages for context injection
-            $pageUrl = null;
-            foreach ($messages as $msg) {
-                if ($msg['role'] === 'system' && str_contains($msg['content'] ?? '', 'CMS page:')) {
-                    preg_match('/CMS page:\s*(.+?)(?:\.|$)/i', $msg['content'], $m);
-                    $pageUrl = trim($m[1] ?? '');
-                    break;
-                }
-            }
-
-            // Build live module context string
-            $contextService = app(AiContextService::class);
-            $liveContext = $pageUrl ? $contextService->buildContextString($pageUrl) : '';
-
-            // Supported AI actions for system prompt
-            $whitelist = implode(', ', app(\App\Services\AiActionService::class)->getWhitelist());
-
-            $systemPrompt = <<<PROMPT
-You are an expert AI Assistant integrated into the Untitled CMS admin dashboard.
-You help admin users with content management, SEO, writing tasks, and answering questions about their CMS data.
-
-You CAN perform the following CMS actions when the admin clearly requests them:
-{$whitelist}
-
-For any supported action, respond with a JSON block in this format (inline, not in a code fence):
-[ACTION]{"action":"action_key","params":{...}}[/ACTION]
-
-CONTENT WRITING RULES (critical):
-- When writing page or banner content, write the COMPLETE, FINAL, READY-TO-PUBLISH content in the "content" field.
-- Use proper HTML formatting (<h2>, <p>, <ul>, <strong> etc.).
-- NEVER write placeholder text like "insert review here", "provide text", or meta-instructions.
-- NEVER ask the user to supply content — use your knowledge to write it based on the title and context.
-- Write real, engaging copy. If asked for a review, write an actual review. If asked for a description, write one.
-
-General rules:
-- If no action is needed, answer conversationally. Keep answers concise and helpful.
-- DO NOT invent record IDs. Always refer to records by title/name only.
-
-{$liveContext}
-PROMPT;
-
-            // Format conversation (exclude system messages — replaced by our systemPrompt above)
-            $formattedHistory = collect($messages)
-                ->filter(fn($m) => $m['role'] !== 'system')
-                ->map(fn($m) => ucfirst($m['role']) . ': ' . ($m['content'] ?? ''))
-                ->join("\n");
+            $systemPrompt = $this->buildSystemPrompt($messages);
+            $formattedHistory = $this->formatConversationHistory($messages);
 
             $agent = new AnonymousAgent($systemPrompt, [], []);
 
@@ -337,10 +292,7 @@ PROMPT;
 
             $activeHub->increment('monthly_usage');
 
-            $jsonString = preg_replace('/```(?:json)?|```/', '', (string) $response);
-            $json = json_decode(trim($jsonString), true);
-
-            return is_array($json) ? $json : [];
+            return $this->extractJsonFromResponse((string) $response);
 
         } catch (\Exception $e) {
             return [];
@@ -499,5 +451,61 @@ PROMPT;
         }
 
         return 'data:image/png;base64,' . $base64;
+    }
+
+    private function buildSystemPrompt(array $messages): string
+    {
+        $pageUrl = null;
+        foreach ($messages as $msg) {
+            if ($msg['role'] === 'system' && str_contains($msg['content'] ?? '', 'CMS page:')) {
+                preg_match('/CMS page:\s*(.+?)(?:\.|$)/i', $msg['content'], $m);
+                $pageUrl = trim($m[1] ?? '');
+                break;
+            }
+        }
+
+        $contextService = app(AiContextService::class);
+        $liveContext = $pageUrl ? $contextService->buildContextString($pageUrl) : '';
+        $whitelist = implode(', ', app(\App\Services\AiActionService::class)->getWhitelist());
+
+        return <<<PROMPT
+You are an expert AI Assistant integrated into the Untitled CMS admin dashboard.
+You help admin users with content management, SEO, writing tasks, and answering questions about their CMS data.
+
+You CAN perform the following CMS actions when the admin clearly requests them:
+{$whitelist}
+
+For any supported action, respond with a JSON block in this format (inline, not in a code fence):
+[ACTION]{"action":"action_key","params":{...}}[/ACTION]
+
+CONTENT WRITING RULES (critical):
+- When writing page or banner content, write the COMPLETE, FINAL, READY-TO-PUBLISH content in the "content" field.
+- Use proper HTML formatting (<h2>, <p>, <ul>, <strong> etc.).
+- NEVER write placeholder text like "insert review here", "provide text", or meta-instructions.
+- NEVER ask the user to supply content — use your knowledge to write it based on the title and context.
+- Write real, engaging copy. If asked for a review, write an actual review. If asked for a description, write one.
+
+General rules:
+- If no action is needed, answer conversationally. Keep answers concise and helpful.
+- DO NOT invent record IDs. Always refer to records by title/name only.
+
+{$liveContext}
+PROMPT;
+    }
+
+    private function formatConversationHistory(array $messages): string
+    {
+        return collect($messages)
+            ->filter(fn($m) => $m['role'] !== 'system')
+            ->map(fn($m) => ucfirst($m['role']) . ': ' . ($m['content'] ?? ''))
+            ->join("\n");
+    }
+
+    private function extractJsonFromResponse(string $response): array
+    {
+        $jsonString = preg_replace('/```(?:json)?|```/', '', $response);
+        $decoded = json_decode(trim($jsonString), true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 }

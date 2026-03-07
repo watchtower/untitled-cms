@@ -3,17 +3,18 @@
 namespace App\Vault\Pipes;
 
 use Closure;
+use App\Vault\DTOs\VaultPipelinePayload;
 use Illuminate\Support\Facades\Log;
 
 class SandboxedScan
 {
-    public function handle($payload, Closure $next)
+    public function handle(VaultPipelinePayload $payload, Closure $next)
     {
-        if (! config('vault.clamav_enabled')) {
+        if (!config('vault.clamav_enabled')) {
             return $next($payload);
         }
 
-        $file = $payload['file'];
+        $file = $payload->file;
         $path = $file->getRealPath();
 
         // Stub for ClamAV scanning

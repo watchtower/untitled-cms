@@ -23,47 +23,38 @@ class VaultService
 {
     public function upload(UploadedFile $file, ?string $folderId = null): VaultFile
     {
-        // Define the pipeline
+        $this->ensureFolderExists($folderId);
+
         $pipes = [
             DetectDoubleExtension::class,
             ValidateMimeType::class,
-                // SandboxedScan::class, // Optional ClamAV
             SanitizeImage::class,
             ModerationCheck::class,
             GenerateUuid::class,
             StoreMetadata::class,
         ];
 
-        // Ensure folder exists if provided
-        if ($folderId) {
-            $folder = VaultFolder::find($folderId);
-            if (!$folder) {
-                throw new \InvalidArgumentException('Folder not found.');
-            }
-        }
-
-        $payload = [
-            'file' => $file,
-            'folder_id' => $folderId,
-        ];
-
-        // Enable SandboxedScan if configured
         if (config('vault.clamav_enabled')) {
             array_splice($pipes, 2, 0, SandboxedScan::class);
         }
 
         return app(Pipeline::class)
-            ->send($payload)
+            ->send(new \App\Vault\DTOs\VaultPipelinePayload($file, $folderId))
             ->through($pipes)
-            ->then(function ($payload) {
-                $file = $payload['created_file'];
+            ->then(function (\App\Vault\DTOs\VaultPipelinePayload $payload) {
+                $file = $payload->created_file;
                 $this->audit('file.upload', $file, null, $file->toArray());
-
-                // Dispatch async WebP conversion job for supported images
                 OptimizeVaultImageJob::dispatch($file);
 
                 return $file;
             });
+    }
+
+    private function ensureFolderExists(?string $folderId): void
+    {
+        if ($folderId && !VaultFolder::where('id', $folderId)->exists()) {
+            throw new \InvalidArgumentException('Folder not found.');
+        }
     }
 
     public function createFolder(string $name, ?string $parentId, $ownerId): VaultFolder
@@ -110,12 +101,9 @@ class VaultService
     public function deleteFile(VaultFile $file): void
     {
         $fileData = $file->toArray();
-        $diskName = $file->is_public ? 'public' : 'vault';
 
         // Secure the file by appending .trashed so it's no longer publicly accessible
-        if (Storage::disk($diskName)->exists($file->storage_path)) {
-            Storage::disk($diskName)->move($file->storage_path, $file->storage_path . '.trashed');
-        }
+        $this->moveStorageFile($file, '', '.trashed');
 
         $file->delete(); // Soft delete
         $this->audit('file.delete', $file, $fileData, null);
@@ -123,12 +111,8 @@ class VaultService
 
     public function restoreFile(VaultFile $file): void
     {
-        $diskName = $file->is_public ? 'public' : 'vault';
-
         // Revert the .trashed extension
-        if (Storage::disk($diskName)->exists($file->storage_path . '.trashed')) {
-            Storage::disk($diskName)->move($file->storage_path . '.trashed', $file->storage_path);
-        }
+        $this->moveStorageFile($file, '.trashed', '');
 
         $file->restore();
         $this->audit('file.restore', $file, null, $file->toArray());
@@ -137,18 +121,40 @@ class VaultService
     public function purgeFile(VaultFile $file): void
     {
         $fileData = $file->toArray();
-        $diskName = $file->is_public ? 'public' : 'vault';
 
-        // Remove the physical file (it might have .trashed appended if it was soft-deleted)
-        if (Storage::disk($diskName)->exists($file->storage_path . '.trashed')) {
-            Storage::disk($diskName)->delete($file->storage_path . '.trashed');
-        } elseif (Storage::disk($diskName)->exists($file->storage_path)) {
-            // Fallback just in case deleting an item that hasn't been soft-deleted first
-            Storage::disk($diskName)->delete($file->storage_path);
-        }
+        // Remove the physical file (it might have .trashed appended if we soft-deleted it)
+        $this->deleteStorageFile($file, '.trashed');
+        // Fallback for hard-deleting an active file directly
+        $this->deleteStorageFile($file, '');
 
         $file->forceDelete(); // Hard delete
         $this->audit('file.purge', $file, $fileData, null);
+    }
+
+    private function resolveDiskPrefix(VaultFile $file): string
+    {
+        return $file->is_public ? 'public' : 'vault';
+    }
+
+    private function moveStorageFile(VaultFile $file, string $fromSuffix = '', string $toSuffix = ''): void
+    {
+        $disk = Storage::disk($this->resolveDiskPrefix($file));
+        $fromPath = $file->storage_path . $fromSuffix;
+        $toPath = $file->storage_path . $toSuffix;
+
+        if ($disk->exists($fromPath)) {
+            $disk->move($fromPath, $toPath);
+        }
+    }
+
+    private function deleteStorageFile(VaultFile $file, string $suffix = ''): void
+    {
+        $disk = Storage::disk($this->resolveDiskPrefix($file));
+        $path = $file->storage_path . $suffix;
+
+        if ($disk->exists($path)) {
+            $disk->delete($path);
+        }
     }
 
     public function renameFolder(VaultFolder $folder, string $newName): void
@@ -201,13 +207,13 @@ class VaultService
 
     private function generatePathSlug($name, $parentId)
     {
-        $slug = \Illuminate\Support\Str::slug($name);
-        if ($parentId) {
-            $parent = VaultFolder::find($parentId);
+        $slug = '/' . \Illuminate\Support\Str::slug($name);
 
-            return $parent ? $parent->path_slug . '/' . $slug : '/' . $slug;
+        if (!$parentId) {
+            return $slug;
         }
 
-        return '/' . $slug;
+        $parent = VaultFolder::find($parentId);
+        return $parent ? $parent->path_slug . $slug : $slug;
     }
 }

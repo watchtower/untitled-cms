@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Cache;
 use MongoDB\Laravel\Eloquent\Model;
 
 class Setting extends Model
@@ -23,27 +24,27 @@ class Setting extends Model
         'is_public' => 'boolean',
     ];
 
-    public static function get($key, $default = null)
+    public static function get(string $key, mixed $default = null): mixed
     {
-        $setting = \Illuminate\Support\Facades\Cache::rememberForever("setting.{$key}", function () use ($key) {
+        $setting = Cache::rememberForever("setting.{$key}", function () use ($key) {
             return self::where('key', $key)->first();
         });
 
-        if (!$setting)
+        if (!$setting) {
             return $default;
+        }
 
-        $value = $setting->value;
-        if ($setting->type === 'boolean')
-            return (bool) $value;
-        if ($setting->type === 'number')
-            return (float) $value;
-
-        return $value;
+        return match ($setting->type) {
+            'boolean' => (bool) $setting->value,
+            'number' => (float) $setting->value,
+            default => $setting->value,
+        };
     }
 
-    public static function set($key, $value, $type = 'text')
+    public static function set(string $key, mixed $value, string $type = 'text'): self
     {
-        \Illuminate\Support\Facades\Cache::forget("setting.{$key}");
+        Cache::forget("setting.{$key}");
+
         return self::updateOrCreate(
             ['key' => $key],
             ['value' => $value, 'type' => $type]

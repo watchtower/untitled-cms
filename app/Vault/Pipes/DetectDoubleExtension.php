@@ -3,13 +3,14 @@
 namespace App\Vault\Pipes;
 
 use Closure;
+use App\Vault\DTOs\VaultPipelinePayload;
 use Illuminate\Validation\ValidationException;
 
 class DetectDoubleExtension
 {
-    public function handle($payload, Closure $next)
+    public function handle(VaultPipelinePayload $payload, Closure $next)
     {
-        $file = $payload['file'];
+        $file = $payload->file;
         $filename = $file->getClientOriginalName();
 
         // Allow multiple dots unless they precede a dangerous extension

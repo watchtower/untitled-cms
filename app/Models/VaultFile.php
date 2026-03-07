@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use MongoDB\Laravel\Eloquent\Model;
 
 class VaultFile extends Model
@@ -48,29 +50,34 @@ class VaultFile extends Model
         'use_original' => 'boolean',
     ];
 
-    public function folder()
+    public function folder(): BelongsTo
     {
         return $this->belongsTo(VaultFolder::class, 'folder_id');
     }
 
-    public function uploader()
+    public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
-    public function getUrlAttribute()
+    public function getUrlAttribute(): string
     {
-        $path = $this->storage_path;
-
-        if ($this->is_optimized && !$this->use_original && $this->optimized_path) {
-            $path = $this->optimized_path;
-        }
+        $servingPath = $this->resolveServingPath();
 
         if ($this->is_public && !$this->trashed()) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+            return Storage::disk('public')->url($servingPath);
         }
 
         // Fallback for private files and trashed files
         return route('vault.file.serve', ['uuid' => $this->uuid]);
+    }
+
+    public function resolveServingPath(): string
+    {
+        if ($this->is_optimized && !$this->use_original && $this->optimized_path) {
+            return $this->optimized_path;
+        }
+
+        return $this->storage_path;
     }
 }

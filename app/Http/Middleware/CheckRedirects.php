@@ -16,41 +16,37 @@ class CheckRedirects
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Only check GET requests
         if (!$request->isMethod('GET')) {
             return $next($request);
         }
 
         $path = $request->path();
-
-        // Check for exact match in redirects
-        // We might want to cache this lookup in production
         $redirect = Redirect::where('from_path', $path)
             ->where('active', true)
             ->first();
 
-        if ($redirect) {
-            $target = $redirect->to_path;
-
-            // Security: prevent open redirect — only allow relative paths (A01)
-            $normalizedTarget = strtolower(trim($target));
-            if (str_starts_with($normalizedTarget, 'http://') || str_starts_with($normalizedTarget, 'https://') || str_starts_with($normalizedTarget, '//')) {
-                // Log suspicious data and skip the redirect instead of following it
-                \Illuminate\Support\Facades\Log::warning('Open redirect attempt blocked in CheckRedirects', [
-                    'from' => $path,
-                    'to' => $target,
-                ]);
-                return $next($request);
-            }
-
-            return redirect($target, $redirect->type);
+        if (!$redirect) {
+            return $next($request);
         }
 
-        // Also check if the path has a leading slash or not, ensuring consistency
-        // The Request::path() returns path without leading slash
-        // If we stored with leading slash, we might need to check that too
-        // For now, we assume we store without leading slash or normalize it.
+        if ($this->isOpenRedirect($redirect->to_path)) {
+            \Illuminate\Support\Facades\Log::warning('Open redirect attempt blocked in CheckRedirects', [
+                'from' => $path,
+                'to' => $redirect->to_path,
+            ]);
 
-        return $next($request);
+            return $next($request);
+        }
+
+        return redirect($redirect->to_path, $redirect->type);
+    }
+
+    private function isOpenRedirect(string $target): bool
+    {
+        $normalized = strtolower(trim($target));
+
+        return str_starts_with($normalized, 'http://')
+            || str_starts_with($normalized, 'https://')
+            || str_starts_with($normalized, '//');
     }
 }

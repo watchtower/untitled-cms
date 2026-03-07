@@ -6,6 +6,7 @@ use App\Models\Page;
 use App\Models\Banner;
 use App\Models\User;
 use App\Models\VaultFile;
+use Illuminate\Support\Facades\Cache;
 
 class AiContextService
 {
@@ -26,31 +27,31 @@ class AiContextService
 
     private function pagesContext(): array
     {
+        $recent = Page::latest()->limit(5)->get(['id', 'title', 'status', 'slug']);
+
         return [
             'module' => 'pages',
-            'stats' => [
+            'stats' => Cache::remember('ai_context_pages_stats', 60, fn() => [
                 'total' => Page::count(),
                 'published' => Page::where('status', 'published')->count(),
                 'draft' => Page::where('status', 'draft')->count(),
-            ],
-            'recent' => Page::latest()->limit(5)->get(['id', 'title', 'status', 'slug'])
-                ->map(fn($p) => ['id' => (string) $p->id, 'title' => $p->title, 'status' => $p->status, 'slug' => $p->slug])
-                ->toArray(),
+            ]),
+            'recent' => $this->formatRecentModels($recent, ['title', 'status', 'slug']),
         ];
     }
 
     private function bannersContext(): array
     {
+        $recent = Banner::latest()->limit(5)->get(['id', 'title', 'status']);
+
         return [
             'module' => 'banners',
-            'stats' => [
+            'stats' => Cache::remember('ai_context_banners_stats', 60, fn() => [
                 'total' => Banner::count(),
                 'active' => Banner::where('status', 'active')->count(),
                 'inactive' => Banner::where('status', 'inactive')->count(),
-            ],
-            'recent' => Banner::latest()->limit(5)->get(['id', 'title', 'status'])
-                ->map(fn($b) => ['id' => (string) $b->id, 'title' => $b->title, 'status' => $b->status])
-                ->toArray(),
+            ]),
+            'recent' => $this->formatRecentModels($recent, ['title', 'status']),
         ];
     }
 
@@ -58,11 +59,11 @@ class AiContextService
     {
         return [
             'module' => 'vault',
-            'stats' => [
+            'stats' => Cache::remember('ai_context_vault_stats', 60, fn() => [
                 'total_files' => VaultFile::count(),
                 'images' => VaultFile::where('mime_type', 'like', 'image/%')->count(),
                 'documents' => VaultFile::where('mime_type', 'not like', 'image/%')->count(),
-            ],
+            ]),
         ];
     }
 
@@ -70,12 +71,23 @@ class AiContextService
     {
         return [
             'module' => 'users',
-            'stats' => [
+            'stats' => Cache::remember('ai_context_users_stats', 60, fn() => [
                 'total' => User::count(),
                 'active' => User::where('is_active', true)->count(),
                 'inactive' => User::where('is_active', false)->count(),
-            ],
+            ]),
         ];
+    }
+
+    private function formatRecentModels(\Illuminate\Support\Collection $models, array $fields): array
+    {
+        return $models->map(function ($model) use ($fields) {
+            $data = ['id' => (string) $model->id];
+            foreach ($fields as $field) {
+                $data[$field] = $model->{$field};
+            }
+            return $data;
+        })->toArray();
     }
 
     /**
@@ -107,19 +119,15 @@ class AiContextService
     public function buildContextString(string $url): string
     {
         try {
-            $pagesTotal = Page::count();
-            $pagesPublished = Page::where('status', 'published')->count();
-            $pagesDraft = Page::where('status', 'draft')->count();
-
-            $bannersTotal = Banner::count();
-            $bannersActive = Banner::where('status', 'active')->count();
+            $pages = $this->pagesContext()['stats'];
+            $banners = $this->bannersContext()['stats'];
 
             $module = $this->detectModule($url);
             $moduleLine = $module !== 'general'
                 ? "The admin is currently on the **{$module}** module."
                 : "The admin is on the CMS dashboard.";
 
-            return "{$moduleLine}\n\nCurrent CMS data (accurate — use these exact numbers):\n- Pages: {$pagesTotal} total, {$pagesPublished} published, {$pagesDraft} draft\n- Banners: {$bannersTotal} total, {$bannersActive} active";
+            return "{$moduleLine}\n\nCurrent CMS data (accurate — use these exact numbers):\n- Pages: {$pages['total']} total, {$pages['published']} published, {$pages['draft']} draft\n- Banners: {$banners['total']} total, {$banners['active']} active";
 
         } catch (\Exception $e) {
             return "The admin is on the CMS admin panel.";

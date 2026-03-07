@@ -90,17 +90,9 @@ class AiActionService
             throw new \Exception('Original record no longer exists (may have already been deleted).');
         }
 
-        if ($beforeState) {
-            // UPDATE action → restore previous field values
-            $model->fill($beforeState)->save();
-            ActivityLogger::log('reverted', "Reverted AI update: {$log->description}", $model);
-            $actionType = 'reverted';
-        } else {
-            // CREATE action → soft-delete = undo the create
-            $model->delete();
-            ActivityLogger::log('ai_undone', "Undid AI create: {$log->description}", $model);
-            $actionType = 'deleted';
-        }
+        $actionType = $beforeState
+            ? $this->applyRevertUpdate($model, $beforeState, $log)
+            : $this->applyRevertCreate($model, $log);
 
         return [
             'restored' => true,
@@ -108,6 +100,20 @@ class AiActionService
             'subject' => class_basename($subjectType),
             'id' => $subjectId,
         ];
+    }
+
+    private function applyRevertUpdate(\Illuminate\Database\Eloquent\Model $model, array $beforeState, ActivityLog $log): string
+    {
+        $model->fill($beforeState)->save();
+        ActivityLogger::log('reverted', "Reverted AI update: {$log->description}", $model);
+        return 'reverted';
+    }
+
+    private function applyRevertCreate(\Illuminate\Database\Eloquent\Model $model, ActivityLog $log): string
+    {
+        $model->delete();
+        ActivityLogger::log('ai_undone', "Undid AI create: {$log->description}", $model);
+        return 'deleted';
     }
 
     // ─── Page Resolvers ────────────────────────────────────────────────────────
@@ -161,34 +167,8 @@ class AiActionService
 
     private function resolvePageByTitle(?string $title): Page
     {
-        if (!$title) {
-            throw new \Exception('No page title provided.');
-        }
-
-        // 1. Exact or like match (Active)
-        $page = Page::where('title', 'like', "%{$title}%")->first();
-
-        // 2. Exact or like match (Trashed/Soft-deleted)
-        if (!$page) {
-            $page = Page::onlyTrashed()->where('title', 'like', "%{$title}%")->first();
-        }
-
-        // 3. Fuzzy match (Active) using longer words
-        if (!$page) {
-            $words = array_filter(explode(' ', $title), fn($w) => strlen($w) > 3);
-            if (!empty($words)) {
-                $query = Page::query();
-                foreach ($words as $word) {
-                    $query->orWhere('title', 'like', "%{$word}%");
-                }
-                $page = $query->first();
-            }
-        }
-
-        if (!$page) {
-            throw new \Exception("No page found matching \"{$title}\". If this is a new page, say 'create a page called {$title}'.");
-        }
-
+        /** @var Page $page */
+        $page = $this->resolveModelByTitle(Page::class, $title, 'page');
         return $page;
     }
 
@@ -211,10 +191,8 @@ class AiActionService
 
     private function executeUpdatePage(array $proposal): array
     {
-        $page = Page::withTrashed()->findOrFail($proposal['resolved_id']);
-        if ($page->trashed()) {
-            $page->restore();
-        }
+        /** @var Page $page */
+        $page = $this->findAndRestoreIfTrashed(Page::class, $proposal['resolved_id']);
 
         $beforeState = $page->only(['title', 'content', 'seo_title', 'seo_description', 'status']);
         // Sanitize any AI-generated content fields before persisting (A03)
@@ -231,10 +209,8 @@ class AiActionService
 
     private function executeUpdatePageStatus(array $proposal): array
     {
-        $page = Page::withTrashed()->findOrFail($proposal['resolved_id']);
-        if ($page->trashed()) {
-            $page->restore();
-        }
+        /** @var Page $page */
+        $page = $this->findAndRestoreIfTrashed(Page::class, $proposal['resolved_id']);
 
         $beforeState = $page->only(['status']);
         $page->update(['status' => $proposal['params']['status']]);
@@ -292,34 +268,8 @@ class AiActionService
 
     private function resolveBannerByTitle(?string $title): Banner
     {
-        if (!$title) {
-            throw new \Exception('No banner title provided.');
-        }
-
-        // 1. Active match
-        $banner = Banner::where('title', 'like', "%{$title}%")->first();
-
-        // 2. Trashed match
-        if (!$banner) {
-            $banner = Banner::onlyTrashed()->where('title', 'like', "%{$title}%")->first();
-        }
-
-        // 3. Fuzzy match
-        if (!$banner) {
-            $words = array_filter(explode(' ', $title), fn($w) => strlen($w) > 3);
-            if (!empty($words)) {
-                $query = Banner::query();
-                foreach ($words as $word) {
-                    $query->orWhere('title', 'like', "%{$word}%");
-                }
-                $banner = $query->first();
-            }
-        }
-
-        if (!$banner) {
-            throw new \Exception("No banner found matching \"{$title}\". If this is a new banner, say 'create a banner called {$title}'.");
-        }
-
+        /** @var Banner $banner */
+        $banner = $this->resolveModelByTitle(Banner::class, $title, 'banner');
         return $banner;
     }
 
@@ -340,10 +290,8 @@ class AiActionService
 
     private function executeUpdateBanner(array $proposal): array
     {
-        $banner = Banner::withTrashed()->findOrFail($proposal['resolved_id']);
-        if ($banner->trashed()) {
-            $banner->restore();
-        }
+        /** @var Banner $banner */
+        $banner = $this->findAndRestoreIfTrashed(Banner::class, $proposal['resolved_id']);
 
         $beforeState = $banner->only(['title', 'content', 'status']);
         // Sanitize any AI-generated content fields before persisting (A03)
@@ -360,10 +308,8 @@ class AiActionService
 
     private function executeUpdateBannerStatus(array $proposal): array
     {
-        $banner = Banner::withTrashed()->findOrFail($proposal['resolved_id']);
-        if ($banner->trashed()) {
-            $banner->restore();
-        }
+        /** @var Banner $banner */
+        $banner = $this->findAndRestoreIfTrashed(Banner::class, $proposal['resolved_id']);
 
         $beforeState = $banner->only(['status']);
         $banner->update(['status' => $proposal['params']['status']]);
@@ -371,5 +317,46 @@ class AiActionService
         ActivityLogger::log('ai_updated', "AI set banner \"{$banner->title}\" to {$proposal['params']['status']}", $banner, $beforeState, true);
 
         return ['subject' => 'Banner', 'id' => (string) $banner->id, 'title' => $banner->title, 'status' => $banner->status, 'url' => route('banners.edit', $banner->id)];
+    }
+
+    // ─── Shared Database Helpers ───────────────────────────────────────────────
+
+    private function findAndRestoreIfTrashed(string $modelClass, string $id): \Illuminate\Database\Eloquent\Model
+    {
+        $model = $modelClass::withTrashed()->findOrFail($id);
+        if (method_exists($model, 'trashed') && $model->trashed()) {
+            $model->restore();
+        }
+        return $model;
+    }
+
+    private function resolveModelByTitle(string $modelClass, ?string $title, string $entityName): \Illuminate\Database\Eloquent\Model
+    {
+        if (!$title) {
+            throw new \Exception("No {$entityName} title provided.");
+        }
+
+        $model = $modelClass::where('title', 'like', "%{$title}%")->first();
+
+        if (!$model) {
+            $model = $modelClass::onlyTrashed()->where('title', 'like', "%{$title}%")->first();
+        }
+
+        if (!$model) {
+            $words = array_filter(explode(' ', $title), fn($w) => strlen($w) > 3);
+            if (!empty($words)) {
+                $query = $modelClass::query();
+                foreach ($words as $word) {
+                    $query->orWhere('title', 'like', "%{$word}%");
+                }
+                $model = $query->first();
+            }
+        }
+
+        if (!$model) {
+            throw new \Exception("No {$entityName} found matching \"{$title}\". If this is a new {$entityName}, say 'create a {$entityName} called {$title}'.");
+        }
+
+        return $model;
     }
 }

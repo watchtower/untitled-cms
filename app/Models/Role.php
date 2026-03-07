@@ -19,20 +19,20 @@ class Role extends Model
     //    return $this->embedsMany(Permission::class);
     // }
 
-    public function syncPermissions(array $permissions)
+    public function syncPermissions(array $permissions): void
     {
         $this->permissions = $permissions;
         $this->save();
     }
 
     // Check if role has specific permission
-    public function hasPermission($permission)
+    public function hasPermission(string $permission): bool
     {
         return in_array($permission, $this->permissions ?? []);
     }
 
     // Get available permissions for the system
-    public static function availablePermissions()
+    public static function availablePermissions(): array
     {
         return [
             'pages.view',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\VaultFile;
 use App\Models\VaultFolder;
 use App\Services\VaultService;
+use App\Http\Requests\SaveAiImageRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -21,64 +22,28 @@ class VaultController extends Controller
 
     public function adminPage()
     {
-        // Check global permission
-        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.view')) {
-            abort(403);
-        }
+        $this->authorizeGlobalMediaView();
 
         return Inertia::render('Vault/Index', [
             'maxUploadSize' => min(
                 (int) ini_get('upload_max_filesize'),
                 (int) ini_get('post_max_size')
             ),
-            // Note: php_ini_loaded_file() path intentionally omitted (security: A05)
         ]);
     }
 
     public function list(Request $request)
     {
-        // Check global permission
-        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.view')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorizeGlobalMediaView();
 
-        $folderId = $request->query('folder_id');
-        $search = $request->query('search');
-        $type = $request->query('type'); // 'image', 'document', 'all'
-
-        $query = VaultFile::query();
-
-        if ($folderId) {
-            $query->where('folder_id', $folderId);
-        } else {
-            // Root
-            $query->whereNull('folder_id');
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('original_name', 'like', "%{$search}%")
-                    ->orWhere('alt_text', 'like', "%{$search}%");
-            });
-        }
-
-        if ($type === 'image') {
-            $query->where('mime_type', 'like', 'image/%');
-        } elseif ($type === 'document') {
-            $query->whereNot('mime_type', 'like', 'image/%');
-        }
-
-        $files = $query->orderBy('created_at', 'desc')->paginate(50);
+        $files = $this->buildListQuery($request)->paginate(50);
 
         return response()->json($files);
     }
 
     public function upload(Request $request)
     {
-        // Check global permission
-        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.create')) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorizeGlobalMediaCreate();
 
         $request->validate([
             'files' => 'required|array',
@@ -89,18 +54,16 @@ class VaultController extends Controller
         $uploadedFiles = [];
         $errors = [];
 
+        if ($request->folder_id) {
+            $folder = VaultFolder::find($request->folder_id);
+            if (Gate::denies('update', $folder)) {
+                abort(403, 'Permission denied for folder');
+            }
+        }
+
         foreach ($request->file('files') as $file) {
             try {
-                // If folder is provided, check write permission on folder
-                if ($request->folder_id) {
-                    $folder = VaultFolder::find($request->folder_id);
-                    if (Gate::denies('update', $folder)) { // Using update policy for write access
-                        throw new \Exception('Permission denied for folder');
-                    }
-                }
-
-                $vaultFile = $this->vaultService->upload($file, $request->folder_id);
-                $uploadedFiles[] = $vaultFile;
+                $uploadedFiles[] = $this->vaultService->upload($file, $request->folder_id);
             } catch (\Exception $e) {
                 $errors[] = [
                     'filename' => $file->getClientOriginalName(),
@@ -115,79 +78,18 @@ class VaultController extends Controller
         ]);
     }
 
-    /**
-     * Save an AI-generated image (base64 data URI or remote URL) into the Vault.
-     */
-    public function saveAiImage(Request $request)
+    public function saveAiImage(SaveAiImageRequest $request)
     {
-        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.create')) {
-            abort(403, 'Unauthorized');
-        }
-
-        $request->validate([
-            'image' => 'required|string',   // base64 data URI OR https:// URL
-            'filename' => 'nullable|string|max:255',
-            'folder_id' => 'nullable|string|exists:' . VaultFolder::class . ',_id',
-        ]);
-
-        $imageData = $request->input('image');
-        $folderId = $request->input('folder_id');
-        $customName = $request->input('filename');
-
-        // Determine if base64 data URI or a remote URL
-        if (str_starts_with($imageData, 'data:')) {
-            // base64 data URI: data:image/png;base64,XXXX
-            if (!preg_match('/^data:(image\/[a-zA-Z+]+);base64,(.+)$/', $imageData, $matches)) {
-                return response()->json(['error' => 'Invalid image data URI.'], 422);
-            }
-            $mimeType = $matches[1];
-            $extension = explode('/', $mimeType)[1] ?? 'png';
-            $extension = $extension === 'jpeg' ? 'jpg' : $extension;
-            $binaryData = base64_decode($matches[2]);
-        } else {
-            // Remote URL (e.g. OpenAI temporary URL)
-            $parsedUrl = parse_url($imageData);
-            if (!$parsedUrl || !isset($parsedUrl['host'])) {
-                return response()->json(['error' => 'Invalid image URL format.'], 422);
-            }
-
-            try {
-                $response = \App\Services\SafeHttpClient::get($imageData, 10);
-                if (!$response->successful()) {
-                    return response()->json(['error' => 'Failed to download remote image. Status: ' . $response->status()], 422);
-                }
-                $binaryData = $response->body();
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 422);
-            }
-
-            $extension = 'png';
-            $mimeType = 'image/png';
-        }
-
-        // Write to a temp file
-        $tmpPath = tempnam(sys_get_temp_dir(), 'ai_vault_') . '.' . $extension;
-        file_put_contents($tmpPath, $binaryData);
-
-        $filename = $customName
-            ? preg_replace('/[^a-zA-Z0-9\-_\.]/', '-', $customName) . '.' . $extension
-            : 'ai-generated-' . now()->format('Ymd-His') . '.' . $extension;
-
-        $uploadedFile = new \Illuminate\Http\UploadedFile(
-            $tmpPath,
-            $filename,
-            $mimeType,
-            \UPLOAD_ERR_OK,
-            true // test mode — skips is_uploaded_file() check
-        );
-
         try {
-            $vaultFile = $this->vaultService->upload($uploadedFile, $folderId);
+            $uploadedFile = $request->getPreparedUploadedFile();
+
+            $vaultFile = $this->vaultService->upload($uploadedFile, $request->input('folder_id'));
+
+            @unlink($uploadedFile->getPathname());
+
             return response()->json(['file' => $vaultFile], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
-        } finally {
-            @unlink($tmpPath);
         }
     }
 
@@ -328,6 +230,7 @@ class VaultController extends Controller
         $movedCount = 0;
 
         foreach ($files as $file) {
+            /** @var VaultFile $file */
             if (Gate::allows('update', $file)) {
                 $this->vaultService->moveFile($file, $folderId);
                 $movedCount++;
@@ -352,6 +255,7 @@ class VaultController extends Controller
         $deletedCount = 0;
 
         foreach ($files as $file) {
+            /** @var VaultFile $file */
             if (Gate::allows('delete', $file)) {
                 $this->vaultService->deleteFile($file);
                 $deletedCount++;
@@ -413,10 +317,7 @@ class VaultController extends Controller
 
     public function trash(Request $request)
     {
-        // Check global permission
-        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.view')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorizeGlobalMediaView();
 
         $files = VaultFile::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(50);
 
@@ -448,4 +349,48 @@ class VaultController extends Controller
 
         return response()->json(['message' => 'Permanently deleted successfully']);
     }
+
+    private function authorizeGlobalMediaView(): void
+    {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.view')) {
+            abort(403, 'Unauthorized');
+        }
+    }
+
+    private function authorizeGlobalMediaCreate(): void
+    {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.create')) {
+            abort(403, 'Unauthorized');
+        }
+    }
+
+    private function buildListQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = VaultFile::query();
+
+        $folderId = $request->query('folder_id');
+        if ($folderId) {
+            $query->where('folder_id', $folderId);
+        } else {
+            $query->whereNull('folder_id');
+        }
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('original_name', 'like', "%{$search}%")
+                    ->orWhere('alt_text', 'like', "%{$search}%");
+            });
+        }
+
+        $type = $request->query('type');
+        if ($type === 'image') {
+            $query->where('mime_type', 'like', 'image/%');
+        } elseif ($type === 'document') {
+            $query->whereNot('mime_type', 'like', 'image/%');
+        }
+
+        return $query->orderBy('created_at', 'desc');
+    }
+
+
 }

@@ -3,14 +3,16 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 use MongoDB\Laravel\Auth\User as Authenticatable;
 use MongoDB\Laravel\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     protected $connection = 'mongodb';
 
@@ -52,17 +54,17 @@ class User extends Authenticatable
         ];
     }
 
-    public function roles()
+    public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
     }
 
-    public function hasRole($roleName)
+    public function hasRole(string $roleName): bool
     {
         return $this->roles()->where('name', $roleName)->exists();
     }
 
-    public function hasPermission($permission)
+    public function hasPermission(string $permission): bool
     {
         foreach ($this->roles as $role) {
             if ($role->hasPermission($permission)) {
@@ -73,23 +75,33 @@ class User extends Authenticatable
         return false;
     }
 
-    public function getCachedPermissions()
+    public function getCachedPermissions(): array
     {
         // Simple implementation: merge all permissions from all roles
         // Ideally cached, but for now direct retrieval is fine for MVP
         $permissions = [];
         foreach ($this->roles as $role) {
             foreach ($role->permissions ?? [] as $permission) {
-                // Handle both array of strings and embedded documents
-                if (is_string($permission)) {
-                    $permissions[] = $permission;
-                } elseif (isset($permission['name'])) {
-                    $permissions[] = $permission['name'];
+                if ($extracted = $this->extractPermissionName($permission)) {
+                    $permissions[] = $extracted;
                 }
             }
         }
 
-        return array_unique($permissions);
+        return array_values(array_unique($permissions));
+    }
+
+    private function extractPermissionName(mixed $permission): ?string
+    {
+        if (is_string($permission)) {
+            return $permission;
+        }
+
+        if (is_array($permission) && isset($permission['name'])) {
+            return $permission['name'];
+        }
+
+        return null;
     }
 
     /**

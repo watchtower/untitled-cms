@@ -57,39 +57,16 @@ class AiController extends Controller
         $title = $request->input('title');
         $content = Str::limit(strip_tags($request->input('content')), 1000);
 
-        // 1. Generate a high-quality descriptive prompt for an image generator
-        $promptAgent = new \Laravel\Ai\AnonymousAgent(
-            'You are a creative director. Analyze the content and write a detailed, high-quality prompt for an image generator (like DALL-E 3) to create a professional, modern blog banner/social preview image. The prompt should be descriptive but concise (under 400 chars). Return ONLY the prompt text.',
-            [],
-            []
-        );
-
-        $prompt = $promptAgent->prompt("Title: {$title}\n\nContent: {$content}");
-
-        // 2. Generate the actual image
         try {
-            $imageUrl = $this->aiService->generateImage((string) $prompt, '1024x1024');
+            $prompt = $this->buildSocialImagePrompt($title, $content);
+            $imageUrl = $this->aiService->generateImage($prompt, '1024x1024');
 
             if (!$imageUrl) {
                 throw new \Exception("Image generation failed.");
             }
 
-            $dlResponse = \App\Services\SafeHttpClient::get($imageUrl, 15);
-
-            if (!$dlResponse->successful()) {
-                throw new \Exception('Failed to download AI-generated image.');
-            }
-            $imageBinary = $dlResponse->body();
-            $tmpPath = tempnam(sys_get_temp_dir(), 'ai_');
-            file_put_contents($tmpPath, $imageBinary);
-
-            $uploadedFile = new \Illuminate\Http\UploadedFile(
-                $tmpPath,
-                Str::slug($title) . '-social-banner.png',
-                'image/png',
-                null,
-                true
-            );
+            $tmpPath = $this->downloadImageToTempFile($imageUrl);
+            $uploadedFile = $this->createUploadedFile($tmpPath, $title);
 
             $vaultFile = $vaultService->upload($uploadedFile);
             unlink($tmpPath);
@@ -97,7 +74,7 @@ class AiController extends Controller
             return response()->json([
                 'url' => $vaultFile->url,
                 'vault_file_uuid' => $vaultFile->uuid,
-                'prompt' => (string) $prompt
+                'prompt' => $prompt
             ]);
 
         } catch (\Exception $e) {
@@ -112,17 +89,11 @@ class AiController extends Controller
         ]);
 
         $file = VaultFile::where('uuid', $request->input('vault_file_uuid'))->firstOrFail();
+        $dataUri = $this->getFileDataUri($file);
 
-        // Read the file binary directly from storage — avoids public URL requirement
-        $diskName = $file->is_public ? 'public' : 'vault';
-        $binary = Storage::disk($diskName)->get($file->storage_path);
-
-        if (!$binary) {
+        if (!$dataUri) {
             return response()->json(['error' => 'Could not read file from storage.'], 422);
         }
-
-        $base64 = base64_encode($binary);
-        $dataUri = 'data:' . $file->mime_type . ';base64,' . $base64;
 
         try {
             $altText = $this->aiService->generateAltTextFromBase64($dataUri, $file->mime_type);
@@ -178,5 +149,54 @@ class AiController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
+    }
+
+    private function buildSocialImagePrompt(string $title, string $content): string
+    {
+        $promptAgent = new \Laravel\Ai\AnonymousAgent(
+            'You are a creative director. Analyze the content and write a detailed, high-quality prompt for an image generator (like DALL-E 3) to create a professional, modern blog banner/social preview image. The prompt should be descriptive but concise (under 400 chars). Return ONLY the prompt text.',
+            [],
+            []
+        );
+
+        return (string) $promptAgent->prompt("Title: {$title}\n\nContent: {$content}");
+    }
+
+    private function downloadImageToTempFile(string $url): string
+    {
+        $response = \App\Services\SafeHttpClient::get($url, 15);
+
+        if (!$response->successful()) {
+            throw new \Exception('Failed to download AI-generated image.');
+        }
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'ai_');
+        file_put_contents($tmpPath, $response->body());
+
+        return $tmpPath;
+    }
+
+    private function createUploadedFile(string $tmpPath, string $title): \Illuminate\Http\UploadedFile
+    {
+        return new \Illuminate\Http\UploadedFile(
+            $tmpPath,
+            Str::slug($title) . '-social-banner.png',
+            'image/png',
+            null,
+            true
+        );
+    }
+
+    private function getFileDataUri(VaultFile $file): ?string
+    {
+        $diskName = $file->is_public ? 'public' : 'vault';
+        $binary = Storage::disk($diskName)->get($file->storage_path);
+
+        if (!$binary) {
+            return null;
+        }
+
+        $base64 = base64_encode($binary);
+        return 'data:' . $file->mime_type . ';base64,' . $base64;
     }
 }

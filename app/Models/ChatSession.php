@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use MongoDB\Laravel\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use MongoDB\Laravel\Eloquent\Model;
 
 class ChatSession extends Model
 {
@@ -24,12 +26,12 @@ class ChatSession extends Model
         'last_active_at' => 'datetime',
     ];
 
-    public function scopeForUser($query, string $userId)
+    public function scopeForUser(Builder $query, string $userId): Builder
     {
         return $query->where('user_id', $userId)->orderBy('last_active_at', 'desc');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
