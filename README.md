@@ -16,7 +16,7 @@
 | 📡 **Markdown for Agents** | Public pages respond with clean Markdown + YAML frontmatter when `Accept: text/markdown` is sent — ready for AI crawlers, coding assistants, and Cloudflare AI Gateway |
 | 📊 **Dashboard** | Analytics cards + Recharts charts · Recent activity feed |
 | 🔍 **Activity Log** | Comprehensive audit trail for all admin actions, filterable in the admin panel |
-| ⚙️ **Settings** | Site-wide key/value settings store via `SettingsService` |
+| ⚙️ **Settings** | Site-wide key/value settings store via `SettingsService` · Custom maintenance mode & error pages |
 
 ---
 
@@ -82,7 +82,7 @@
 **Key design decisions:**
 - **MongoDB throughout** — Flexible document model for pages (embedded SEO fields), vault metadata, activity logs, and AI usage tracking.
 - **Monolithic SPA** — Laravel renders the initial Inertia page; React handles all subsequent navigation. No separate API server.
-- **Upload Pipeline** — Vault uploads pass through an ordered `Pipe` chain: `ValidateMimeType → DetectDoubleExtension → SandboxedScan → SanitizeImage → GenerateUuid → StoreMetadata`.
+- **Upload Pipeline** — Vault uploads pass through an ordered `Pipe` chain utilizing a strict `VaultPipelinePayload` DTO: `ValidateMimeType → DetectDoubleExtension → SandboxedScan → SanitizeImage → GenerateUuid → StoreMetadata`.
 - **Single Active AI Hub** — One hub is "active" at a time; `AiService` dynamically patches Laravel AI's config at runtime so no restart is required when switching providers.
 
 ---
@@ -248,6 +248,9 @@ Deployment scripts are available at the root:
 - Markdown-for-Agents (`Accept: text/markdown` + YAML frontmatter)
 - Settings — admin-configurable key/value store
 - Dark mode, responsive layouts, Shadcn UI
+- Maintenance mode with bypass access for admins and custom error pages
+- Enhanced security (OWASP Top 10 mitigation, SSRF protection)
+- Strict typing and validation via DTOs and Form Requests
 
 ### 🔲 Planned
 
