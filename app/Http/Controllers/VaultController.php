@@ -31,7 +31,7 @@ class VaultController extends Controller
                 (int) ini_get('upload_max_filesize'),
                 (int) ini_get('post_max_size')
             ),
-            'phpIniPath' => php_ini_loaded_file(),
+            // Note: php_ini_loaded_file() path intentionally omitted (security: A05)
         ]);
     }
 
@@ -151,29 +151,14 @@ class VaultController extends Controller
                 return response()->json(['error' => 'Invalid image URL format.'], 422);
             }
 
-            // Prevent SSRF by checking if the host resolves to a private or reserved IP
-            $ip = gethostbyname($parsedUrl['host']);
-            if ($ip === $parsedUrl['host'] && !filter_var($ip, FILTER_VALIDATE_IP)) {
-                return response()->json(['error' => 'Could not resolve image host.'], 422);
-            }
-
-            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                \Illuminate\Support\Facades\Log::warning('SSRF attempt blocked in saveAiImage', [
-                    'url' => $imageData,
-                    'resolved_ip' => $ip,
-                    'user_id' => auth()->id()
-                ]);
-                return response()->json(['error' => 'Fetching from internal or reserved IP addresses is forbidden.'], 422);
-            }
-
             try {
-                $response = \Illuminate\Support\Facades\Http::timeout(10)->get($imageData);
+                $response = \App\Services\SafeHttpClient::get($imageData, 10);
                 if (!$response->successful()) {
                     return response()->json(['error' => 'Failed to download remote image. Status: ' . $response->status()], 422);
                 }
                 $binaryData = $response->body();
             } catch (\Exception $e) {
-                return response()->json(['error' => 'Exception occurred during remote download. ' . $e->getMessage()], 422);
+                return response()->json(['error' => $e->getMessage()], 422);
             }
 
             $extension = 'png';

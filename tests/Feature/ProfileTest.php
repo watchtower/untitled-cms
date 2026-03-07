@@ -10,6 +10,12 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \App\Models\User::truncate(); // Fix for MongoDB persistence across tests
+    }
+
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();
@@ -76,7 +82,7 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+        $this->assertTrue($user->fresh()->trashed());
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void

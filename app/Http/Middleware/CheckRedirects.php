@@ -17,7 +17,7 @@ class CheckRedirects
     public function handle(Request $request, Closure $next): Response
     {
         // Only check GET requests
-        if (! $request->isMethod('GET')) {
+        if (!$request->isMethod('GET')) {
             return $next($request);
         }
 
@@ -30,7 +30,20 @@ class CheckRedirects
             ->first();
 
         if ($redirect) {
-            return redirect($redirect->to_path, $redirect->type);
+            $target = $redirect->to_path;
+
+            // Security: prevent open redirect — only allow relative paths (A01)
+            $normalizedTarget = strtolower(trim($target));
+            if (str_starts_with($normalizedTarget, 'http://') || str_starts_with($normalizedTarget, 'https://') || str_starts_with($normalizedTarget, '//')) {
+                // Log suspicious data and skip the redirect instead of following it
+                \Illuminate\Support\Facades\Log::warning('Open redirect attempt blocked in CheckRedirects', [
+                    'from' => $path,
+                    'to' => $target,
+                ]);
+                return $next($request);
+            }
+
+            return redirect($target, $redirect->type);
         }
 
         // Also check if the path has a leading slash or not, ensuring consistency

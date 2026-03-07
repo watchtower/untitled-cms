@@ -74,8 +74,12 @@ class AiController extends Controller
                 throw new \Exception("Image generation failed.");
             }
 
-            // 3. Optional: Upload to Vault automatically so it's persisted
-            $imageBinary = file_get_contents($imageUrl);
+            $dlResponse = \App\Services\SafeHttpClient::get($imageUrl, 15);
+
+            if (!$dlResponse->successful()) {
+                throw new \Exception('Failed to download AI-generated image.');
+            }
+            $imageBinary = $dlResponse->body();
             $tmpPath = tempnam(sys_get_temp_dir(), 'ai_');
             file_put_contents($tmpPath, $imageBinary);
 

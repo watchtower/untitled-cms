@@ -200,7 +200,7 @@ class AiActionService
         $page = Page::create([
             'title' => $params['title'],
             'slug' => Str::slug($params['title']),
-            'content' => $params['content'] ?? '',
+            'content' => clean($params['content'] ?? ''), // Sanitize AI content (A03)
             'status' => 'draft',
         ]);
 
@@ -217,7 +217,12 @@ class AiActionService
         }
 
         $beforeState = $page->only(['title', 'content', 'seo_title', 'seo_description', 'status']);
-        $page->fill(array_filter($proposal['params']))->save();
+        // Sanitize any AI-generated content fields before persisting (A03)
+        $params = $proposal['params'];
+        if (isset($params['content'])) {
+            $params['content'] = clean($params['content']);
+        }
+        $page->fill(array_filter($params))->save();
 
         ActivityLogger::log('ai_updated', "AI updated page: {$page->title}", $page, $beforeState, true);
 
@@ -341,7 +346,12 @@ class AiActionService
         }
 
         $beforeState = $banner->only(['title', 'content', 'status']);
-        $banner->fill(array_filter($proposal['params']))->save();
+        // Sanitize any AI-generated content fields before persisting (A03)
+        $params = $proposal['params'];
+        if (isset($params['content'])) {
+            $params['content'] = clean($params['content']);
+        }
+        $banner->fill(array_filter($params))->save();
 
         ActivityLogger::log('ai_updated', "AI updated banner: {$banner->title}", $banner, $beforeState, true);
 

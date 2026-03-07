@@ -41,28 +41,37 @@ Route::middleware('auth')->group(function () {
     Route::resource('ai-hubs', \App\Http\Controllers\AiHubController::class)->only(['index', 'update']);
     Route::post('/ai-hubs/{aiHub}/activate', [\App\Http\Controllers\AiHubController::class, 'activate'])->name('ai-hubs.activate');
 
-    Route::post('/ai/generate-seo', [\App\Http\Controllers\AiController::class, 'generateSeo'])->name('ai.seo');
-    Route::post('/ai/generate-tags', [\App\Http\Controllers\AiController::class, 'generateTags'])->name('ai.generate-tags');
-    Route::post('/ai/generate-social-image', [\App\Http\Controllers\AiController::class, 'generateSocialImage'])->name('ai.social-image');
-    Route::post('/ai/generate-alt-text', [\App\Http\Controllers\AiController::class, 'generateAltText'])->name('ai.alt-text');
-    Route::post('/ai/generate', [\App\Http\Controllers\AiController::class, 'generate'])->name('ai.generate');
-    Route::post('/ai/chat', [\App\Http\Controllers\AiController::class, 'chat'])->name('ai.chat');
-    Route::post('/ai/generate-image', [\App\Http\Controllers\AiController::class, 'generateImage'])->name('ai.generate-image');
-    Route::get('/ai/context', [\App\Http\Controllers\AiContextController::class, 'show'])->name('ai.context');
+    // AI Routes — rate-limited to prevent OpenAI cost abuse (A04)
+    Route::middleware('throttle:30,1')->group(function () {
+        Route::post('/ai/generate-seo', [\App\Http\Controllers\AiController::class, 'generateSeo'])->name('ai.seo');
+        Route::post('/ai/generate-tags', [\App\Http\Controllers\AiController::class, 'generateTags'])->name('ai.generate-tags');
+        Route::post('/ai/generate-alt-text', [\App\Http\Controllers\AiController::class, 'generateAltText'])->name('ai.alt-text');
+        Route::post('/ai/generate', [\App\Http\Controllers\AiController::class, 'generate'])->name('ai.generate');
+    });
 
-    // AI Chat Sessions
-    Route::get('/ai/chat/sessions', [\App\Http\Controllers\ChatSessionController::class, 'index'])->name('ai.sessions.index');
-    Route::post('/ai/chat/sessions', [\App\Http\Controllers\ChatSessionController::class, 'store'])->name('ai.sessions.store');
-    Route::get('/ai/chat/sessions/{id}', [\App\Http\Controllers\ChatSessionController::class, 'show'])->name('ai.sessions.show');
-    Route::put('/ai/chat/sessions/{id}', [\App\Http\Controllers\ChatSessionController::class, 'update'])->name('ai.sessions.update');
-    Route::delete('/ai/chat/sessions/{id}', [\App\Http\Controllers\ChatSessionController::class, 'destroy'])->name('ai.sessions.destroy');
+    // Image generation — stricter limit (heavy OpenAI cost) (A04)
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/ai/generate-social-image', [\App\Http\Controllers\AiController::class, 'generateSocialImage'])->name('ai.social-image');
+        Route::post('/ai/generate-image', [\App\Http\Controllers\AiController::class, 'generateImage'])->name('ai.generate-image');
+    });
 
-    // AI Actions (Phase 2)
-    Route::post('/ai/actions/resolve', [\App\Http\Controllers\AiActionController::class, 'resolve'])->name('ai.actions.resolve');
-    Route::post('/ai/actions/parse', [\App\Http\Controllers\AiActionController::class, 'parse'])->name('ai.actions.parse');
-    Route::post('/ai/actions/execute', [\App\Http\Controllers\AiActionController::class, 'execute'])->name('ai.actions.execute');
-    Route::post('/ai/actions/revert/{logId}', [\App\Http\Controllers\AiActionController::class, 'revert'])->name('ai.actions.revert');
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::post('/ai/chat', [\App\Http\Controllers\AiController::class, 'chat'])->name('ai.chat');
+        Route::get('/ai/context', [\App\Http\Controllers\AiContextController::class, 'show'])->name('ai.context');
 
+        // AI Chat Sessions
+        Route::get('/ai/chat/sessions', [\App\Http\Controllers\ChatSessionController::class, 'index'])->name('ai.sessions.index');
+        Route::post('/ai/chat/sessions', [\App\Http\Controllers\ChatSessionController::class, 'store'])->name('ai.sessions.store');
+        Route::get('/ai/chat/sessions/{id}', [\App\Http\Controllers\ChatSessionController::class, 'show'])->name('ai.sessions.show');
+        Route::put('/ai/chat/sessions/{id}', [\App\Http\Controllers\ChatSessionController::class, 'update'])->name('ai.sessions.update');
+        Route::delete('/ai/chat/sessions/{id}', [\App\Http\Controllers\ChatSessionController::class, 'destroy'])->name('ai.sessions.destroy');
+
+        // AI Actions (Phase 2)
+        Route::post('/ai/actions/resolve', [\App\Http\Controllers\AiActionController::class, 'resolve'])->name('ai.actions.resolve');
+        Route::post('/ai/actions/parse', [\App\Http\Controllers\AiActionController::class, 'parse'])->name('ai.actions.parse');
+        Route::post('/ai/actions/execute', [\App\Http\Controllers\AiActionController::class, 'execute'])->name('ai.actions.execute');
+        Route::post('/ai/actions/revert/{logId}', [\App\Http\Controllers\AiActionController::class, 'revert'])->name('ai.actions.revert');
+    });
 
     Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-log.index');
 

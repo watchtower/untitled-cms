@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\AiActionService;
 use App\Services\AiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AiActionController extends Controller
 {
@@ -107,6 +108,9 @@ PROMPT;
      */
     public function revert(Request $request, string $logId)
     {
+        // Only users who can manage content (editors/admins) may revert AI actions (A01)
+        Gate::authorize('update', \App\Models\Page::class);
+
         try {
             $result = $this->actionService->revert($logId);
             return response()->json(['ok' => true, 'result' => $result]);

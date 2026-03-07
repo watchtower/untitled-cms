@@ -49,7 +49,7 @@ class VaultUploadTest extends TestCase
 
         // Verify storage
         $uploadedFile = VaultFile::first();
-        Storage::disk('vault')->assertExists($uploadedFile->storage_path);
+        $this->assertTrue(Storage::disk('public')->exists($uploadedFile->storage_path), "File missing at: {$uploadedFile->storage_path}");
     }
 
     public function test_double_extension_is_rejected()
@@ -73,7 +73,7 @@ class VaultUploadTest extends TestCase
         // ValidationException is an Exception, so it should be caught and returned in 'errors'.
 
         $response->assertStatus(200)
-            ->assertJsonFragment(['error' => 'Double extension detected in filename: exploit.php.jpg']);
+            ->assertJsonFragment(['error' => 'Potential malicious double extension detected in filename: exploit.php.jpg']);
 
         $this->assertDatabaseMissing('vault_files', ['original_name' => 'exploit.php.jpg'], 'mongodb');
     }

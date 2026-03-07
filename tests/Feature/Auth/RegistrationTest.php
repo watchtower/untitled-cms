@@ -9,6 +9,12 @@ class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \App\Models\User::truncate(); // Fix for MongoDB persistence across tests
+    }
+
     public function test_registration_screen_can_be_rendered(): void
     {
         $response = $this->get('/register');

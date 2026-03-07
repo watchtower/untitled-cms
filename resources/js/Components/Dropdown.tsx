@@ -1,4 +1,4 @@
-import { Transition } from '@headlessui/react';
+
 import { InertiaLinkProps, Link } from '@inertiajs/react';
 import {
     createContext,
@@ -15,8 +15,8 @@ const DropDownContext = createContext<{
     toggleOpen: () => void;
 }>({
     open: false,
-    setOpen: () => {},
-    toggleOpen: () => {},
+    setOpen: () => { },
+    toggleOpen: () => { },
 });
 
 const Dropdown = ({ children }: PropsWithChildren) => {
@@ -78,17 +78,9 @@ const Content = ({
 
     return (
         <>
-            <Transition
-                show={open}
-                enter="transition ease-out duration-200"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-            >
+            {open && (
                 <div
-                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
+                    className={`absolute z-50 mt-2 rounded-md shadow-lg transition ease-out duration-200 transform opacity-100 scale-100 ${alignmentClasses} ${widthClasses}`}
                     onClick={() => setOpen(false)}
                 >
                     <div
@@ -100,7 +92,7 @@ const Content = ({
                         {children}
                     </div>
                 </div>
-            </Transition>
+            )}
         </>
     );
 };
