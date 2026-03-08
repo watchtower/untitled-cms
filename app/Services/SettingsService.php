@@ -46,7 +46,7 @@ class SettingsService
 
         if ($setting) {
             $setting->update(['value' => $value]);
-            $this->clearCache();
+            $this->clearCache($key);
 
             return $setting;
         }
@@ -57,9 +57,13 @@ class SettingsService
     /**
      * Clear settings cache.
      */
-    public function clearCache()
+    public function clearCache(?string $key = null)
     {
         Cache::forget('app_settings');
         Cache::forget('app_settings_public');
+
+        if ($key !== null) {
+            Cache::forget("setting.{$key}");
+        }
     }
 }

@@ -1,5 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { ChartAreaInteractive } from "@/Components/chart-area-interactive"
 import { SectionCards } from "@/Components/section-cards"
 import {
@@ -9,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/Components/ui/card"
-import { Activity, CreditCard, DollarSign, Users } from "lucide-react"
 
 // Mock data for now, replacing data.json
 const recentSales = [
@@ -41,6 +42,14 @@ const recentSales = [
 ]
 
 export default function Dashboard() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verified') === '1') {
+      toast.success('Email verified! Welcome aboard.');
+      router.replace(route('dashboard'), { preserveScroll: true });
+    }
+  }, []);
+
   return (
     <AuthenticatedLayout header="Dashboard">
       <Head title="Dashboard" />

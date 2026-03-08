@@ -56,5 +56,12 @@ class RoleSeeder extends Seeder
             'media.view',
             'media.create',
         ]);
+
+        // User: Self-registered users — read-only access
+        $userRole = Role::firstOrCreate(['name' => 'user'], ['slug' => 'user']);
+        $userRole->syncPermissions([
+            'pages.view',
+            'media.view',
+        ]);
     }
 }

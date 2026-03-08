@@ -54,10 +54,11 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            'email' => $validated['email'],
-            'name' => explode('@', $validated['email'])[0], // Temporary name
-            'password' => Hash::make(\Illuminate\Support\Str::random(16)),
-            'is_active' => false,
+            'email'             => $validated['email'],
+            'name'              => explode('@', $validated['email'])[0], // Temporary name
+            'password'          => Hash::make(\Illuminate\Support\Str::random(16)),
+            'is_active'         => true,  // Admin-invited users are immediately active
+            'email_verified_at' => now(), // Admin-invited users are pre-verified (admin vouches for them)
         ]);
 
         $user->roles()->attach($validated['role']);

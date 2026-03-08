@@ -80,6 +80,17 @@ class SettingSeeder extends Seeder
                 'is_public' => true,
             ],
 
+            // Auth
+            [
+                'key'         => 'auth.registration_enabled',
+                'value'       => false,
+                'group'       => 'auth',
+                'type'        => 'boolean',
+                'label'       => 'Enable Self-Registration',
+                'description' => 'Allow new users to register via the /register page. When disabled, only admin-invited users can create accounts.',
+                'is_public'   => false,
+            ],
+
             // System
             [
                 'key' => 'maintenance_mode',

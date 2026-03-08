@@ -69,6 +69,18 @@ class RolesAndPermissionsSeeder extends Seeder
             ]
         );
 
+        // User: self-registered users — read-only access
+        Role::updateOrCreate(
+            ['slug' => 'user'],
+            [
+                'name'        => 'User',
+                'permissions' => [
+                    'pages.view',
+                    'media.view',
+                ],
+            ]
+        );
+
         // 2. Create/Update Admin User
         $adminUser = User::updateOrCreate(
             ['email' => 'admin@example.com'],
