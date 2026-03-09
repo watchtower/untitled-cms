@@ -8,8 +8,21 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
+
+// Social OAuth redirect — guest only (no point redirecting authenticated users to OAuth)
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect'])
+        ->name('social.redirect')
+        ->middleware('throttle:10,1');
+});
+
+// Social OAuth callback — outside guest middleware; session may not be established yet at this point
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->name('social.callback')
+    ->middleware('throttle:10,1');
 
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])

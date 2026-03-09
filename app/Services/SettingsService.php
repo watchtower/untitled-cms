@@ -28,12 +28,23 @@ class SettingsService
     }
 
     /**
-     * Get all public settings for frontend.
+     * Get all public settings for frontend, with type coercion applied.
+     * Uses the same boolean/number casting as Setting::get() so that
+     * boolean settings are always true/false, never "1"/"0" strings.
      */
-    public function getPublicSettings()
+    public function getPublicSettings(): array
     {
         return Cache::rememberForever('app_settings_public', function () {
-            return Setting::where('is_public', true)->pluck('value', 'key')->toArray();
+            return Setting::where('is_public', true)
+                ->get()
+                ->mapWithKeys(fn ($setting) => [
+                    $setting->key => match ($setting->type) {
+                        'boolean' => (bool) $setting->value,
+                        'number'  => (float) $setting->value,
+                        default   => $setting->value,
+                    },
+                ])
+                ->toArray();
         });
     }
 

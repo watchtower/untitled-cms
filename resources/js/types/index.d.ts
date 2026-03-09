@@ -5,14 +5,22 @@ export interface Role {
 }
 
 export interface User {
-    id: number;
+    id: string; // MongoDB ObjectId serialised as a 24-char hex string
     name: string;
     email: string;
     email_verified_at?: string;
     is_active: boolean;
-    deleted_at?: string;
+    deleted_at?: string | null;
     roles?: Role[];
     permissions: string[];
+}
+
+export interface SharedSettings {
+    social_login_google_enabled?: boolean;
+    social_login_github_enabled?: boolean;
+    social_login_apple_enabled?: boolean;
+    social_login_twitter_enabled?: boolean;
+    [key: string]: unknown;
 }
 
 export type PageProps<
@@ -23,6 +31,7 @@ export type PageProps<
         user: User;
         permissions: string[];
     };
+    settings: SharedSettings;
     tinymce_api_key?: string;
     canCreate?: boolean;
     canEdit?: boolean;

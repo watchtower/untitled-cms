@@ -28,6 +28,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'is_active',
+        'email_verified_at',
+        'social_accounts',
     ];
 
     /**
@@ -38,6 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'social_accounts', // Contains linked provider IDs — not needed by frontend
     ];
 
     /**
@@ -49,8 +52,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_active' => 'boolean',
+            'password'          => 'hashed',
+            'is_active'         => 'boolean',
+            'social_accounts'   => 'array',
         ];
     }
 
