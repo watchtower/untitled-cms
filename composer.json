@@ -1,11 +1,15 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "nava/untitled-cms",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "AI-native CMS built on Laravel 12 + MongoDB with a React + Inertia.js admin SPA.",
     "keywords": [
         "laravel",
-        "framework"
+        "mongodb",
+        "cms",
+        "inertia",
+        "react",
+        "ai"
     ],
     "license": "MIT",
     "require": {
@@ -51,6 +55,7 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
+            "@php artisan db:seed --force",
             "npm install",
             "npm run build"
         ],
