@@ -75,6 +75,15 @@ class AiActionService
     }
 
     /**
+     * Model classes that are eligible for AI action revert.
+     * Prevents arbitrary class invocation if the activity_log record is tampered with.
+     */
+    private const REVERTABLE_MODELS = [
+        \App\Models\Page::class,
+        \App\Models\Banner::class,
+    ];
+
+    /**
      * Revert an AI action using the before_state snapshot in ActivityLog.
      */
     public function revert(string $logId): array
@@ -84,6 +93,11 @@ class AiActionService
         $subjectType = $log->subject_type;
         $subjectId = $log->subject_id;
         $beforeState = $log->before_state;
+
+        // Allowlist to prevent arbitrary static method invocation via a tampered log record
+        if (!in_array($subjectType, self::REVERTABLE_MODELS, true)) {
+            throw new \Exception("Unsupported model type for revert: {$subjectType}");
+        }
 
         $model = $subjectType::find($subjectId);
         if (!$model) {

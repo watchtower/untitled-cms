@@ -66,10 +66,12 @@ class AiController extends Controller
             }
 
             $tmpPath = $this->downloadImageToTempFile($imageUrl);
-            $uploadedFile = $this->createUploadedFile($tmpPath, $title);
-
-            $vaultFile = $vaultService->upload($uploadedFile);
-            unlink($tmpPath);
+            try {
+                $uploadedFile = $this->createUploadedFile($tmpPath, $title);
+                $vaultFile = $vaultService->upload($uploadedFile);
+            } finally {
+                @unlink($tmpPath);
+            }
 
             return response()->json([
                 'url' => $vaultFile->url,
@@ -121,12 +123,16 @@ class AiController extends Controller
     {
         $request->validate([
             'messages' => 'required|array',
-            'messages.*.role' => 'required|string|in:user,assistant,system',
-            'messages.*.content' => 'required|string',
+            'messages.*.role' => 'required|string|in:user,assistant',
+            'messages.*.content' => 'required|string|max:10000',
+            'page_url' => 'nullable|string|max:500',
         ]);
 
         try {
-            $response = $this->aiService->generateChatResponse($request->input('messages'));
+            $response = $this->aiService->generateChatResponse(
+                $request->input('messages'),
+                $request->input('page_url')
+            );
             return response()->json(['message' => $response]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);

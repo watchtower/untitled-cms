@@ -29,7 +29,18 @@ class AiService
         }
 
         $providerName = strtolower($activeHub->name);
-        $apiKey = $activeHub->api_key;
+
+        // The api_key cast is 'encrypted'. If APP_KEY was rotated after the key was stored,
+        // decryption fails with DecryptException. Surface a clear error rather than a 500.
+        try {
+            $apiKey = $activeHub->api_key;
+        } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+            throw new \Exception(
+                "The API key for \"{$activeHub->name}\" could not be decrypted. " .
+                "This usually means APP_KEY was changed after the key was saved. " .
+                "Please re-enter the API key in AI Integrations."
+            );
+        }
 
         $supportedProviders = array_keys(config('ai.providers'));
         if (!in_array($providerName, $supportedProviders)) {
@@ -221,7 +232,7 @@ class AiService
         }
     }
 
-    public function generateChatResponse(array $messages): string
+    public function generateChatResponse(array $messages, ?string $pageUrl = null): string
     {
         $activeHub = $this->configureActiveAi();
 
@@ -230,7 +241,7 @@ class AiService
         }
 
         try {
-            $systemPrompt = $this->buildSystemPrompt($messages);
+            $systemPrompt = $this->buildSystemPrompt($pageUrl);
             $formattedHistory = $this->formatConversationHistory($messages);
 
             $agent = new AnonymousAgent($systemPrompt, [], []);
@@ -453,17 +464,8 @@ class AiService
         return 'data:image/png;base64,' . $base64;
     }
 
-    private function buildSystemPrompt(array $messages): string
+    private function buildSystemPrompt(?string $pageUrl): string
     {
-        $pageUrl = null;
-        foreach ($messages as $msg) {
-            if ($msg['role'] === 'system' && str_contains($msg['content'] ?? '', 'CMS page:')) {
-                preg_match('/CMS page:\s*(.+?)(?:\.|$)/i', $msg['content'], $m);
-                $pageUrl = trim($m[1] ?? '');
-                break;
-            }
-        }
-
         $contextService = app(AiContextService::class);
         $liveContext = $pageUrl ? $contextService->buildContextString($pageUrl) : '';
         $whitelist = implode(', ', app(\App\Services\AiActionService::class)->getWhitelist());

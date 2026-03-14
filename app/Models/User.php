@@ -7,6 +7,7 @@ use App\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use MongoDB\Laravel\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -81,18 +82,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getCachedPermissions(): array
     {
-        // Simple implementation: merge all permissions from all roles
-        // Ideally cached, but for now direct retrieval is fine for MVP
-        $permissions = [];
-        foreach ($this->roles as $role) {
-            foreach ($role->permissions ?? [] as $permission) {
-                if ($extracted = $this->extractPermissionName($permission)) {
-                    $permissions[] = $extracted;
+        return Cache::remember('user_permissions_' . $this->id, 60, function () {
+            $permissions = [];
+            foreach ($this->roles as $role) {
+                foreach ($role->permissions ?? [] as $permission) {
+                    if ($extracted = $this->extractPermissionName($permission)) {
+                        $permissions[] = $extracted;
+                    }
                 }
             }
-        }
 
-        return array_values(array_unique($permissions));
+            return array_values(array_unique($permissions));
+        });
     }
 
     private function extractPermissionName(mixed $permission): ?string

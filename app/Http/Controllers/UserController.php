@@ -19,7 +19,7 @@ class UserController extends Controller
         Gate::authorize('viewAny', User::class);
 
         $users = User::with('roles')->paginate(10);
-        $trashedUsers = User::onlyTrashed()->with('roles')->get();
+        $trashedUsers = User::onlyTrashed()->with('roles')->paginate(50, ['*'], 'trashed_page');
         $roles = \App\Models\Role::all();
 
         $stats = [

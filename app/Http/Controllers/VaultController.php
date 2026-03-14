@@ -26,10 +26,27 @@ class VaultController extends Controller
 
         return Inertia::render('Vault/Index', [
             'maxUploadSize' => min(
-                (int) ini_get('upload_max_filesize'),
-                (int) ini_get('post_max_size')
+                $this->parsePhpIniSize(ini_get('upload_max_filesize')),
+                $this->parsePhpIniSize(ini_get('post_max_size'))
             ),
         ]);
+    }
+
+    /**
+     * Convert PHP ini size strings (e.g. "50M", "8G", "512K") to bytes.
+     * A plain (int) cast silently truncates the unit suffix and returns the wrong value.
+     */
+    private function parsePhpIniSize(string $size): int
+    {
+        $value = (int) $size;
+        $unit  = strtolower(substr(trim($size), -1));
+
+        return match ($unit) {
+            'g' => $value * 1024 * 1024 * 1024,
+            'm' => $value * 1024 * 1024,
+            'k' => $value * 1024,
+            default => $value,
+        };
     }
 
     public function list(Request $request)

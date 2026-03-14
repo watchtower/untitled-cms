@@ -53,19 +53,17 @@ class PageController extends Controller
             'tags' => 'nullable|array',
         ]);
 
-        if (!empty($validated['slug'])) {
-            $slug = Str::slug($validated['slug']);
-        } else {
-            $slug = Str::slug($validated['title']);
-        }
+        // Derive base slug from custom input or title
+        $baseSlug = !empty($validated['slug'])
+            ? Str::slug($validated['slug'])
+            : Str::slug($validated['title']);
 
-        // Ensure unique slug (double check if unique validation handles it, but manual collision handling is good too)
-        $count = Page::where('slug', $slug)->count();
-        if ($count > 0) {
-            $slug .= '-' . ($count + 1);
+        // Ensure uniqueness — increment until no collision
+        $slug = $baseSlug;
+        $counter = 2;
+        while (Page::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter++;
         }
-
-        $slug = Str::slug($validated['title']) . ($count > 0 ? '-' . ($count + 1) : '');
 
         // Sanitize content
         $validated['content'] = clean($validated['content']);

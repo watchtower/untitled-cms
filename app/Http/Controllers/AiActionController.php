@@ -90,6 +90,9 @@ PROMPT;
      */
     public function execute(Request $request)
     {
+        // Requires at minimum the ability to create pages/banners
+        Gate::authorize('create', \App\Models\Page::class);
+
         $request->validate([
             'proposal' => 'required|array',
             'proposal.action' => 'required|string',

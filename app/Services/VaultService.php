@@ -168,8 +168,9 @@ class VaultService
 
     public function deleteFolder(VaultFolder $folder): void
     {
-        $folder->delete(); // Soft delete
-        $this->audit('folder.delete', $folder, $folder->toArray(), null);
+        $folderData = $folder->toArray(); // Capture before soft delete
+        $folder->delete();
+        $this->audit('folder.delete', $folder, $folderData, null);
     }
 
     public function restoreFolder(VaultFolder $folder): void

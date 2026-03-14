@@ -20,14 +20,24 @@ class AiHubController extends Controller
             $usage = $hub->monthly_usage ?: 0;
             $percent = $quota > 0 ? min(round(($usage / $quota) * 100), 100) : 0;
 
+            // Accessing api_key triggers the 'encrypted' cast.
+            // If APP_KEY was rotated or the record was seeded with a different key,
+            // DecryptException is thrown. Treat that as "no valid key stored".
+            try {
+                $hasKey = !empty($hub->api_key);
+            } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+                $hasKey = false;
+            }
+
             return [
                 'id' => $hub->id,
                 'name' => $hub->name,
                 'is_active' => $hub->is_active,
                 'default_model' => $hub->default_model,
                 'image_model' => $hub->image_model,
-                'has_key' => !empty($hub->api_key),
-                'api_key' => $hub->api_key,
+                // Never expose the decrypted key to the frontend.
+                // The UI shows a masked placeholder when has_key is true.
+                'has_key' => $hasKey,
                 'usage_percent' => $percent,
                 'usage_text' => "{$usage} / {$quota} reqs",
             ];

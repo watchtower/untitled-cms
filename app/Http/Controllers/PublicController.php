@@ -68,7 +68,13 @@ class PublicController extends Controller
     {
         $pageQuery = Page::where('slug', $slug);
 
-        if (!($request->has('preview') && auth()->check())) {
+        // Allow draft preview only for users with explicit page-view permission (editors/admins).
+        // A bare auth()->check() would let any registered user read unpublished content.
+        $canPreview = $request->has('preview')
+            && auth()->check()
+            && auth()->user()->hasPermission('pages.view');
+
+        if (!$canPreview) {
             $pageQuery->where('status', 'published');
         }
 

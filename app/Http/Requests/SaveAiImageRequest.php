@@ -68,7 +68,11 @@ class SaveAiImageRequest extends FormRequest
 
     private function createTempUploadedFile(string $binaryData, string $extension, string $mimeType, ?string $customName): \Illuminate\Http\UploadedFile
     {
-        $tmpPath = tempnam(sys_get_temp_dir(), 'ai_vault_') . '.' . $extension;
+        // tempnam() creates a zero-byte file at the base path; we need a .ext variant.
+        // Delete the base file immediately to avoid an orphaned temp file.
+        $basePath = tempnam(sys_get_temp_dir(), 'ai_vault_');
+        @unlink($basePath);
+        $tmpPath = $basePath . '.' . $extension;
         file_put_contents($tmpPath, $binaryData);
 
         $filename = $customName
