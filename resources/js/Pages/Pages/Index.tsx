@@ -96,7 +96,7 @@ export default function Index({ auth, pages }: PagesIndexProps) {
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         {canEdit && (
-                            <DropdownMenuItem onClick={() => router.visit(route('pages.edit', row.original.id))}>
+                            <DropdownMenuItem onClick={() => router.visit(route('admin.pages.edit', row.original.id))}>
                                 <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
                         )}
@@ -104,7 +104,7 @@ export default function Index({ auth, pages }: PagesIndexProps) {
                             <DropdownMenuItem
                                 onClick={() => {
                                     if (confirm('Are you sure you want to delete this page?')) {
-                                        router.delete(route('pages.destroy', row.original.id));
+                                        router.delete(route('admin.pages.destroy', row.original.id));
                                     }
                                 }}
                                 className="text-destructive focus:text-destructive"
@@ -146,7 +146,7 @@ export default function Index({ auth, pages }: PagesIndexProps) {
             </CardContent>
             <CardFooter className="flex justify-end gap-2 pt-2 border-t">
                 {canEdit && (
-                    <Link href={route('pages.edit', row.id)}>
+                    <Link href={route('admin.pages.edit', row.id)}>
                         <Button variant="outline" size="sm">
                             <Edit className="mr-2 h-3 w-3" /> Edit
                         </Button>
@@ -159,7 +159,7 @@ export default function Index({ auth, pages }: PagesIndexProps) {
                         className="text-destructive border-destructive/20 hover:bg-destructive/10"
                         onClick={() => {
                             if (confirm('Are you sure you want to delete this page?')) {
-                                router.delete(route('pages.destroy', row.id));
+                                router.delete(route('admin.pages.destroy', row.id));
                             }
                         }}
                     >
@@ -178,7 +178,7 @@ export default function Index({ auth, pages }: PagesIndexProps) {
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold tracking-tight">Content Pages</h1>
                     {canCreate && (
-                        <Link href={route('pages.create')}>
+                        <Link href={route('admin.pages.create')}>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" /> Add Page
                             </Button>

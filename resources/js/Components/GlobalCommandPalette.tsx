@@ -49,18 +49,18 @@ export function GlobalCommandPalette() {
             <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
                 <CommandGroup heading="Suggestions">
-                    <CommandItem onSelect={() => runCommand(() => router.visit(route('dashboard')))}>
+                    <CommandItem onSelect={() => runCommand(() => router.visit(route('admin.dashboard')))}>
                         <Calendar className="mr-2 h-4 w-4" />
                         <span>Dashboard</span>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => router.visit(route('profile.edit')))}>
+                    <CommandItem onSelect={() => runCommand(() => router.visit(route('admin.profile.edit')))}>
                         <Smile className="mr-2 h-4 w-4" />
                         <span>Profile</span>
                     </CommandItem>
                 </CommandGroup>
                 <CommandSeparator />
                 <CommandGroup heading="Settings">
-                    <CommandItem onSelect={() => runCommand(() => router.visit(route('profile.edit')))}>
+                    <CommandItem onSelect={() => runCommand(() => router.visit(route('admin.profile.edit')))}>
                         <User className="mr-2 h-4 w-4" />
                         <span>Profile</span>
                         <CommandShortcut>⌘P</CommandShortcut>
@@ -70,7 +70,7 @@ export function GlobalCommandPalette() {
                         <span>Billing</span>
                         <CommandShortcut>⌘B</CommandShortcut>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => router.visit(route('settings.index')))}>
+                    <CommandItem onSelect={() => runCommand(() => router.visit(route('admin.settings.index')))}>
                         <Settings className="mr-2 h-4 w-4" />
                         <span>Settings</span>
                         <CommandShortcut>⌘S</CommandShortcut>

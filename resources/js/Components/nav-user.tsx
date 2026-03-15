@@ -83,7 +83,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href={route('profile.edit')}>
+                <Link href={route('admin.profile.edit')}>
                   <BadgeCheck />
                   Account
                 </Link>

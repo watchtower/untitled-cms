@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useState, forwardRef } from 'react';
+import React, { PropsWithChildren, forwardRef } from 'react';
 import { usePage, Link, router } from '@inertiajs/react';
 import { cn, isExternal } from '@/lib/utils';
 import ApplicationLogo from '@/Components/ApplicationLogo';
@@ -31,8 +31,26 @@ import {
     SheetTrigger,
 } from "@/Components/ui/sheet";
 
+interface NavItem {
+    id: string;
+    title: string;
+    url: string;
+    target: '_self' | '_blank';
+    order: number;
+    subItems?: NavItem[];
+}
+
+interface SharedProps {
+    auth: {
+        user: { name: string; email: string } | null;
+        canAccessBackend: boolean;
+    };
+    menus: Record<string, { items: NavItem[] }> | null;
+    settings: { site_name?: string; site_description?: string } | null;
+}
+
 export default function PublicLayout({ children }: PropsWithChildren) {
-    const { auth, menus, settings } = usePage<any>().props;
+    const { auth, menus, settings } = usePage<SharedProps>().props;
     const user = auth.user;
     const primaryNav = menus?.['app_header']?.items || [];
     const footerNav = menus?.['footer-navigation']?.items || [];
@@ -41,7 +59,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
         router.post(route('logout'));
     };
 
-    const NavLink = forwardRef<HTMLAnchorElement, { item: any, className?: string, children?: React.ReactNode }>(
+    const NavLink = forwardRef<HTMLAnchorElement, { item: NavItem, className?: string, children?: React.ReactNode }>(
         ({ item, className, children }, ref) => {
             if (isExternal(item.url)) {
                 return (
@@ -80,14 +98,14 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                             <div className="hidden md:flex">
                                 <NavigationMenu>
                                     <NavigationMenuList>
-                                        {primaryNav.map((item: any) => (
+                                        {primaryNav.map((item) => (
                                             <NavigationMenuItem key={item.id}>
                                                 {item.subItems && item.subItems.length > 0 ? (
                                                     <>
                                                         <NavigationMenuTrigger className="bg-transparent">{item.title}</NavigationMenuTrigger>
                                                         <NavigationMenuContent>
                                                             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-popover">
-                                                                {item.subItems.map((sub: any) => (
+                                                                {item.subItems.map((sub) => (
                                                                     <li key={sub.id}>
                                                                         <NavigationMenuLink asChild>
                                                                             <NavLink
@@ -134,16 +152,19 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    {auth.permissions?.length > 0 && (
+                                    {auth.canAccessBackend && (
                                         <DropdownMenuItem asChild>
-                                            <Link href={route('dashboard')} className="w-full flex cursor-pointer">
+                                            <Link href={route('admin.dashboard')} className="w-full flex cursor-pointer">
                                                 <LayoutDashboard className="mr-2 h-4 w-4" />
                                                 <span>Admin Dashboard</span>
                                             </Link>
                                         </DropdownMenuItem>
                                     )}
                                     <DropdownMenuItem asChild>
-                                        <Link href={route('profile.edit')} className="w-full flex cursor-pointer">
+                                        <Link
+                                            href={auth.canAccessBackend ? route('admin.profile.edit') : route('profile.edit')}
+                                            className="w-full flex cursor-pointer"
+                                        >
                                             <Settings className="mr-2 h-4 w-4" />
                                             <span>Profile Settings</span>
                                         </Link>
@@ -181,12 +202,12 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                         <SheetTitle className="text-left">Navigation</SheetTitle>
                                     </SheetHeader>
                                     <div className="grid gap-4 py-4">
-                                        {primaryNav.map((item: any) => (
+                                        {primaryNav.map((item) => (
                                             <div key={item.id} className="flex flex-col gap-2">
                                                 <NavLink item={item} className="text-sm font-medium hover:text-primary transition-colors" />
                                                 {item.subItems && item.subItems.length > 0 && (
                                                     <div className="pl-4 flex flex-col gap-2 border-l ml-1 mt-1">
-                                                        {item.subItems.map((sub: any) => (
+                                                        {item.subItems.map((sub) => (
                                                             <NavLink key={sub.id} item={sub} className="text-sm text-muted-foreground hover:text-primary transition-colors" />
                                                         ))}
                                                     </div>
@@ -223,32 +244,26 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                 {settings?.site_description || 'A modern headless CMS powered by Laravel, React, and Artificial Intelligence.'}
                             </p>
                         </div>
-                        <div className="col-span-1">
-                            {footerNav.length > 0 && (
-                                <>
-                                    <h3 className="text-sm font-semibold tracking-wider uppercase mb-4">Links</h3>
-                                    <ul className="space-y-3">
-                                        {footerNav.map((item: any) => (
-                                            <li key={item.id}>
-                                                <NavLink item={item} className="text-sm text-muted-foreground hover:text-foreground transition-colors" />
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </>
-                            )}
-                        </div>
+                        {footerNav.length > 0 && (
+                            <div className="col-span-1">
+                                <h3 className="text-sm font-semibold tracking-wider uppercase mb-4">Explore</h3>
+                                <ul className="space-y-3">
+                                    {footerNav.map((item) => (
+                                        <li key={item.id}>
+                                            <NavLink item={item} className="text-sm text-muted-foreground hover:text-foreground transition-colors" />
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                         <div className="col-span-1">
                             <h3 className="text-sm font-semibold tracking-wider uppercase mb-4">Legal</h3>
                             <ul className="space-y-3">
                                 <li>
-                                    <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                        Privacy Policy
-                                    </Link>
+                                    <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
                                 </li>
                                 <li>
-                                    <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                        Terms of Service
-                                    </Link>
+                                    <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
                                 </li>
                             </ul>
                         </div>

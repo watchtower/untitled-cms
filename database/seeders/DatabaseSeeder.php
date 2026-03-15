@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,
             AiHubSeeder::class,
             ContentSeeder::class,
+            MenuSeeder::class,
         ]);
     }
 }

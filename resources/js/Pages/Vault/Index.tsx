@@ -151,7 +151,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
     const handleMove = async () => {
         if (!selectedFiles.length) return;
         try {
-            await axios.post(route('vault.files.batch_move'), {
+            await axios.post(route('admin.vault.files.batch_move'), {
                 uuids: selectedFiles.map(f => f.uuid),
                 folder_id: moveTarget || null
             });
@@ -207,11 +207,11 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
     const refresh = useCallback((folderId: string | null = null, trashTarget: boolean = isTrashView) => {
         setLoading(true);
         const params: any = { folder_id: folderId, search };
-        const endpoint = trashTarget ? route('vault.trash.list') : route('vault.files.list');
+        const endpoint = trashTarget ? route('admin.vault.trash.list') : route('admin.vault.files.list');
 
         Promise.all([
             axios.get(endpoint, { params }),
-            axios.get(route('vault.folders.list'))
+            axios.get(route('admin.vault.folders.list'))
         ]).then(([filesRes, foldersRes]) => {
             setFiles(filesRes.data.data || filesRes.data);
             setFolders(foldersRes.data); // All folders for tree? Or just current level?
@@ -254,7 +254,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
     const handleCreateFolder = async () => {
         if (!newFolderName) return;
         try {
-            await axios.post(route('vault.folders.store'), {
+            await axios.post(route('admin.vault.folders.store'), {
                 name: newFolderName,
                 parent_id: currentFolder?.id
             });
@@ -581,7 +581,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                         file={file}
                                                         selected={selectedFiles.some(f => f.id === file.id)}
                                                         onSelect={(e) => handleSelectFile(e, file)}
-                                                        onDoubleClick={() => window.open(route('vault.file.serve', file.uuid), '_blank')}
+                                                        onDoubleClick={() => window.open(route('admin.vault.file.serve', file.uuid), '_blank')}
                                                     />
                                                 </ContextMenuTrigger>
                                                 <ContextMenuContent>
@@ -597,7 +597,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <ContextMenuItem onClick={() => window.open(route('vault.file.serve', file.uuid), '_blank')}>
+                                                            <ContextMenuItem onClick={() => window.open(route('admin.vault.file.serve', file.uuid), '_blank')}>
                                                                 <Download className="mr-2 h-4 w-4" /> Download/View
                                                             </ContextMenuItem>
                                                             <ContextMenuSeparator />
@@ -651,7 +651,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                             selectedFiles.some(f => f.id === file.id) && "bg-accent/50"
                                                         )}
                                                         onClick={(e) => handleSelectFile(e, file)}
-                                                        onDoubleClick={() => window.open(route('vault.file.serve', file.uuid), '_blank')}
+                                                        onDoubleClick={() => window.open(route('admin.vault.file.serve', file.uuid), '_blank')}
                                                     >
                                                         <div className="relative h-10 w-10 shrink-0 bg-muted/20 border rounded flex items-center justify-center overflow-hidden">
                                                             {file.mime_type.startsWith('image/') && file.url ? (
@@ -698,7 +698,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <ContextMenuItem onClick={() => window.open(route('vault.file.serve', file.uuid), '_blank')}>
+                                                            <ContextMenuItem onClick={() => window.open(route('admin.vault.file.serve', file.uuid), '_blank')}>
                                                                 <Download className="mr-2 h-4 w-4" /> Download/View
                                                             </ContextMenuItem>
                                                             <ContextMenuSeparator />
@@ -782,7 +782,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                                 disabled={!currentAlt.trim()}
                                                                 onClick={async () => {
                                                                     try {
-                                                                        await axios.patch(route('vault.file.alt_text', selectedFiles[0].uuid), { alt_text: currentAlt });
+                                                                        await axios.patch(route('admin.vault.file.alt_text', selectedFiles[0].uuid), { alt_text: currentAlt });
                                                                         toast.success('Alt text saved!');
                                                                         refresh(currentFolder?.id || null);
                                                                     } catch {
@@ -850,7 +850,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                                 checked={!selectedFiles[0].use_original}
                                                                 onCheckedChange={async (checked) => {
                                                                     try {
-                                                                        const res = await axios.patch(route('vault.file.toggle_optimization', selectedFiles[0].uuid), {
+                                                                        const res = await axios.patch(route('admin.vault.file.toggle_optimization', selectedFiles[0].uuid), {
                                                                             use_original: !checked
                                                                         });
 
@@ -909,7 +909,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                     variant="destructive"
                                                     onClick={() => {
                                                         if (confirm(`Are you sure you want to PERMANENTLY delete these ${selectedFiles.length} items?`)) {
-                                                            Promise.all(selectedFiles.map(f => axios.delete(route('vault.file.force_destroy', f.uuid))))
+                                                            Promise.all(selectedFiles.map(f => axios.delete(route('admin.vault.file.force_destroy', f.uuid))))
                                                                 .then(() => {
                                                                     toast.success(`${selectedFiles.length} items permanently deleted`);
                                                                     setSelectedFiles([]);
@@ -925,7 +925,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                         ) : (
                                             <>
                                                 {selectedFiles.length === 1 && (
-                                                    <Button variant="outline" onClick={() => window.open(route('vault.file.serve', selectedFiles[0].uuid), '_blank')} className="w-full">
+                                                    <Button variant="outline" onClick={() => window.open(route('admin.vault.file.serve', selectedFiles[0].uuid), '_blank')} className="w-full">
                                                         <Download className="mr-2 h-4 w-4" /> Download
                                                     </Button>
                                                 )}
@@ -941,7 +941,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                     onClick={async () => {
                                                         if (confirm(`Are you sure you want to delete these ${selectedFiles.length} items?`)) {
                                                             try {
-                                                                await axios.post(route('vault.files.batch_delete'), {
+                                                                await axios.post(route('admin.vault.files.batch_delete'), {
                                                                     uuids: selectedFiles.map(f => f.uuid)
                                                                 });
                                                                 toast.success(`${selectedFiles.length} items deleted`);

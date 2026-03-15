@@ -9,10 +9,12 @@ export default function UpdateProfileInformation({
     mustVerifyEmail,
     status,
     className = '',
+    updateRoute = 'profile.update',
 }: {
     mustVerifyEmail: boolean;
     status?: string;
     className?: string;
+    updateRoute?: string;
 }) {
     const user = usePage().props.auth.user;
 
@@ -25,7 +27,7 @@ export default function UpdateProfileInformation({
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        patch(route('profile.update'));
+        patch(route(updateRoute));
     };
 
     return (

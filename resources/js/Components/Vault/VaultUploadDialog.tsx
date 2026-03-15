@@ -72,7 +72,7 @@ export default function VaultUploadDialog({
         }
 
         try {
-            const response = await axios.post(route('vault.upload'), formData, {
+            const response = await axios.post(route('admin.vault.upload'), formData, {
                 onUploadProgress: (progressEvent) => {
                     const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
                     updateUploadState(upload.id, { progress: percent });

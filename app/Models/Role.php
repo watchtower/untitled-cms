@@ -9,10 +9,11 @@ class Role extends Model
 {
     protected $connection = 'mongodb';
 
-    protected $fillable = ['name', 'slug', 'description', 'permissions', 'is_active'];
+    protected $fillable = ['name', 'slug', 'description', 'permissions', 'is_active', 'backend_access'];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active'       => 'boolean',
+        'backend_access'  => 'boolean',
     ];
 
     // public function permissions()
@@ -25,10 +26,9 @@ class Role extends Model
         // Bust permission cache for all role members whenever permissions are saved,
         // regardless of which code path triggered the save (controller, seeder, etc.).
         static::saved(function (Role $role) {
-            if ($role->wasChanged('permissions')) {
-                foreach ($role->users()->pluck('_id') as $userId) {
-                    Cache::forget('user_permissions_' . $userId);
-                }
+            foreach ($role->users()->pluck('_id') as $userId) {
+                Cache::forget('user_permissions_' . $userId);
+                Cache::forget('user_backend_access_' . $userId);
             }
         });
     }

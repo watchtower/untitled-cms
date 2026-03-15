@@ -173,12 +173,12 @@ export default function Edit({ menu }: MenuEditProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(route('menus.update', menu.id));
+        put(route('admin.menus.update', menu.id));
     };
 
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete this menu?')) {
-            router.delete(route('menus.destroy', menu.id));
+            router.delete(route('admin.menus.destroy', menu.id));
         }
     };
 

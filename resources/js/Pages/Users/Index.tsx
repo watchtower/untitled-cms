@@ -184,7 +184,7 @@ export default function Index({ auth, users, trashedUsers, roles, stats }: Users
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             {!isTrashed && canEdit && (
-                                <DropdownMenuItem onClick={() => router.visit(route('users.edit', user.id))}>
+                                <DropdownMenuItem onClick={() => router.visit(route('admin.users.edit', user.id))}>
                                     <Edit className="mr-2 h-4 w-4" /> Edit
                                 </DropdownMenuItem>
                             )}
@@ -192,7 +192,7 @@ export default function Index({ auth, users, trashedUsers, roles, stats }: Users
                                 <DropdownMenuItem
                                     onClick={() => {
                                         if (confirm('Are you sure you want to delete this user?')) {
-                                            router.delete(route('users.destroy', user.id));
+                                            router.delete(route('admin.users.destroy', user.id));
                                         }
                                     }}
                                     className="text-destructive focus:text-destructive"
@@ -204,7 +204,7 @@ export default function Index({ auth, users, trashedUsers, roles, stats }: Users
                                 <>
                                     <DropdownMenuItem onClick={() => {
                                         if (confirm('Are you sure you want to restore this user?')) {
-                                            router.post(route('users.restore', user.id));
+                                            router.post(route('admin.users.restore', user.id));
                                         }
                                     }}>
                                         <RotateCcw className="mr-2 h-4 w-4" /> Restore
@@ -212,7 +212,7 @@ export default function Index({ auth, users, trashedUsers, roles, stats }: Users
                                     <DropdownMenuItem
                                         onClick={() => {
                                             if (confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) {
-                                                router.delete(route('users.force-delete', user.id));
+                                                router.delete(route('admin.users.force-delete', user.id));
                                             }
                                         }}
                                         className="text-destructive focus:text-destructive"
@@ -233,19 +233,19 @@ export default function Index({ auth, users, trashedUsers, roles, stats }: Users
 
     const handleBatchActivate = (ids: string[]) => {
         if (confirm(`Activate ${ids.length} selected users?`)) {
-            router.post(route('users.batch-activate'), { user_ids: ids });
+            router.post(route('admin.users.batch-activate'), { user_ids: ids });
         }
     };
 
     const handleBatchDeactivate = (ids: string[]) => {
         if (confirm(`Deactivate ${ids.length} selected users?`)) {
-            router.post(route('users.batch-deactivate'), { user_ids: ids });
+            router.post(route('admin.users.batch-deactivate'), { user_ids: ids });
         }
     };
 
     const handleBatchDelete = (ids: string[]) => {
         if (confirm(`Delete ${ids.length} selected users?`)) {
-            router.post(route('users.batch-delete'), { user_ids: ids });
+            router.post(route('admin.users.batch-delete'), { user_ids: ids });
         }
     };
 
@@ -263,7 +263,7 @@ export default function Index({ auth, users, trashedUsers, roles, stats }: Users
                         {canCreate && !showTrashed && (
                             <div className="flex gap-2">
                                 <InviteUserDialog roles={roles} />
-                                <Link href={route('users.create')}>
+                                <Link href={route('admin.users.create')}>
                                     <Button size="sm" className="h-8">
                                         <Plus className="mr-2 h-4 w-4" /> Add User
                                     </Button>

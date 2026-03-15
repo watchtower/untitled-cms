@@ -27,24 +27,38 @@ class VaultFolderController extends Controller
         // Let's return root folders with 'children' relation loaded recursively
         // MongoDB allows this, but standard Eloquent 'with' might be heavy.
 
+        if (! auth()->user()->hasPermission('media.view')) {
+            abort(403);
+        }
+
         $parentId = $request->query('parent_id') ?? null;
 
         $folders = VaultFolder::with(['owner', 'permissions'])->where('parent_id', $parentId)
             ->orderBy('name')
             ->get();
 
-        $folderIds = $folders->pluck('_id')->toArray();
-        $filesStats = \App\Models\VaultFile::whereIn('folder_id', $folderIds)
-            ->get(['folder_id', 'size_bytes'])
-            ->groupBy('folder_id');
+        $folderIds = $folders->pluck('_id')->map(fn ($id) => (string) $id)->toArray();
+
+        $rawStats = \App\Models\VaultFile::raw(function ($collection) use ($folderIds) {
+            return $collection->aggregate([
+                ['$match' => ['folder_id' => ['$in' => $folderIds], 'deleted_at' => null]],
+                ['$group' => [
+                    '_id'         => '$folder_id',
+                    'files_count' => ['$sum' => 1],
+                    'files_size'  => ['$sum' => '$size_bytes'],
+                ]],
+            ]);
+        });
+
+        $filesStats = collect($rawStats)->keyBy('_id');
 
         $folders->transform(function (VaultFolder $folder) use ($filesStats) {
-            $folderFiles = $filesStats->get((string) $folder->_id, collect());
+            $stat = $filesStats->get((string) $folder->_id);
 
-            $folder->files_count = $folderFiles->count();
-            $folder->files_size = $folderFiles->sum('size_bytes');
+            $folder->files_count  = $stat ? (int) $stat['files_count'] : 0;
+            $folder->files_size   = $stat ? (int) $stat['files_size'] : 0;
             $folder->is_restricted = $folder->permissions->isNotEmpty();
-            unset($folder->permissions);
+            $folder->makeHidden('permissions');
 
             return $folder;
         });
@@ -54,7 +68,7 @@ class VaultFolderController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.create')) {
+        if (!auth()->user()->hasPermission('media.create')) {
             abort(403);
         }
 

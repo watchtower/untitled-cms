@@ -28,12 +28,14 @@ class Page extends Model
         'author_id',
         'published_at',
         'tags',
+        'is_system_page',
     ];
 
     protected $casts = [
-        'published_at' => 'datetime',
+        'published_at'   => 'datetime',
         'featured_images' => 'array',
-        'tags' => 'array',
+        'tags'           => 'array',
+        'is_system_page' => 'boolean',
     ];
 
     public function author(): BelongsTo

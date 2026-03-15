@@ -118,7 +118,7 @@ export default function Index({ auth, banners }: BannersIndexProps) {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             {canEdit && (
-                                <DropdownMenuItem onClick={() => router.visit(route('banners.edit', banner.id))}>
+                                <DropdownMenuItem onClick={() => router.visit(route('admin.banners.edit', banner.id))}>
                                     <Edit className="mr-2 h-4 w-4" /> Edit
                                 </DropdownMenuItem>
                             )}
@@ -126,7 +126,7 @@ export default function Index({ auth, banners }: BannersIndexProps) {
                                 <DropdownMenuItem
                                     onClick={() => {
                                         if (confirm('Are you sure you want to delete this banner?')) {
-                                            router.delete(route('banners.destroy', banner.id));
+                                            router.delete(route('admin.banners.destroy', banner.id));
                                         }
                                     }}
                                     className="text-destructive focus:text-destructive"
@@ -167,12 +167,12 @@ export default function Index({ auth, banners }: BannersIndexProps) {
             <div className="flex items-center justify-end gap-2 pt-2 border-t">
                 {canEdit && (
                     <Button variant="outline" size="sm" asChild>
-                        <Link href={route('banners.edit', banner.id)}>Edit</Link>
+                        <Link href={route('admin.banners.edit', banner.id)}>Edit</Link>
                     </Button>
                 )}
                 {canDelete && (
                     <Button variant="outline" size="sm" className="text-destructive border-dashed border-red-200" asChild>
-                        <Link href={route('banners.destroy', banner.id)} method="delete" as="button">Delete</Link>
+                        <Link href={route('admin.banners.destroy', banner.id)} method="delete" as="button">Delete</Link>
                     </Button>
                 )}
             </div>
@@ -187,7 +187,7 @@ export default function Index({ auth, banners }: BannersIndexProps) {
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold">Banner Management</h1>
                     {canCreate && (
-                        <Link href={route('banners.create')}>
+                        <Link href={route('admin.banners.create')}>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" /> Add Banner
                             </Button>

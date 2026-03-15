@@ -205,7 +205,7 @@ class AiActionService
 
         ActivityLogger::log('ai_created', "AI created page: {$page->title}", $page, null, true);
 
-        return ['subject' => 'Page', 'id' => (string) $page->id, 'title' => $page->title, 'url' => route('pages.edit', $page->id)];
+        return ['subject' => 'Page', 'id' => (string) $page->id, 'title' => $page->title, 'url' => route('admin.pages.edit', $page->id)];
     }
 
     private function executeUpdatePage(array $proposal): array
@@ -223,7 +223,7 @@ class AiActionService
 
         ActivityLogger::log('ai_updated', "AI updated page: {$page->title}", $page, $beforeState, true);
 
-        return ['subject' => 'Page', 'id' => (string) $page->id, 'title' => $page->title, 'url' => route('pages.edit', $page->id)];
+        return ['subject' => 'Page', 'id' => (string) $page->id, 'title' => $page->title, 'url' => route('admin.pages.edit', $page->id)];
     }
 
     private function executeUpdatePageStatus(array $proposal): array
@@ -236,7 +236,7 @@ class AiActionService
 
         ActivityLogger::log('ai_updated', "AI set page \"{$page->title}\" to {$proposal['params']['status']}", $page, $beforeState, true);
 
-        return ['subject' => 'Page', 'id' => (string) $page->id, 'title' => $page->title, 'status' => $page->status, 'url' => route('pages.edit', $page->id)];
+        return ['subject' => 'Page', 'id' => (string) $page->id, 'title' => $page->title, 'status' => $page->status, 'url' => route('admin.pages.edit', $page->id)];
     }
 
     // ─── Banner Resolvers ──────────────────────────────────────────────────────
@@ -304,7 +304,7 @@ class AiActionService
 
         ActivityLogger::log('ai_created', "AI created banner: {$banner->title}", $banner, null, true);
 
-        return ['subject' => 'Banner', 'id' => (string) $banner->id, 'title' => $banner->title, 'url' => route('banners.edit', $banner->id)];
+        return ['subject' => 'Banner', 'id' => (string) $banner->id, 'title' => $banner->title, 'url' => route('admin.banners.edit', $banner->id)];
     }
 
     private function executeUpdateBanner(array $proposal): array
@@ -322,7 +322,7 @@ class AiActionService
 
         ActivityLogger::log('ai_updated', "AI updated banner: {$banner->title}", $banner, $beforeState, true);
 
-        return ['subject' => 'Banner', 'id' => (string) $banner->id, 'title' => $banner->title, 'url' => route('banners.edit', $banner->id)];
+        return ['subject' => 'Banner', 'id' => (string) $banner->id, 'title' => $banner->title, 'url' => route('admin.banners.edit', $banner->id)];
     }
 
     private function executeUpdateBannerStatus(array $proposal): array
@@ -335,7 +335,7 @@ class AiActionService
 
         ActivityLogger::log('ai_updated', "AI set banner \"{$banner->title}\" to {$proposal['params']['status']}", $banner, $beforeState, true);
 
-        return ['subject' => 'Banner', 'id' => (string) $banner->id, 'title' => $banner->title, 'status' => $banner->status, 'url' => route('banners.edit', $banner->id)];
+        return ['subject' => 'Banner', 'id' => (string) $banner->id, 'title' => $banner->title, 'status' => $banner->status, 'url' => route('admin.banners.edit', $banner->id)];
     }
 
     // ─── Shared Database Helpers ───────────────────────────────────────────────

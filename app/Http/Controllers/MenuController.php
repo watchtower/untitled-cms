@@ -39,7 +39,7 @@ class MenuController extends Controller
 
         \App\Services\ActivityLogger::log('create', "Created menu: {$menu->name}", $menu);
 
-        return redirect()->route('menus.edit', $menu->id)->with('success', 'Menu created successfully.');
+        return redirect()->route('admin.menus.edit', $menu->id)->with('success', 'Menu created successfully.');
     }
 
     /**
@@ -78,7 +78,7 @@ class MenuController extends Controller
             return redirect()->back()->with('success', 'Menu updated successfully.');
         }
 
-        return redirect()->route('menus.index')->with('success', 'Menu updated successfully.');
+        return redirect()->route('admin.menus.index')->with('success', 'Menu updated successfully.');
     }
 
     /**
@@ -93,6 +93,6 @@ class MenuController extends Controller
 
         \App\Services\ActivityLogger::log('delete', "Deleted menu: {$name}", $menu);
 
-        return redirect()->route('menus.index')->with('success', 'Menu deleted successfully.');
+        return redirect()->route('admin.menus.index')->with('success', 'Menu deleted successfully.');
     }
 }

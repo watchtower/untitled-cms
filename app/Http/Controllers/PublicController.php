@@ -21,6 +21,7 @@ class PublicController extends Controller
             ->get(['id', 'title', 'slides', 'order', 'slug']);
 
         $recentPages = Page::where('status', 'published')
+            ->where('is_system_page', '!=', true)
             ->orderBy('published_at', 'desc')
             ->take(6)
             ->get(['id', 'title', 'slug', 'seo_description', 'published_at', 'featured_images']);
@@ -92,7 +93,7 @@ class PublicController extends Controller
                 $frontmatter .= "description: \"{$description}\"\n";
             }
             if (!empty($page->featured_images)) {
-                $frontmatter .= "image: " . url($page->featured_images[0]) . "\n";
+                $frontmatter .= "image: \"" . url($page->featured_images[0]) . "\"\n";
             }
             $frontmatter .= "---\n\n";
 

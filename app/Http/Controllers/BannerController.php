@@ -71,7 +71,7 @@ class BannerController extends Controller
 
         \App\Services\ActivityLogger::log('create', "Created banner: {$banner->title}", $banner);
 
-        return redirect()->route('banners.index')->with('success', 'Banner created successfully.');
+        return redirect()->route('admin.banners.index')->with('success', 'Banner created successfully.');
     }
 
     /**
@@ -127,7 +127,7 @@ class BannerController extends Controller
             return redirect()->back()->with('success', 'Banner status updated successfully.');
         }
 
-        return redirect()->route('banners.index')->with('success', 'Banner updated successfully.');
+        return redirect()->route('admin.banners.index')->with('success', 'Banner updated successfully.');
     }
 
     /**
@@ -142,6 +142,6 @@ class BannerController extends Controller
 
         \App\Services\ActivityLogger::log('delete', "Deleted banner: {$title}", $banner);
 
-        return redirect()->route('banners.index')->with('success', 'Banner deleted successfully.');
+        return redirect()->route('admin.banners.index')->with('success', 'Banner deleted successfully.');
     }
 }

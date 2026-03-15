@@ -66,7 +66,7 @@ class AiHubController extends Controller
 
         \App\Services\ActivityLogger::log('updated', "Updated AI Integration: {$aiHub->name}", $aiHub);
 
-        return redirect()->route('ai-hubs.index')->with('success', 'AI Integration updated successfully.');
+        return redirect()->route('admin.ai-hubs.index')->with('success', 'AI Integration updated successfully.');
     }
 
     /**

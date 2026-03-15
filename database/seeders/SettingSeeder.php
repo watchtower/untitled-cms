@@ -21,7 +21,7 @@ class SettingSeeder extends Seeder
             ],
             [
                 'key' => 'site_description',
-                'value' => 'A powerful CMS built with Laravel and React.',
+                'value' => 'AI-native content management — built for the age of agents, teams, and scale.',
                 'group' => 'general',
                 'type' => 'textarea',
                 'label' => 'Site Description',

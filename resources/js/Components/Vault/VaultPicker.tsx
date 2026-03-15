@@ -74,10 +74,10 @@ export default function VaultPicker({
         const actualType = typeOverride !== undefined ? typeOverride : filterType;
         try {
             const [filesRes, foldersRes] = await Promise.all([
-                axios.get(route('vault.files.list'), {
+                axios.get(route('admin.vault.files.list'), {
                     params: { folder_id: folderId, search, type: actualType === 'all' ? undefined : actualType }
                 }),
-                axios.get(route('vault.folders.list'))
+                axios.get(route('admin.vault.folders.list'))
             ]);
 
             setFiles(filesRes.data.data); // Paginated response
@@ -188,7 +188,7 @@ export default function VaultPicker({
         }
 
         try {
-            const res = await axios.post(route('vault.upload'), formData, {
+            const res = await axios.post(route('admin.vault.upload'), formData, {
                 onUploadProgress: (progressEvent) => {
                     const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
                     updateUploadState(upload.id, { progress: percent });

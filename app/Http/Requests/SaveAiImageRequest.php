@@ -6,14 +6,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class SaveAiImageRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        // We handle authorization inside the controller method 'authorizeGlobalMediaCreate'
-        // or we can handle it here directly. Let's do it here.
-        return auth()->check() && (auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('media.create'));
+        return auth()->check() && auth()->user()->hasPermission('media.create');
     }
 
     public function rules(): array
@@ -63,7 +58,24 @@ class SaveAiImageRequest extends FormRequest
             throw new \Exception('Failed to download remote image. Status: ' . $response->status());
         }
 
-        return $this->createTempUploadedFile($response->body(), 'png', 'image/png', $customName);
+        $contentType = $response->header('Content-Type') ?? 'image/png';
+        // Strip charset or boundary parameters (e.g. "image/jpeg; charset=utf-8" → "image/jpeg").
+        $mime = strtolower(trim(explode(';', $contentType)[0]));
+
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
+        if (! in_array($mime, $allowedMimes, true)) {
+            throw new \Exception('Remote URL did not return a supported image type: ' . $mime);
+        }
+
+        $extension = match ($mime) {
+            'image/jpeg' => 'jpg',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+            'image/avif' => 'avif',
+            default      => 'png',
+        };
+
+        return $this->createTempUploadedFile($response->body(), $extension, $mime, $customName);
     }
 
     private function createTempUploadedFile(string $binaryData, string $extension, string $mimeType, ?string $customName): \Illuminate\Http\UploadedFile

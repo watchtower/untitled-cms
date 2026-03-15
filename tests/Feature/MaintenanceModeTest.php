@@ -16,10 +16,10 @@ class MaintenanceModeTest extends TestCase
     {
         parent::setUp();
 
-        // Ensure roles exist
-        Role::firstOrCreate(['name' => 'super-admin']);
-        Role::firstOrCreate(['name' => 'admin']);
-        Role::firstOrCreate(['name' => 'user']);
+        // Ensure roles exist with slugs (hasRole() matches on slug)
+        Role::updateOrCreate(['slug' => 'super-admin'], ['name' => 'super-admin', 'backend_access' => true, 'is_active' => true]);
+        Role::updateOrCreate(['slug' => 'admin'],       ['name' => 'admin',       'backend_access' => true, 'is_active' => true]);
+        Role::updateOrCreate(['slug' => 'user'],        ['name' => 'user',        'backend_access' => false, 'is_active' => true]);
     }
 
     protected function tearDown(): void
@@ -64,7 +64,7 @@ class MaintenanceModeTest extends TestCase
         app(SettingsService::class)->clearCache();
 
         $admin = User::factory()->create();
-        $adminRole = Role::where('name', 'admin')->first();
+        $adminRole = Role::where('slug', 'admin')->first();
         $admin->roles()->attach($adminRole);
 
         $response = $this->actingAs($admin)->get('/');
@@ -79,7 +79,7 @@ class MaintenanceModeTest extends TestCase
         app(SettingsService::class)->clearCache();
 
         $superAdmin = User::factory()->create();
-        $superAdminRole = Role::where('name', 'super-admin')->first();
+        $superAdminRole = Role::where('slug', 'super-admin')->first();
         $superAdmin->roles()->attach($superAdminRole);
 
         $response = $this->actingAs($superAdmin)->get('/');
@@ -93,7 +93,7 @@ class MaintenanceModeTest extends TestCase
         app(SettingsService::class)->clearCache();
 
         $user = User::factory()->create();
-        $userRole = Role::where('name', 'user')->first();
+        $userRole = Role::where('slug', 'user')->first();
         $user->roles()->attach($userRole);
 
         // They can access login/dashboard normally

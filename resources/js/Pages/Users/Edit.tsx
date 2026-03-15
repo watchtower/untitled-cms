@@ -51,7 +51,7 @@ export default function Edit({ auth, user, roles }: UserEditProps) {
     });
 
     const submit = () => {
-        put(route('users.update', user.id));
+        put(route('admin.users.update', user.id));
     };
 
     // Email validation
@@ -95,7 +95,7 @@ export default function Edit({ auth, user, roles }: UserEditProps) {
     }, [isDirty, processing, submit]);
 
     const handleDelete = () => {
-        router.delete(route('users.destroy', user.id));
+        router.delete(route('admin.users.destroy', user.id));
     };
 
     const handleRoleChange = (roleId: string, checked: boolean) => {
@@ -156,7 +156,7 @@ export default function Edit({ auth, user, roles }: UserEditProps) {
                                                 const currentRoles = data.roles;
                                                 const previousStatus = data.is_active;
                                                 setData('is_active', checked);
-                                                router.put(route('users.update', user.id), {
+                                                router.put(route('admin.users.update', user.id), {
                                                     name: data.name,
                                                     email: data.email,
                                                     roles: currentRoles,
@@ -269,7 +269,7 @@ export default function Edit({ auth, user, roles }: UserEditProps) {
                                                 className="w-full text-xs mt-2"
                                                 onClick={() => {
                                                     if (confirm('Are you sure you want to logout from all devices? This will end all active sessions except the current one.')) {
-                                                        router.post(route('users.logout-all-devices', user.id));
+                                                        router.post(route('admin.users.logout-all-devices', user.id));
                                                     }
                                                 }}
                                             >

@@ -33,7 +33,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if ($request->user()->canAccessBackend()) {
+            // Admin: honour the intended URL (they may have been mid-task before session expired).
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
+
+        // Non-admin: always go home — clear any stored intended URL to prevent redirect to /admin/*.
+        session()->forget('url.intended');
+        return redirect('/');
     }
 
     /**

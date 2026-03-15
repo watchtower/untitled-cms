@@ -20,7 +20,7 @@ export default function Create({ auth, availablePermissions }: RoleCreateProps) 
     });
 
     const submit = () => {
-        post(route('roles.store'));
+        post(route('admin.roles.store'));
     };
 
     const handlePermissionChange = (permission: string, checked: boolean) => {

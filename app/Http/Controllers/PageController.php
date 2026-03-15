@@ -71,7 +71,7 @@ class PageController extends Controller
 
         \App\Services\ActivityLogger::log('create', "Created page: {$page->title}", $page);
 
-        return redirect()->route('pages.index')->with('success', 'Page created successfully.');
+        return redirect()->route('admin.pages.index')->with('success', 'Page created successfully.');
     }
 
     /**
@@ -187,7 +187,7 @@ class PageController extends Controller
             return redirect()->back()->with('success', 'Page status updated successfully.');
         }
 
-        return redirect()->route('pages.index')->with('success', 'Page updated successfully.');
+        return redirect()->route('admin.pages.index')->with('success', 'Page updated successfully.');
     }
 
     /**
@@ -202,6 +202,6 @@ class PageController extends Controller
 
         \App\Services\ActivityLogger::log('delete', "Deleted page: {$title}", $page);
 
-        return redirect()->route('pages.index')->with('success', 'Page deleted successfully.');
+        return redirect()->route('admin.pages.index')->with('success', 'Page deleted successfully.');
     }
 }

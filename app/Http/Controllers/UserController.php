@@ -154,7 +154,7 @@ class UserController extends Controller
 
         $user->roles()->attach($validated['roles']);
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+        return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
     }
 
     /**
@@ -216,7 +216,7 @@ class UserController extends Controller
             return redirect()->back()->with('success', 'User status updated successfully.');
         }
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
     }
 
     /**
@@ -228,7 +228,7 @@ class UserController extends Controller
 
         // Prevent deleting self (optional but good practice)
         if ($user->id === auth()->id()) {
-            return redirect()->route('users.index')->with('error', 'You cannot delete yourself.');
+            return redirect()->route('admin.users.index')->with('error', 'You cannot delete yourself.');
         }
 
         $name = $user->name; // Store name before deletion for logging
@@ -237,7 +237,7 @@ class UserController extends Controller
         // If not, ensure roles are detached: $user->roles()->detach();
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
     }
 
     /**
@@ -252,7 +252,7 @@ class UserController extends Controller
 
         \App\Services\ActivityLogger::log('restore', "Restored user: {$user->name}", $user);
 
-        return redirect()->route('users.index')->with('success', 'User restored successfully.');
+        return redirect()->route('admin.users.index')->with('success', 'User restored successfully.');
     }
 
     /**
@@ -269,7 +269,7 @@ class UserController extends Controller
 
         \App\Services\ActivityLogger::log('force_delete', "Permanently deleted user: {$name}");
 
-        return redirect()->route('users.index')->with('success', 'User permanently deleted.');
+        return redirect()->route('admin.users.index')->with('success', 'User permanently deleted.');
     }
 
     /**

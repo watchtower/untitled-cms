@@ -51,7 +51,7 @@ export default function Create({ auth }: any) {
 
         setIsSuggestingTags(true);
         try {
-            const response = await axios.post(route('ai.generate-tags'), {
+            const response = await axios.post(route('admin.ai.generate-tags'), {
                 title: data.title,
                 content: data.content,
             });
@@ -72,7 +72,7 @@ export default function Create({ auth }: any) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('pages.store'));
+        post(route('admin.pages.store'));
     };
 
     return (

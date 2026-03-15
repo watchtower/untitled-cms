@@ -114,6 +114,21 @@ class SocialAuthController extends Controller
      */
     private function safeIntendedUrl(): string
     {
+        $user = auth()->user();
+
+        if (! $user) {
+            return route('login');
+        }
+
+        // Non-admin users always go to their profile — never follow a stored /admin/* URL.
+        if (! $user->canAccessBackend()) {
+            session()->forget('url.intended');
+            return url('/');
+        }
+
+        // Admin users: honour the intended URL only if it belongs to this app's host.
+        // A str_starts_with() prefix check is bypassable (e.g. app.url + ".evil.com"),
+        // so we compare parsed hosts instead.
         $intended     = session()->pull('url.intended', '');
         $appHost      = parse_url(config('app.url'), PHP_URL_HOST);
         $intendedHost = parse_url($intended, PHP_URL_HOST);
@@ -122,7 +137,7 @@ class SocialAuthController extends Controller
             return $intended;
         }
 
-        return route('dashboard');
+        return route('admin.dashboard');
     }
 
     private function createSocialUser(\Laravel\Socialite\Contracts\User $socialUser, string $provider): User

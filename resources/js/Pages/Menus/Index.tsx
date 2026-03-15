@@ -51,7 +51,7 @@ export default function Index({ menus }: MenusIndexProps) {
 
     const submitCreate = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('menus.store'), {
+        post(route('admin.menus.store'), {
             onSuccess: () => {
                 setCreateOpen(false);
                 reset();
@@ -114,7 +114,7 @@ export default function Index({ menus }: MenusIndexProps) {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             {canManage && (
-                                <DropdownMenuItem onClick={() => router.visit(route('menus.edit', menu.id))}>
+                                <DropdownMenuItem onClick={() => router.visit(route('admin.menus.edit', menu.id))}>
                                     <Edit className="mr-2 h-4 w-4" /> Edit
                                 </DropdownMenuItem>
                             )}
@@ -122,7 +122,7 @@ export default function Index({ menus }: MenusIndexProps) {
                                 <DropdownMenuItem
                                     onClick={() => {
                                         if (confirm('Are you sure you want to delete this menu?')) {
-                                            router.delete(route('menus.destroy', menu.id));
+                                            router.delete(route('admin.menus.destroy', menu.id));
                                         }
                                     }}
                                     className="text-destructive focus:text-destructive"
@@ -154,12 +154,12 @@ export default function Index({ menus }: MenusIndexProps) {
             <div className="flex items-center justify-end gap-2 pt-2 border-t">
                 {canManage && (
                     <Button variant="outline" size="sm" asChild>
-                        <Link href={route('menus.edit', menu.id)}>Edit</Link>
+                        <Link href={route('admin.menus.edit', menu.id)}>Edit</Link>
                     </Button>
                 )}
                 {canManage && (
                     <Button variant="outline" size="sm" className="text-destructive border-dashed border-red-200" asChild>
-                        <Link href={route('menus.destroy', menu.id)} method="delete" as="button">Delete</Link>
+                        <Link href={route('admin.menus.destroy', menu.id)} method="delete" as="button">Delete</Link>
                     </Button>
                 )}
             </div>

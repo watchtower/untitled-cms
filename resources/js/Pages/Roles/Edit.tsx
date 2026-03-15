@@ -70,11 +70,11 @@ export default function Edit({ auth, role, availablePermissions }: RoleEditProps
     };
 
     const submit = () => {
-        put(route('roles.update', role.id));
+        put(route('admin.roles.update', role.id));
     };
 
     const handleDelete = () => {
-        router.delete(route('roles.destroy', role.id));
+        router.delete(route('admin.roles.destroy', role.id));
     };
 
     // Group permissions
@@ -166,7 +166,7 @@ export default function Edit({ auth, role, availablePermissions }: RoleEditProps
                                         checked={data.is_active}
                                         onCheckedChange={(checked) => {
                                             setData('is_active', checked);
-                                            router.put(route('roles.update', { id: role.id, stay: 1 }), {
+                                            router.put(route('admin.roles.update', { id: role.id, stay: 1 }), {
                                                 ...data,
                                                 is_active: checked,
                                                 stay: 1

@@ -46,7 +46,7 @@ export default function Dashboard() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('verified') === '1') {
       toast.success('Email verified! Welcome aboard.');
-      router.replace(route('dashboard'), { preserveScroll: true });
+      router.replace(route('admin.dashboard'), { preserveScroll: true });
     }
   }, []);
 

@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'can' => \App\Http\Middleware\CheckPermission::class,
+            'admin' => \App\Http\Middleware\RequireAdminAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

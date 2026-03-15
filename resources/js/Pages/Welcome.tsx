@@ -34,7 +34,7 @@ export default function Welcome({
                         </div>
                         <nav className="flex items-center gap-4">
                             {auth.user ? (
-                                <Link href={route('dashboard')}>
+                                <Link href={route('admin.dashboard')}>
                                     <Button>Dashboard</Button>
                                 </Link>
                             ) : (
@@ -65,7 +65,7 @@ export default function Welcome({
                         </div>
                         <div className="flex gap-4">
                             {auth.user ? (
-                                <Link href={route('dashboard')}>
+                                <Link href={route('admin.dashboard')}>
                                     <Button size="lg" className="h-12 px-8 text-base">
                                         Go to Dashboard <LayoutDashboard className="ml-2 h-4 w-4" />
                                     </Button>

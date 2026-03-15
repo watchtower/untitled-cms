@@ -5,36 +5,52 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-// Profile routes: auth only — email changes un-verify the user, so verified is not required here
+// Non-admin profile — auth only, no admin middleware
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Custom user routes (must be before resource route)
+// Admin routes — require auth, email verification, and at least one permission (admin middleware)
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin'])->group(function () {
+
+    // Admin profile
+    Route::get('/profile', [ProfileController::class, 'adminEdit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'adminUpdate'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'adminDestroy'])->name('profile.destroy');
+
+    // Dashboard
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
+
+    // Users
     Route::post('/users/invite', [\App\Http\Controllers\UserController::class, 'invite'])->name('users.invite');
     Route::post('/users/batch-activate', [\App\Http\Controllers\UserController::class, 'batchActivate'])->name('users.batch-activate');
     Route::post('/users/batch-deactivate', [\App\Http\Controllers\UserController::class, 'batchDeactivate'])->name('users.batch-deactivate');
     Route::post('/users/batch-delete', [\App\Http\Controllers\UserController::class, 'batchDelete'])->name('users.batch-delete');
-
     Route::post('/users/{id}/restore', [\App\Http\Controllers\UserController::class, 'restore'])->name('users.restore');
     Route::delete('/users/{id}/force-delete', [\App\Http\Controllers\UserController::class, 'forceDelete'])->name('users.force-delete');
     Route::post('/users/{id}/logout-all-devices', [\App\Http\Controllers\UserController::class, 'logoutAllDevices'])->name('users.logout-all-devices');
-
     Route::resource('users', \App\Http\Controllers\UserController::class);
+
+    // Roles
     Route::resource('roles', \App\Http\Controllers\RoleController::class);
+
+    // Pages
     Route::resource('pages', \App\Http\Controllers\PageController::class);
 
+    // Banners
     Route::resource('banners', \App\Http\Controllers\BannerController::class);
+
+    // Menus
     Route::resource('menus', \App\Http\Controllers\MenuController::class)->except(['create', 'show']);
+
+    // AI Hubs
     Route::resource('ai-hubs', \App\Http\Controllers\AiHubController::class)->only(['index', 'update']);
     Route::post('/ai-hubs/{aiHub}/activate', [\App\Http\Controllers\AiHubController::class, 'activate'])->name('ai-hubs.activate');
+    // Note: ai-hubs.reset-usage is a dead route — not wired to web.php
 
     // AI Routes — rate-limited to prevent OpenAI cost abuse (A04)
     Route::middleware('throttle:30,1')->group(function () {
@@ -68,8 +84,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/ai/actions/revert/{logId}', [\App\Http\Controllers\AiActionController::class, 'revert'])->name('ai.actions.revert');
     });
 
+    // Activity Log
     Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-log.index');
 
+    // Settings
     Route::get('/settings', [\App\Http\Controllers\SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings/{key}', [\App\Http\Controllers\SettingController::class, 'update'])->name('settings.update');
 

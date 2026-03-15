@@ -70,12 +70,12 @@ export default function Edit({ auth, banner }: BannerEditProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(route('banners.update', banner.id));
+        put(route('admin.banners.update', banner.id));
     };
 
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete this banner?')) {
-            router.delete(route('banners.destroy', banner.id));
+            router.delete(route('admin.banners.destroy', banner.id));
         }
     };
 
@@ -126,7 +126,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                                 checked={data.is_active}
                                                 onCheckedChange={(checked) => {
                                                     setData('is_active', checked);
-                                                    router.put(route('banners.update', banner.id), {
+                                                    router.put(route('admin.banners.update', banner.id), {
                                                         ...data,
                                                         is_active: checked,
                                                         stay: 1

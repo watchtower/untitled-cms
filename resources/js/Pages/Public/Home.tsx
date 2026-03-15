@@ -68,7 +68,7 @@ export default function Home({ banners, recentPages }: Props) {
                     >
                         <CarouselContent>
                             {allSlides.map((slide, index) => (
-                                <CarouselItem key={index}>
+                                <CarouselItem key={`slide-${slide.sequence ?? index}`}>
                                     <div className="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
                                         <div className="absolute inset-0 bg-foreground/20 z-10" /> {/* Dim overlay */}
                                         <img
@@ -117,18 +117,44 @@ export default function Home({ banners, recentPages }: Props) {
                     </Carousel>
                 </div>
             ) : (
-                <div className="w-full bg-muted/30 border-b py-24 text-center">
-                    <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl mb-4">Welcome to Untitled CMS</h1>
-                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">This homepage is ready for content. Add some banners in the admin panel to see the hero carousel in action.</p>
-                </div>
+                <section className="relative w-full overflow-hidden border-b">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-muted/30" />
+                    <div className="relative container max-w-5xl mx-auto px-4 py-32 text-center">
+                        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
+                            Content that <span className="text-primary">speaks</span> for itself.
+                        </h1>
+                        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+                            An AI-native CMS built on Laravel, React, and MongoDB — ready for teams, agents, and the open web.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <Button asChild size="lg" className="h-12 px-8">
+                                <Link href="/getting-started">Get Started</Link>
+                            </Button>
+                            <Button asChild size="lg" variant="outline" className="h-12 px-8">
+                                <Link href={route('login')}>Sign In</Link>
+                            </Button>
+                        </div>
+                    </div>
+                </section>
             )}
 
-            {/* Recent Articles Section */}
+            {/* Features Strip */}
+            <div className="border-b bg-muted/20">
+                <div className="container max-w-7xl mx-auto px-4 py-6 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />Laravel 12 + MongoDB</span>
+                    <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />React + Inertia.js SPA</span>
+                    <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />Multi-Provider AI Hub</span>
+                    <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />Role-Based Access Control</span>
+                    <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />Markdown for AI Agents</span>
+                </div>
+            </div>
+
+            {/* From the Blog Section */}
             <div className="container max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b pb-4">
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Recent Articles</h2>
-                        <p className="text-muted-foreground mt-2">Latest updates and featured content.</p>
+                        <h2 className="text-3xl font-bold tracking-tight">From the Blog</h2>
+                        <p className="text-muted-foreground mt-2">Latest updates and featured content from our team.</p>
                     </div>
                 </div>
 
@@ -169,8 +195,9 @@ export default function Home({ banners, recentPages }: Props) {
                             </Card>
                         ))
                     ) : (
-                        <div className="col-span-full text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
-                            No articles found. Start publishing to see them here.
+                        <div className="col-span-full text-center py-16 text-muted-foreground">
+                            <p className="text-lg font-medium mb-2">No articles yet.</p>
+                            <p className="text-sm">Start publishing pages in the admin panel to see them here.</p>
                         </div>
                     )}
                 </div>

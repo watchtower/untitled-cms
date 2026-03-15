@@ -71,7 +71,7 @@ export default function Index({ auth, roles }: RolesIndexProps) {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             {canEdit && (
-                                <DropdownMenuItem onClick={() => router.visit(route('roles.edit', role.id))}>
+                                <DropdownMenuItem onClick={() => router.visit(route('admin.roles.edit', role.id))}>
                                     <Edit className="mr-2 h-4 w-4" /> Edit
                                 </DropdownMenuItem>
                             )}
@@ -79,7 +79,7 @@ export default function Index({ auth, roles }: RolesIndexProps) {
                                 <DropdownMenuItem
                                     onClick={() => {
                                         if (confirm('Are you sure you want to delete this role?')) {
-                                            router.delete(route('roles.destroy', role.id));
+                                            router.delete(route('admin.roles.destroy', role.id));
                                         }
                                     }}
                                     className="text-destructive focus:text-destructive"
@@ -104,7 +104,7 @@ export default function Index({ auth, roles }: RolesIndexProps) {
                     </div>
                     <div className="flex gap-1">
                         {canEdit && (
-                            <Link href={route('roles.edit', row.id)}>
+                            <Link href={route('admin.roles.edit', row.id)}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
                                     <Edit className="h-4 w-4" />
                                 </Button>
@@ -127,7 +127,7 @@ export default function Index({ auth, roles }: RolesIndexProps) {
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold">Role Management</h1>
                     {canCreate && (
-                        <Link href={route('roles.create')}>
+                        <Link href={route('admin.roles.create')}>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" /> Add Role
                             </Button>

@@ -214,7 +214,7 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
 
         setIsSuggestingTags(true);
         try {
-            const response = await axios.post(route('ai.generate-tags'), {
+            const response = await axios.post(route('admin.ai.generate-tags'), {
                 title: data.title,
                 content: data.content,
             });
@@ -286,7 +286,7 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(route('pages.update', page.id), {
+        put(route('admin.pages.update', page.id), {
             onSuccess: () => {
                 setLastSaved(new Date());
             },
@@ -295,7 +295,7 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
 
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete this page?')) {
-            router.delete(route('pages.destroy', page.id));
+            router.delete(route('admin.pages.destroy', page.id));
         }
     };
 
@@ -344,7 +344,7 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                    fetch(route('pages.show', page.id), {
+                                    fetch(route('admin.pages.show', page.id), {
                                         headers: {
                                             'Accept': 'text/markdown'
                                         }
@@ -400,7 +400,7 @@ export default function Edit({ auth, page, redirects }: PageEditProps) {
                                                     const newStatus = checked ? 'published' : 'draft';
                                                     setData('status', newStatus);
                                                     // Autosave status change
-                                                    router.put(route('pages.update', page.id), {
+                                                    router.put(route('admin.pages.update', page.id), {
                                                         ...data,
                                                         status: newStatus,
                                                         stay: 1

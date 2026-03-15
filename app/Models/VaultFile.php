@@ -69,7 +69,7 @@ class VaultFile extends Model
         }
 
         // Fallback for private files and trashed files
-        return route('vault.file.serve', ['uuid' => $this->uuid]);
+        return route('admin.vault.file.serve', ['uuid' => $this->uuid]);
     }
 
     public function resolveServingPath(): string

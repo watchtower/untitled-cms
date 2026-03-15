@@ -10,36 +10,38 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         // Admin: All permissions — always kept in sync with Role::availablePermissions()
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole = Role::updateOrCreate(
+            ['slug' => 'admin'],
+            ['name' => 'admin', 'backend_access' => true, 'is_active' => true]
+        );
         $adminRole->syncPermissions(Role::availablePermissions());
 
         // Editor: Can manage content/banners, but not users/roles
-        $editorRole = Role::firstOrCreate(['name' => 'editor']);
+        $editorRole = Role::updateOrCreate(
+            ['slug' => 'editor'],
+            ['name' => 'editor', 'backend_access' => true, 'is_active' => true]
+        );
         $editorRole->syncPermissions([
-            'pages.view',
-            'pages.create',
-            'pages.edit',
-            'pages.delete',
-            'pages.publish',
-            'media.view',
-            'media.create',
-            'media.edit',
-            'media.delete',
+            'pages.view', 'pages.create', 'pages.edit', 'pages.delete', 'pages.publish',
+            'media.view', 'media.create', 'media.edit', 'media.delete',
             'banners.manage',
         ]);
 
         // Author: Can create/edit own content, no publishing or deleting others
-        $authorRole = Role::firstOrCreate(['name' => 'author']);
+        $authorRole = Role::updateOrCreate(
+            ['slug' => 'author'],
+            ['name' => 'author', 'backend_access' => true, 'is_active' => true]
+        );
         $authorRole->syncPermissions([
-            'pages.view',
-            'pages.create',
-            'pages.edit',
-            'media.view',
-            'media.create',
+            'pages.view', 'pages.create', 'pages.edit',
+            'media.view', 'media.create',
         ]);
 
-        // User: Self-registered users — read-only access
-        $userRole = Role::firstOrCreate(['name' => 'user'], ['slug' => 'user']);
+        // User: Self-registered users — read-only, no backend access
+        $userRole = Role::updateOrCreate(
+            ['slug' => 'user'],
+            ['name' => 'user', 'backend_access' => false, 'is_active' => true]
+        );
         $userRole->syncPermissions([
             'pages.view',
             'media.view',

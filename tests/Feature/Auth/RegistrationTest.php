@@ -112,7 +112,7 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response = $this->get('/pages');
+        $response = $this->get('/admin/pages');
 
         $response->assertRedirect(route('verification.notice'));
     }

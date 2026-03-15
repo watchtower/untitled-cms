@@ -33,7 +33,7 @@ export default function Create({ auth }: any) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('banners.store'));
+        post(route('admin.banners.store'));
     };
 
     const addSlide = () => {

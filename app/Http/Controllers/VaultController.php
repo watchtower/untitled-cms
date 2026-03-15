@@ -369,14 +369,14 @@ class VaultController extends Controller
 
     private function authorizeGlobalMediaView(): void
     {
-        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.view')) {
+        if (!auth()->user()->hasPermission('media.view')) {
             abort(403, 'Unauthorized');
         }
     }
 
     private function authorizeGlobalMediaCreate(): void
     {
-        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasPermission('media.create')) {
+        if (!auth()->user()->hasPermission('media.create')) {
             abort(403, 'Unauthorized');
         }
     }

@@ -28,7 +28,7 @@ export default function Create({ auth, roles }: UserCreateProps) {
     });
 
     const submit = () => {
-        post(route('users.store'));
+        post(route('admin.users.store'));
     };
 
     const handleRoleChange = (roleId: string, checked: boolean) => {

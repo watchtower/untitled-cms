@@ -27,7 +27,25 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect('/');
+    }
+
+    public function test_admin_users_are_redirected_to_dashboard_after_login(): void
+    {
+        $user = User::factory()->create();
+        $role = \App\Models\Role::updateOrCreate(
+            ['slug' => 'admin'],
+            ['name' => 'admin', 'backend_access' => true, 'is_active' => true]
+        );
+        $user->roles()->attach($role->id);
+
+        $response = $this->post('/login', [
+            'email'    => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('admin.dashboard', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
@@ -40,6 +58,23 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertGuest();
+    }
+
+    public function test_non_admin_login_clears_intended_url(): void
+    {
+        $user = User::factory()->create(); // No roles — non-admin
+
+        // Simulate a stale intended URL that could bounce them to admin
+        session(['url.intended' => '/admin/users']);
+
+        $response = $this->post('/login', [
+            'email'    => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect('/');
+        $this->assertNull(session('url.intended'), 'url.intended should be cleared for non-admin users');
     }
 
     public function test_users_can_logout(): void

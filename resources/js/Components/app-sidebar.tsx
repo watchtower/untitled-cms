@@ -43,20 +43,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Helper to determine if a route is active
   const isActive = (pattern: string) => {
-    if (pattern === 'dashboard') return url === '/dashboard';
+    if (pattern === 'dashboard') return url === '/admin/dashboard';
     // Simple check for now, can be improved with regex
-    return url.startsWith('/' + pattern);
+    return url.startsWith('/admin/' + pattern);
   };
 
   const data = {
     navMain: [
       {
         title: "Platform",
-        url: route('dashboard'),
+        url: route('admin.dashboard'),
         icon: LayoutDashboard,
         isActive: true,
         items: [
-          { title: "Dashboard", url: route('dashboard') },
+          { title: "Dashboard", url: route('admin.dashboard') },
         ],
       },
       {
@@ -65,10 +65,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: BookOpen,
         isActive: true,
         items: [
-          { title: "Pages", url: route('pages.index') },
-          { title: "Menus", url: route('menus.index') },
-          { title: "Banners", url: route('banners.index') },
-          { title: "Vault", url: route('vault.index') },
+          { title: "Pages", url: route('admin.pages.index') },
+          { title: "Menus", url: route('admin.menus.index') },
+          { title: "Banners", url: route('admin.banners.index') },
+          { title: "Vault", url: route('admin.vault.index') },
         ]
       },
       {
@@ -77,11 +77,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: Settings2,
         isActive: true,
         items: [
-          { title: "Users", url: route('users.index') },
-          { title: "Roles", url: route('roles.index') },
-          { title: "AI Integrations", url: route('ai-hubs.index') },
-          { title: "Activity", url: route('activity-log.index') },
-          { title: "Settings", url: route('settings.index') },
+          { title: "Users", url: route('admin.users.index') },
+          { title: "Roles", url: route('admin.roles.index') },
+          { title: "AI Integrations", url: route('admin.ai-hubs.index') },
+          { title: "Activity", url: route('admin.activity-log.index') },
+          { title: "Settings", url: route('admin.settings.index') },
         ]
       }
     ],

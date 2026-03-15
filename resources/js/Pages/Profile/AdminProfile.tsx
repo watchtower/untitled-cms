@@ -7,7 +7,7 @@ import UpdateProfileInformationForm from './Partials/UpdateProfileInformationFor
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
 import { FormSplitLayout } from '@/Components/Common/FormLayouts';
 
-export default function Edit({
+export default function AdminProfile({
     mustVerifyEmail,
     status,
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
@@ -23,10 +23,10 @@ export default function Edit({
                         <Card className="border-destructive/50">
                             <CardHeader>
                                 <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                                <CardDescription>Irreversible actions</CardDescription>
+                                <CardDescription>Deactivate your account — restorable by another administrator.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <DeleteUserForm className="w-full" />
+                                <DeleteUserForm className="w-full" destroyRoute="admin.profile.destroy" />
                             </CardContent>
                         </Card>
                     }
@@ -38,6 +38,7 @@ export default function Edit({
                                     mustVerifyEmail={mustVerifyEmail}
                                     status={status}
                                     className="max-w-xl"
+                                    updateRoute="admin.profile.update"
                                 />
                             </CardContent>
                         </Card>

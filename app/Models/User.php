@@ -64,9 +64,20 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Role::class);
     }
 
-    public function hasRole(string $roleName): bool
+    /**
+     * True when at least one of the user's roles has backend_access enabled.
+     * Use this — not getCachedPermissions() — to gate admin area access.
+     */
+    public function canAccessBackend(): bool
     {
-        return $this->roles()->where('name', $roleName)->exists();
+        if (! $this->id) {
+            return false;
+        }
+
+        return Cache::remember('user_backend_access_' . $this->id, 60, function () {
+            // Query directly to avoid caching a stale in-memory roles collection.
+            return $this->roles()->where('backend_access', true)->where('is_active', true)->exists();
+        });
     }
 
     public function hasPermission(string $permission): bool
@@ -114,5 +125,6 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->roles()->sync($roleIds);
         Cache::forget('user_permissions_' . $this->id);
+        Cache::forget('user_backend_access_' . $this->id);
     }
 }

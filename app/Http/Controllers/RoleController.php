@@ -53,7 +53,7 @@ class RoleController extends Controller
 
         Role::create($validated);
 
-        return redirect()->route('roles.index')->with('success', 'Role created successfully.');
+        return redirect()->route('admin.roles.index')->with('success', 'Role created successfully.');
     }
 
     public function edit(string $id)
@@ -105,7 +105,7 @@ class RoleController extends Controller
             return redirect()->back()->with('success', $permissionsOverridden ? $message : 'Role status updated successfully.');
         }
 
-        return redirect()->route('roles.index')->with('success', $message);
+        return redirect()->route('admin.roles.index')->with('success', $message);
     }
 
     public function destroy(string $id)
@@ -119,6 +119,6 @@ class RoleController extends Controller
 
         $role->delete();
 
-        return redirect()->route('roles.index')->with('success', 'Role deleted successfully.');
+        return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully.');
     }
 }

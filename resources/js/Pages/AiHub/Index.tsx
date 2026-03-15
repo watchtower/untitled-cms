@@ -69,7 +69,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingHub) return;
-        put(route('ai-hubs.update', editingHub.id), {
+        put(route('admin.ai-hubs.update', editingHub.id), {
             preserveScroll: true,
             onSuccess: () => setEditingHub(null),
         });
@@ -77,7 +77,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
 
     const handleResetUsage = (hubId: number) => {
         if (confirm('Are you sure you want to reset the monthly usage counter for this provider to zero?')) {
-            router.post(route('ai-hubs.reset-usage', hubId), {}, { preserveScroll: true });
+            router.post(route('ai-hubs.reset-usage', hubId) /* dead route — not currently wired */, {}, { preserveScroll: true });
         }
     };
 
@@ -102,7 +102,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
                         <Switch
                             checked={integration.is_active}
                             onCheckedChange={() => {
-                                router.post(route('ai-hubs.activate', integration.id), {}, { preserveScroll: true });
+                                router.post(route('admin.ai-hubs.activate', integration.id), {}, { preserveScroll: true });
                             }}
                         />
                         <Badge variant={integration.is_active ? 'default' : 'secondary'}>

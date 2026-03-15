@@ -42,7 +42,7 @@ export default function SettingsIndex({ settings }: Props) {
     };
 
     const handleSave = (key: string, value: any) => {
-        router.put(route('settings.update', key), { value }, {
+        router.put(route('admin.settings.update', key), { value }, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
