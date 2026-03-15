@@ -104,6 +104,10 @@ require __DIR__ . '/auth.php';
 // Sitemap
 Route::get('/sitemap.md', [\App\Http\Controllers\SitemapController::class, 'markdown'])->name('sitemap.md');
 
+// LLMs.txt — AI discoverability (llmstxt.org standard)
+Route::get('/llms.txt', [\App\Http\Controllers\LlmsController::class, 'index'])->name('llms.txt');
+Route::get('/llms-full.txt', [\App\Http\Controllers\LlmsController::class, 'full'])->name('llms-full.txt');
+
 // RSS Feed
 Route::get('/rss', [\App\Http\Controllers\FeedController::class, 'rss'])->name('feed.rss');
 Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'rss']);

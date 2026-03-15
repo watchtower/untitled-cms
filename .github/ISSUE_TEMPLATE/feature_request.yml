@@ -1,0 +1,47 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest an improvement. Please describe your idea clearly.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem this solves
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: "I'm always frustrated when..."
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the solution you'd like.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or features you've considered?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Pages / Content
+        - Vault (Media Manager)
+        - AI Hub
+        - Authentication / RBAC
+        - Dashboard / Analytics
+        - Settings
+        - API / Headless
+        - Developer Experience
+        - Security
+        - Other
+    validations:
+      required: true
