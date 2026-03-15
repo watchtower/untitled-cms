@@ -194,10 +194,10 @@ else
             sed -i.bak "s|DB_PORT=.*|DB_PORT=${DB_PORT}|" .env
             sed -i.bak "s|DB_DATABASE=.*|DB_DATABASE=${DB_NAME}|" .env
             if [ -n "$DB_USERNAME" ]; then
-                sed -i.bak "s|DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" .env
+                sed -i.bak "s|^#\{0,1\} *DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" .env
             fi
             if [ -n "$DB_PASSWORD" ]; then
-                sed -i.bak "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" .env
+                sed -i.bak "s|^#\{0,1\} *DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" .env
             fi
             echo -e " $PASS Local MongoDB configured."
             ;;
