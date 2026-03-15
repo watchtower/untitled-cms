@@ -1,7 +1,7 @@
 # Untitled CMS
 
 <p align="center">
-  <a href="https://github.com/your-org/untitled-cms/actions/workflows/ci.yml"><img src="https://github.com/your-org/untitled-cms/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/watchtower/untitled-cms/actions/workflows/ci.yml"><img src="https://github.com/watchtower/untitled-cms/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/PHP-8.2%2B-blue?logo=php" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Laravel-12-red?logo=laravel" alt="Laravel 12">
   <img src="https://img.shields.io/badge/MongoDB-6%2B-green?logo=mongodb" alt="MongoDB 6+">
@@ -23,45 +23,45 @@
 
 ### Why Untitled CMS?
 
-| You want… | Untitled CMS gives you… |
-|---|---|
-| A CMS that works *with* AI tools | `/llms.txt`, `/llms-full.txt`, `Accept: text/markdown` on every page, and YAML frontmatter for agents |
-| Secure media management | 7-stage upload pipeline: double-extension detection → MIME check → image sanitization → optional ClamAV scan |
-| Flexible AI integration | Swap providers at runtime — OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama |
-| Granular access control | 34 permissions across 8 policy classes, cached RBAC, invite-only user flow |
-| A developer-friendly stack | Laravel 12 + React + TypeScript + Tailwind CSS + Shadcn UI, all in one repo |
-| Easy self-hosting | Interactive installer, Docker Compose, systemd + Nginx templates |
+| You want…                        | Untitled CMS gives you…                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| A CMS that works _with_ AI tools | `/llms.txt`, `/llms-full.txt`, `Accept: text/markdown` on every page, and YAML frontmatter for agents        |
+| Secure media management          | 7-stage upload pipeline: double-extension detection → MIME check → image sanitization → optional ClamAV scan |
+| Flexible AI integration          | Swap providers at runtime — OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama                       |
+| Granular access control          | 34 permissions across 8 policy classes, cached RBAC, invite-only user flow                                   |
+| A developer-friendly stack       | Laravel 12 + React + TypeScript + Tailwind CSS + Shadcn UI, all in one repo                                  |
+| Easy self-hosting                | Interactive installer, Docker Compose, systemd + Nginx templates                                             |
 
 ---
 
 ## What's Inside
 
-| Module | Highlights |
-|---|---|
-| **Auth & RBAC** | Login · Registration · Email verification · Token-based invitations · Granular role/permission system with Laravel Gate policies |
-| **Pages** | CKEditor 5 rich text · Draft/Published workflow · SEO meta fields · AI-generated meta · Dynamic public routing · Scheduled publishing |
-| **Banners** | Drag-and-drop reordering (`@dnd-kit`) · Active/inactive scheduling with `start_at / end_at` |
-| **The Vault** | Hierarchical media manager · 3-panel resizable layout · Secure 7-stage upload pipeline · Folder-level permissions · Full audit log · AI-generated alt text |
-| **AI Hub** | Multi-provider manager (OpenAI, Gemini, Anthropic, Groq, Mistral, Deepseek, Ollama) · Per-hub monthly usage tracking · Text generation · SEO meta generation · Vision-based alt text · Image generation |
-| **Markdown for Agents** | Every public page responds with clean Markdown + YAML frontmatter when `Accept: text/markdown` is sent — ready for AI crawlers and coding assistants |
-| **`/llms.txt`** | AI-discoverability standard (llmstxt.org) — index of all published pages for LLM ingestion. `/llms-full.txt` delivers full page content as plain Markdown |
-| **Dashboard** | Analytics cards + Recharts charts · Recent activity feed |
-| **Activity Log** | Comprehensive audit trail for all admin actions, filterable in the admin panel |
-| **Settings** | Site-wide key/value settings store · Custom maintenance mode & error pages |
-| **Menus** | Drag-and-drop navigation builder |
-| **Social Login** | OAuth via Google and GitHub |
+| Module                  | Highlights                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Auth & RBAC**         | Login · Registration · Email verification · Token-based invitations · Granular role/permission system with Laravel Gate policies                                                                        |
+| **Pages**               | CKEditor 5 rich text · Draft/Published workflow · SEO meta fields · AI-generated meta · Dynamic public routing · Scheduled publishing                                                                   |
+| **Banners**             | Drag-and-drop reordering (`@dnd-kit`) · Active/inactive scheduling with `start_at / end_at`                                                                                                             |
+| **The Vault**           | Hierarchical media manager · 3-panel resizable layout · Secure 7-stage upload pipeline · Folder-level permissions · Full audit log · AI-generated alt text                                              |
+| **AI Hub**              | Multi-provider manager (OpenAI, Gemini, Anthropic, Groq, Mistral, Deepseek, Ollama) · Per-hub monthly usage tracking · Text generation · SEO meta generation · Vision-based alt text · Image generation |
+| **Markdown for Agents** | Every public page responds with clean Markdown + YAML frontmatter when `Accept: text/markdown` is sent — ready for AI crawlers and coding assistants                                                    |
+| **`/llms.txt`**         | AI-discoverability standard (llmstxt.org) — index of all published pages for LLM ingestion. `/llms-full.txt` delivers full page content as plain Markdown                                               |
+| **Dashboard**           | Analytics cards + Recharts charts · Recent activity feed                                                                                                                                                |
+| **Activity Log**        | Comprehensive audit trail for all admin actions, filterable in the admin panel                                                                                                                          |
+| **Settings**            | Site-wide key/value settings store · Custom maintenance mode & error pages                                                                                                                              |
+| **Menus**               | Drag-and-drop navigation builder                                                                                                                                                                        |
+| **Social Login**        | OAuth via Google and GitHub                                                                                                                                                                             |
 
 ---
 
 ## Requirements
 
-| Requirement | Version | Notes |
-|---|---|---|
-| **PHP** | >= 8.2 | Extensions: `mongodb`, `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo` |
-| **Composer** | >= 2.0 | [getcomposer.org](https://getcomposer.org) |
-| **Node.js** | >= 18 | [nodejs.org](https://nodejs.org) |
-| **npm** | >= 9 | Bundled with Node.js |
-| **MongoDB** | >= 6.0 | Local install or [Atlas free tier](https://www.mongodb.com/atlas) |
+| Requirement  | Version | Notes                                                                     |
+| ------------ | ------- | ------------------------------------------------------------------------- |
+| **PHP**      | >= 8.2  | Extensions: `mongodb`, `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo` |
+| **Composer** | >= 2.0  | [getcomposer.org](https://getcomposer.org)                                |
+| **Node.js**  | >= 18   | [nodejs.org](https://nodejs.org)                                          |
+| **npm**      | >= 9    | Bundled with Node.js                                                      |
+| **MongoDB**  | >= 6.0  | Local install or [Atlas free tier](https://www.mongodb.com/atlas)         |
 
 > **MongoDB PHP extension:** `pecl install mongodb` — see the [official guide](https://www.php.net/manual/en/mongodb.installation.php).
 
@@ -74,7 +74,7 @@
 The installer checks prerequisites, walks you through configuration, and prints your login credentials.
 
 ```bash
-git clone https://github.com/your-org/untitled-cms.git untitled-cms
+git clone https://github.com/watchtower/untitled-cms.git untitled-cms
 cd untitled-cms
 bash install.sh
 ```
@@ -93,7 +93,7 @@ Runs in sequence: `composer install` → `.env` copy → `key:generate` → `mig
 
 ```bash
 # 1. Clone
-git clone https://github.com/your-org/untitled-cms.git untitled-cms
+git clone https://github.com/watchtower/untitled-cms.git untitled-cms
 cd untitled-cms
 
 # 2. Dependencies
@@ -106,6 +106,7 @@ php artisan key:generate
 ```
 
 Edit `.env` — set at minimum:
+
 ```env
 APP_URL=http://localhost:8000
 
@@ -141,10 +142,10 @@ docker compose up
 
 After seeding, log in at `http://localhost:8000/login`:
 
-| Field | Value |
-|---|---|
-| Email | `admin@example.com` |
-| Password | `password` |
+| Field    | Value               |
+| -------- | ------------------- |
+| Email    | `admin@example.com` |
+| Password | `password`          |
 
 > **Change this password immediately after your first login.**
 
@@ -158,14 +159,14 @@ Start all dev services in one command (server + queue worker + log viewer + Vite
 composer run dev
 ```
 
-| Command | Description |
-|---|---|
-| `php artisan serve` | Laravel dev server on port 8000 |
-| `npm run dev` | Vite dev server with HMR |
-| `php artisan queue:listen` | Process queued jobs |
-| `php artisan pail` | Real-time log viewer |
-| `composer run test` | Run PHPUnit test suite |
-| `./vendor/bin/pint` | PHP code formatter |
+| Command                    | Description                     |
+| -------------------------- | ------------------------------- |
+| `php artisan serve`        | Laravel dev server on port 8000 |
+| `npm run dev`              | Vite dev server with HMR        |
+| `php artisan queue:listen` | Process queued jobs             |
+| `php artisan pail`         | Real-time log viewer            |
+| `composer run test`        | Run PHPUnit test suite          |
+| `./vendor/bin/pint`        | PHP code formatter              |
 
 ---
 
@@ -209,33 +210,33 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 
 ### Backend
 
-| Package | Version | Purpose |
-|---|---|---|
-| [Laravel](https://laravel.com/) | `^12.0` | Core framework |
-| [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb) | `^5.5` | MongoDB ODM |
-| [laravel/sanctum](https://laravel.com/docs/sanctum) | `^4.0` | Session & token authentication |
-| [laravel/socialite](https://laravel.com/docs/socialite) | `^5.24` | OAuth (Google, GitHub) |
-| [laravel/ai](https://github.com/laravel/ai) | `^0.2.1` | LLM provider abstraction |
-| [inertiajs/inertia-laravel](https://inertiajs.com/) | `^2.0` | Server-side SPA bridge |
-| [intervention/image](https://image.intervention.io/v3) | `^3.11` | Image processing & sanitization |
-| [league/html-to-markdown](https://github.com/thephpleague/html-to-markdown) | `^5.1` | HTML → Markdown for AI delivery |
-| [mews/purifier](https://github.com/mewebstudio/Purifier) | `^3.4` | HTML sanitization |
-| [tightenco/ziggy](https://github.com/tighten/ziggy) | `^2.0` | Named Laravel routes in JavaScript |
+| Package                                                                     | Version  | Purpose                            |
+| --------------------------------------------------------------------------- | -------- | ---------------------------------- |
+| [Laravel](https://laravel.com/)                                             | `^12.0`  | Core framework                     |
+| [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb)       | `^5.5`   | MongoDB ODM                        |
+| [laravel/sanctum](https://laravel.com/docs/sanctum)                         | `^4.0`   | Session & token authentication     |
+| [laravel/socialite](https://laravel.com/docs/socialite)                     | `^5.24`  | OAuth (Google, GitHub)             |
+| [laravel/ai](https://github.com/laravel/ai)                                 | `^0.2.1` | LLM provider abstraction           |
+| [inertiajs/inertia-laravel](https://inertiajs.com/)                         | `^2.0`   | Server-side SPA bridge             |
+| [intervention/image](https://image.intervention.io/v3)                      | `^3.11`  | Image processing & sanitization    |
+| [league/html-to-markdown](https://github.com/thephpleague/html-to-markdown) | `^5.1`   | HTML → Markdown for AI delivery    |
+| [mews/purifier](https://github.com/mewebstudio/Purifier)                    | `^3.4`   | HTML sanitization                  |
+| [tightenco/ziggy](https://github.com/tighten/ziggy)                         | `^2.0`   | Named Laravel routes in JavaScript |
 
 ### Frontend
 
-| Package | Version | Purpose |
-|---|---|---|
-| [React](https://reactjs.org/) | `^18.2` | UI framework |
-| TypeScript | `^5.0` | Type safety |
-| [Tailwind CSS](https://tailwindcss.com/) | v4 | Utility-first styling |
-| [Shadcn UI](https://ui.shadcn.com/) | latest | Accessible component library |
-| [CKEditor 5](https://ckeditor.com/) | `^41` | Rich text editor |
-| [@dnd-kit](https://dndkit.com/) | `^6` | Drag-and-drop |
-| [@tanstack/react-table](https://tanstack.com/table) | `^8` | Headless data tables |
-| [Recharts](https://recharts.org/) | `^2` | Dashboard charts |
-| [Sonner](https://sonner.emilkowal.ski/) | `^2` | Toast notifications |
-| [Zod](https://zod.dev/) | `^4` | Frontend schema validation |
+| Package                                             | Version | Purpose                      |
+| --------------------------------------------------- | ------- | ---------------------------- |
+| [React](https://reactjs.org/)                       | `^18.2` | UI framework                 |
+| TypeScript                                          | `^5.0`  | Type safety                  |
+| [Tailwind CSS](https://tailwindcss.com/)            | v4      | Utility-first styling        |
+| [Shadcn UI](https://ui.shadcn.com/)                 | latest  | Accessible component library |
+| [CKEditor 5](https://ckeditor.com/)                 | `^41`   | Rich text editor             |
+| [@dnd-kit](https://dndkit.com/)                     | `^6`    | Drag-and-drop                |
+| [@tanstack/react-table](https://tanstack.com/table) | `^8`    | Headless data tables         |
+| [Recharts](https://recharts.org/)                   | `^2`    | Dashboard charts             |
+| [Sonner](https://sonner.emilkowal.ski/)             | `^2`    | Toast notifications          |
+| [Zod](https://zod.dev/)                             | `^4`    | Frontend schema validation   |
 
 ---
 
@@ -266,6 +267,7 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 ```
 
 **Key design decisions:**
+
 - **MongoDB throughout** — Flexible document model for pages, vault metadata, activity logs, and AI usage tracking.
 - **Monolithic SPA** — Laravel renders the initial Inertia page; React handles all subsequent navigation. No separate API server.
 - **Upload Pipeline** — Vault uploads pass through an ordered `Pipe` chain: `DetectDoubleExtension → ValidateMimeType → SanitizeImage → ModerationCheck → SandboxedScan → GenerateUuid → StoreMetadata`.
@@ -315,17 +317,17 @@ Requires ClamAV installed and running locally.
 
 ## Commands Reference
 
-| Command | Description |
-|---|---|
-| `bash install.sh` | Interactive first-time installer |
-| `composer run setup` | Non-interactive full setup |
-| `composer run dev` | Start all dev services (server, queue, logs, Vite) |
-| `composer run test` | Run PHPUnit test suite |
-| `./vendor/bin/pint` | PHP code formatter (Laravel Pint) |
-| `npm run dev` | Vite dev server with HMR only |
-| `npm run build` | Production frontend build |
-| `php artisan db:seed --force` | Re-seed the database |
-| `php artisan migrate:fresh --seed` | Wipe and re-seed (dev only) |
+| Command                            | Description                                        |
+| ---------------------------------- | -------------------------------------------------- |
+| `bash install.sh`                  | Interactive first-time installer                   |
+| `composer run setup`               | Non-interactive full setup                         |
+| `composer run dev`                 | Start all dev services (server, queue, logs, Vite) |
+| `composer run test`                | Run PHPUnit test suite                             |
+| `./vendor/bin/pint`                | PHP code formatter (Laravel Pint)                  |
+| `npm run dev`                      | Vite dev server with HMR only                      |
+| `npm run build`                    | Production frontend build                          |
+| `php artisan db:seed --force`      | Re-seed the database                               |
+| `php artisan migrate:fresh --seed` | Wipe and re-seed (dev only)                        |
 
 ---
 
@@ -334,6 +336,7 @@ Requires ClamAV installed and running locally.
 See [docs/deployment.md](docs/deployment.md) for a full production deployment guide — including Nginx config, systemd queue worker, SSL, and multi-server scaling.
 
 Scripts at the project root:
+
 - `deploy.sh` — Git pull + asset build + cache clear
 - `backup.sh` — MongoDB backup script
 

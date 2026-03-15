@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Initial public release.
 
 ### Added
+
 - `/llms.txt` and `/llms-full.txt` endpoints — AI-discoverability standard (llmstxt.org), exposing all published content as plain Markdown for LLM ingestion and RAG pipelines
 - GitHub Actions CI workflow — automated testing (PHP 8.2 + 8.3), Pint code style, security audit, and frontend build on every push and pull request
 - GitHub issue templates (bug report, feature request) and pull request template
@@ -40,5 +41,5 @@ Initial public release.
 - **Dark mode** — System-preference aware, toggle in admin UI
 - **34 permissions** — Organised by resource group across all modules
 
-[Unreleased]: https://github.com/your-org/untitled-cms/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/your-org/untitled-cms/releases/tag/v0.1.0
+[Unreleased]: https://github.com/watchtower/untitled-cms/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/watchtower/untitled-cms/releases/tag/v0.1.0
