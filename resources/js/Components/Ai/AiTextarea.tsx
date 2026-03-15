@@ -44,7 +44,6 @@ export function AiTextarea({
                 toast.success('Text generated successfully');
             }
         } catch (error: any) {
-            console.error('AI Generation error:', error);
             const message = error.response?.data?.error || 'Failed to generate text. Ensure an AI Engine is active.';
             toast.error(message);
         } finally {

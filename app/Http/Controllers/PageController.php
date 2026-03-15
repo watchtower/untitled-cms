@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Page;
@@ -42,37 +41,32 @@ class PageController extends Controller
         $this->authorize('create', Page::class);
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:pages,slug',
-            'content' => 'required|string',
-            'status' => 'required|in:draft,published',
-            'seo_title' => 'nullable|string|max:255',
+            'title'           => 'required|string|max:255',
+            'slug'            => 'nullable|string|max:255|unique:pages,slug',
+            'content'         => 'required|string',
+            'status'          => 'required|in:draft,published',
+            'seo_title'       => 'nullable|string|max:255',
             'seo_description' => 'nullable|string|max:160',
-            'featured_image' => 'nullable|string',
+            'featured_image'  => 'nullable|string',
             'featured_images' => 'nullable|array',
-            'tags' => 'nullable|array',
+            'tags'            => 'nullable|array',
         ]);
 
         // Derive base slug from custom input or title
-        $baseSlug = !empty($validated['slug'])
+        $baseSlug = ! empty($validated['slug'])
             ? Str::slug($validated['slug'])
             : Str::slug($validated['title']);
 
-        // Ensure uniqueness — increment until no collision
-        $slug = $baseSlug;
-        $counter = 2;
-        while (Page::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
-        }
+        $slug = Page::uniqueSlug($baseSlug);
 
         // Sanitize content
         $validated['content'] = clean($validated['content']);
 
         $page = Page::create([
-            ...$validated,
-            'slug' => $slug,
-            'author_id' => auth()->id(),
-            'published_at' => $validated['status'] === 'published' ? now() : null,
+             ...$validated,
+            'slug'         => $slug,
+            'author_id'    => auth()->id(),
+            'published_at' => 'published' === $validated['status'] ? now() : null,
         ]);
 
         \App\Services\ActivityLogger::log('create', "Created page: {$page->title}", $page);
@@ -89,22 +83,22 @@ class PageController extends Controller
         $this->authorize('view', $page);
 
         if ($request->prefers(['text/html', 'text/markdown']) === 'text/markdown') {
-            $converter = new \League\HTMLToMarkdown\HtmlConverter();
+            $converter       = new \League\HTMLToMarkdown\HtmlConverter();
             $markdownContent = $converter->convert($page->content ?? '');
 
-            $frontmatter = "---\n";
-            $title = str_replace('"', '\"', $page->seo_title ?: $page->title);
+            $frontmatter  = "---\n";
+            $title        = str_replace('"', '\"', $page->seo_title ?: $page->title);
             $frontmatter .= "title: \"{$title}\"\n";
             if ($page->seo_description) {
-                $description = str_replace('"', '\"', $page->seo_description);
+                $description  = str_replace('"', '\"', $page->seo_description);
                 $frontmatter .= "description: \"{$description}\"\n";
             }
-            if (!empty($page->featured_images)) {
+            if (! empty($page->featured_images)) {
                 $frontmatter .= "image: " . url($page->featured_images[0]) . "\n";
             }
             $frontmatter .= "---\n\n";
 
-            $markdown = $frontmatter . "# " . $page->title . "\n\n" . $markdownContent;
+            $markdown  = $frontmatter . "# " . $page->title . "\n\n" . $markdownContent;
 
             return response($markdown, 200)
                 ->header('Content-Type', 'text/markdown; charset=utf-8')
@@ -131,7 +125,7 @@ class PageController extends Controller
             ->get();
 
         return Inertia::render('Pages/Edit', [
-            'page' => $page,
+            'page'      => $page,
             'redirects' => $redirects,
         ]);
     }
@@ -145,24 +139,24 @@ class PageController extends Controller
         $this->authorize('update', $page);
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:pages,slug,' . $id,
-            'content' => 'required|string',
-            'status' => 'required|in:draft,published',
-            'seo_title' => 'nullable|string|max:255',
+            'title'           => 'required|string|max:255',
+            'slug'            => 'nullable|string|max:255|unique:pages,slug,' . $id,
+            'content'         => 'required|string',
+            'status'          => 'required|in:draft,published',
+            'seo_title'       => 'nullable|string|max:255',
             'seo_description' => 'nullable|string|max:160',
-            'featured_image' => 'nullable|string',
+            'featured_image'  => 'nullable|string',
             'featured_images' => 'nullable|array',
-            'tags' => 'nullable|array',
+            'tags'            => 'nullable|array',
         ]);
 
-        if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['title']);
-        } else {
-            $validated['slug'] = Str::slug($validated['slug']);
-        }
+        $baseSlug = ! empty($validated['slug'])
+            ? Str::slug($validated['slug'])
+            : Str::slug($validated['title']);
 
-        if (isset($validated['status']) && $validated['status'] === 'published' && $page->status !== 'published') {
+        $validated['slug'] = Page::uniqueSlug($baseSlug, $page->id);
+
+        if (isset($validated['status']) && 'published' === $validated['status'] && 'published' !== $page->status) {
             $validated['published_at'] = now();
         }
 
@@ -171,9 +165,9 @@ class PageController extends Controller
             // Create a redirect from the old slug to the new slug
             PageRedirect::create([
                 'from_path' => $page->slug,
-                'to_path' => $validated['slug'],
-                'type' => 301,
-                'active' => true,
+                'to_path'   => $validated['slug'],
+                'type'      => 301,
+                'active'    => true,
             ]);
 
             // Update any existing redirects that pointed to the old slug to point to the new slug

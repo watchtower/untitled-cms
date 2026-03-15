@@ -52,8 +52,8 @@ const loadPersistedFilters = () => {
                 statusFilter: parsed.statusFilter || []
             };
         }
-    } catch (e) {
-        console.error('Failed to load filters:', e);
+    } catch {
+        // ignore localStorage read errors
     }
     return { showTrashed: false, statusFilter: [] };
 };
@@ -74,8 +74,8 @@ export default function Index({ auth, users, trashedUsers, roles, stats }: Users
                 showTrashed,
                 statusFilter
             }));
-        } catch (e) {
-            console.error('Failed to save filters:', e);
+        } catch {
+            // ignore localStorage write errors
         }
     }, [showTrashed, statusFilter]);
 

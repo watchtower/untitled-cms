@@ -191,9 +191,14 @@ class AiActionService
     private function executeCreatePage(array $proposal): array
     {
         $params = $proposal['params'];
+
+        if (empty($params['title'])) {
+            throw new \InvalidArgumentException('Page title is required to create a page.');
+        }
+
         $page = Page::create([
             'title' => $params['title'],
-            'slug' => Str::slug($params['title']),
+            'slug'  => Page::uniqueSlug(Str::slug($params['title'])),
             'content' => clean($params['content'] ?? ''), // Sanitize AI content (A03)
             'status' => 'draft',
         ]);

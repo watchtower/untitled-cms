@@ -9,6 +9,18 @@ use Inertia\Inertia;
 class BannerController extends Controller
 {
     /**
+     * Validates that a slide URL does not use a dangerous URI scheme.
+     */
+    private function slideUrlRules(): array
+    {
+        return ['nullable', 'string', 'max:2048', function ($attribute, $value, $fail) {
+            if ($value && preg_match('/^\s*(javascript|data|vbscript):/i', $value)) {
+                $fail('The slide URL must not use a dangerous URI scheme.');
+            }
+        }];
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
@@ -44,7 +56,7 @@ class BannerController extends Controller
             'slug' => 'nullable|string|max:255|unique:banners,slug',
             'slides' => 'nullable|array',
             'slides.*.image' => 'required_with:slides|string',
-            'slides.*.url' => 'nullable|string',
+            'slides.*.url' => $this->slideUrlRules(),
             'slides.*.target' => 'nullable|string|in:_self,_blank',
             'slides.*.sequence' => 'nullable|numeric',
             'slides.*.title' => 'nullable|string',
@@ -91,26 +103,21 @@ class BannerController extends Controller
         $banner = Banner::findOrFail($id);
         $this->authorize('update', $banner);
 
-        try {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'slug' => 'nullable|string|max:255|unique:banners,slug,' . $id . ',_id',
-                'slides' => 'nullable|array',
-                'slides.*.image' => 'required_with:slides|string',
-                'slides.*.url' => 'nullable|string',
-                'slides.*.target' => 'nullable|string|in:_self,_blank',
-                'slides.*.sequence' => 'nullable|numeric',
-                'slides.*.title' => 'nullable|string',
-                'slides.*.subtitle' => 'nullable|string',
-                'slides.*.caption' => 'nullable|string',
-                'is_active' => 'boolean',
-                'start_at' => 'nullable|date',
-                'end_at' => 'nullable|date|after_or_equal:start_at',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            \Illuminate\Support\Facades\Log::error('Banner Validation Failed', $e->errors());
-            throw $e;
-        }
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:banners,slug,' . $id . ',_id',
+            'slides' => 'nullable|array',
+            'slides.*.image' => 'required_with:slides|string',
+            'slides.*.url' => $this->slideUrlRules(),
+            'slides.*.target' => 'nullable|string|in:_self,_blank',
+            'slides.*.sequence' => 'nullable|numeric',
+            'slides.*.title' => 'nullable|string',
+            'slides.*.subtitle' => 'nullable|string',
+            'slides.*.caption' => 'nullable|string',
+            'is_active' => 'boolean',
+            'start_at' => 'nullable|date',
+            'end_at' => 'nullable|date|after_or_equal:start_at',
+        ]);
 
         $banner->update($validated);
 

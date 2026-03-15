@@ -26,6 +26,8 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/Components/ui/toggle-group"
+// TODO: Replace with real analytics data from the backend (passed as a prop).
+// referenceDate below is also hardcoded and must be updated when real data is wired in.
 const chartData = [
   { date: "2024-04-01", desktop: 222, mobile: 150 },
   { date: "2024-04-02", desktop: 97, mobile: 180 },
@@ -144,7 +146,7 @@ export function ChartAreaInteractive() {
     }
   }, [isMobile])
 
-  const filteredData = chartData.filter((item) => {
+  const filteredData = React.useMemo(() => chartData.filter((item) => {
     const date = new Date(item.date)
     const referenceDate = new Date("2024-06-30")
     let daysToSubtract = 90
@@ -156,7 +158,7 @@ export function ChartAreaInteractive() {
     const startDate = new Date(referenceDate)
     startDate.setDate(startDate.getDate() - daysToSubtract)
     return date >= startDate
-  })
+  }), [timeRange])
 
   return (
     <Card className="@container/card">

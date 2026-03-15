@@ -239,8 +239,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
             }
             setSelectedFiles([]);
             setLastSelectedFile(null);
-        }).catch(err => {
-            console.error(err);
+        }).catch(() => {
             toast.error('Failed to load vault data');
         }).finally(() => {
             setLoading(false);

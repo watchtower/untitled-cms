@@ -50,4 +50,31 @@ class Page extends Model
     {
         return $query->where('status', 'draft');
     }
+
+    /**
+     * Return a slug that is unique in the pages collection.
+     * Fetches all taken variants in one query to avoid N+1 loops.
+     *
+     * @param string      $base      The desired base slug (already Str::slug'd).
+     * @param string|null $excludeId MongoDB _id to exclude (for updates).
+     */
+    public static function uniqueSlug(string $base, ?string $excludeId = null): string
+    {
+        $query = static::withTrashed()->where('slug', 'like', $base . '%');
+        if ($excludeId) {
+            $query->where('_id', '!=', $excludeId);
+        }
+        $taken = $query->pluck('slug')->flip()->all();
+
+        if (!isset($taken[$base])) {
+            return $base;
+        }
+
+        $counter = 2;
+        while (isset($taken[$base . '-' . $counter])) {
+            $counter++;
+        }
+
+        return $base . '-' . $counter;
+    }
 }

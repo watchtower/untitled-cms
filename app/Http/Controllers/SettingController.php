@@ -21,6 +21,8 @@ class SettingController extends Controller
      */
     public function index()
     {
+        $this->authorize('manage', Setting::class);
+
         $settings = Setting::all()->groupBy('group');
 
         return Inertia::render('Settings/Index', [
@@ -33,6 +35,8 @@ class SettingController extends Controller
      */
     public function update(Request $request, string $key)
     {
+        $this->authorize('manage', Setting::class);
+
         $request->validate([
             'value' => 'nullable',
         ]);

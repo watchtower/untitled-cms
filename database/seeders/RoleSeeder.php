@@ -9,28 +9,9 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        $permissions = [
-            'users.manage',
-            'roles.manage',
-            'pages.view',
-            'pages.create',
-            'pages.edit',
-            'pages.delete',
-            'pages.publish',
-            'media.view',
-            'media.create',
-            'media.edit',
-            'media.delete',
-            'banners.manage',
-            'ai-integrations.view',
-            'ai-integrations.edit',
-        ];
-
-        // 2. Create Roles and Assign Permissions
-
-        // Admin: All permissions
+        // Admin: All permissions — always kept in sync with Role::availablePermissions()
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $adminRole->syncPermissions($permissions);
+        $adminRole->syncPermissions(Role::availablePermissions());
 
         // Editor: Can manage content/banners, but not users/roles
         $editorRole = Role::firstOrCreate(['name' => 'editor']);

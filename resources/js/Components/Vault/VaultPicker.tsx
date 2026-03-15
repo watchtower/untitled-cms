@@ -107,8 +107,7 @@ export default function VaultPicker({
                 setAncestors([]);
             }
 
-        } catch (error) {
-            console.error(error);
+        } catch {
             toast.error('Failed to load library');
         } finally {
             setLoading(false);

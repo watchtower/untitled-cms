@@ -71,17 +71,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasPermission(string $permission): bool
     {
-        foreach ($this->roles as $role) {
-            if ($role->hasPermission($permission)) {
-                return true;
-            }
-        }
-
-        return false;
+        return in_array($permission, $this->getCachedPermissions());
     }
 
     public function getCachedPermissions(): array
     {
+        if (!$this->id) {
+            return [];
+        }
+
         return Cache::remember('user_permissions_' . $this->id, 60, function () {
             $permissions = [];
             foreach ($this->roles as $role) {
@@ -110,10 +108,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Sync user roles
+     * Sync user roles and bust the permission cache so the change is immediately visible.
      */
     public function syncRoles(array $roleIds): void
     {
         $this->roles()->sync($roleIds);
+        Cache::forget('user_permissions_' . $this->id);
     }
 }
