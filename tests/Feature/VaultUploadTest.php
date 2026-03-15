@@ -79,13 +79,14 @@ class VaultUploadTest extends TestCase
         $user = $this->createAdminUser();
         $file = UploadedFile::fake()->createWithContent('malicious.jpg', '<?php echo "evil"; ?>');
 
-        $this->actingAs($user)->postJson(route('admin.vault.upload'), [
+        $response = $this->actingAs($user)->postJson(route('admin.vault.upload'), [
             'files' => [$file],
         ]);
 
-        // Mime type detection is environment-dependent; this test documents the intent.
-        // Add assertions here once CI mime detection behaviour is confirmed.
-        $this->markTestIncomplete('Mime detection result is environment-dependent — add assertion when confirmed.');
+        $response->assertStatus(200)
+            ->assertJsonFragment(['error' => 'Security violation: Image sanitization failed. The file is corrupt or contains invalid data.']);
+
+        $this->assertDatabaseMissing('vault_files', ['original_name' => 'malicious.jpg'], 'mongodb');
     }
 
     public function test_unauthorized_user_cannot_upload(): void
