@@ -224,6 +224,11 @@ npm install
 header "Generating Application Key"
 php artisan key:generate --ansi
 
+# ─── Storage Permissions & Link ───────────────────────────────────────────────
+header "Setting Up Storage"
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+php artisan storage:link --ansi
+
 # ─── Database ─────────────────────────────────────────────────────────────────
 header "Running Migrations"
 php artisan migrate --force --ansi
@@ -236,11 +241,9 @@ php artisan db:seed --force --ansi
 header "Building Frontend Assets"
 npm run build
 
-# ─── Cache (optional warm-up) ─────────────────────────────────────────────────
-header "Warming Up Caches"
-php artisan config:clear --ansi
-php artisan route:clear --ansi
-php artisan view:clear --ansi
+# ─── Cache Clear ──────────────────────────────────────────────────────────────
+header "Clearing Caches"
+php artisan optimize:clear --ansi
 
 # ─── Done ─────────────────────────────────────────────────────────────────────
 separator
