@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\ActivityLog;
-use App\Models\Page;
 use App\Models\Banner;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Page;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class AiActionService
@@ -41,8 +41,8 @@ class AiActionService
     {
         $action = $raw['action'] ?? null;
 
-        if (!$action || !$this->isSupported($action)) {
-            throw new \Exception("Action \"{$action}\" is not supported. Supported: " . implode(', ', $this->whitelist));
+        if (! $action || ! $this->isSupported($action)) {
+            throw new \Exception("Action \"{$action}\" is not supported. Supported: ".implode(', ', $this->whitelist));
         }
 
         return match ($action) {
@@ -79,8 +79,8 @@ class AiActionService
      * Prevents arbitrary class invocation if the activity_log record is tampered with.
      */
     private const REVERTABLE_MODELS = [
-        \App\Models\Page::class,
-        \App\Models\Banner::class,
+        Page::class,
+        Banner::class,
     ];
 
     /**
@@ -95,12 +95,12 @@ class AiActionService
         $beforeState = $log->before_state;
 
         // Allowlist to prevent arbitrary static method invocation via a tampered log record
-        if (!in_array($subjectType, self::REVERTABLE_MODELS, true)) {
+        if (! in_array($subjectType, self::REVERTABLE_MODELS, true)) {
             throw new \Exception("Unsupported model type for revert: {$subjectType}");
         }
 
         $model = $subjectType::find($subjectId);
-        if (!$model) {
+        if (! $model) {
             throw new \Exception('Original record no longer exists (may have already been deleted).');
         }
 
@@ -116,17 +116,19 @@ class AiActionService
         ];
     }
 
-    private function applyRevertUpdate(\Illuminate\Database\Eloquent\Model $model, array $beforeState, ActivityLog $log): string
+    private function applyRevertUpdate(Model $model, array $beforeState, ActivityLog $log): string
     {
         $model->fill($beforeState)->save();
         ActivityLogger::log('reverted', "Reverted AI update: {$log->description}", $model);
+
         return 'reverted';
     }
 
-    private function applyRevertCreate(\Illuminate\Database\Eloquent\Model $model, ActivityLog $log): string
+    private function applyRevertCreate(Model $model, ActivityLog $log): string
     {
         $model->delete();
         ActivityLogger::log('ai_undone', "Undid AI create: {$log->description}", $model);
+
         return 'deleted';
     }
 
@@ -183,6 +185,7 @@ class AiActionService
     {
         /** @var Page $page */
         $page = $this->resolveModelByTitle(Page::class, $title, 'page');
+
         return $page;
     }
 
@@ -198,7 +201,7 @@ class AiActionService
 
         $page = Page::create([
             'title' => $params['title'],
-            'slug'  => Page::uniqueSlug(Str::slug($params['title'])),
+            'slug' => Page::uniqueSlug(Str::slug($params['title'])),
             'content' => clean($params['content'] ?? ''), // Sanitize AI content (A03)
             'status' => 'draft',
         ]);
@@ -289,6 +292,7 @@ class AiActionService
     {
         /** @var Banner $banner */
         $banner = $this->resolveModelByTitle(Banner::class, $title, 'banner');
+
         return $banner;
     }
 
@@ -340,30 +344,31 @@ class AiActionService
 
     // ─── Shared Database Helpers ───────────────────────────────────────────────
 
-    private function findAndRestoreIfTrashed(string $modelClass, string $id): \Illuminate\Database\Eloquent\Model
+    private function findAndRestoreIfTrashed(string $modelClass, string $id): Model
     {
         $model = $modelClass::withTrashed()->findOrFail($id);
         if (method_exists($model, 'trashed') && $model->trashed()) {
             $model->restore();
         }
+
         return $model;
     }
 
-    private function resolveModelByTitle(string $modelClass, ?string $title, string $entityName): \Illuminate\Database\Eloquent\Model
+    private function resolveModelByTitle(string $modelClass, ?string $title, string $entityName): Model
     {
-        if (!$title) {
+        if (! $title) {
             throw new \Exception("No {$entityName} title provided.");
         }
 
         $model = $modelClass::where('title', 'like', "%{$title}%")->first();
 
-        if (!$model) {
+        if (! $model) {
             $model = $modelClass::onlyTrashed()->where('title', 'like', "%{$title}%")->first();
         }
 
-        if (!$model) {
-            $words = array_filter(explode(' ', $title), fn($w) => strlen($w) > 3);
-            if (!empty($words)) {
+        if (! $model) {
+            $words = array_filter(explode(' ', $title), fn ($w) => strlen($w) > 3);
+            if (! empty($words)) {
                 $query = $modelClass::query();
                 foreach ($words as $word) {
                     $query->orWhere('title', 'like', "%{$word}%");
@@ -372,7 +377,7 @@ class AiActionService
             }
         }
 
-        if (!$model) {
+        if (! $model) {
             throw new \Exception("No {$entityName} found matching \"{$title}\". If this is a new {$entityName}, say 'create a {$entityName} called {$title}'.");
         }
 

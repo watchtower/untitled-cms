@@ -73,7 +73,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::updateOrCreate(
             ['slug' => 'user'],
             [
-                'name'        => 'User',
+                'name' => 'User',
                 'permissions' => [
                     'pages.view',
                     'media.view',

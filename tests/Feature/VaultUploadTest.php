@@ -27,9 +27,10 @@ class VaultUploadTest extends TestCase
         $role = Role::updateOrCreate(
             ['slug' => 'super-admin'],
             ['name' => 'Super Admin', 'backend_access' => true, 'is_active' => true,
-             'permissions' => ['media.view', 'media.create', 'media.edit', 'media.delete']]
+                'permissions' => ['media.view', 'media.create', 'media.edit', 'media.delete']]
         );
         $user->roles()->attach($role->id);
+
         return $user;
     }
 
@@ -47,8 +48,8 @@ class VaultUploadTest extends TestCase
 
         $this->assertDatabaseHas('vault_files', [
             'original_name' => 'test.jpg',
-            'mime_type'     => 'image/jpeg',
-            'uploaded_by'   => $user->id,
+            'mime_type' => 'image/jpeg',
+            'uploaded_by' => $user->id,
         ], 'mongodb');
 
         $uploadedFile = VaultFile::first();

@@ -12,6 +12,7 @@ class ChatSession extends Model
     use SoftDeletes;
 
     protected $connection = 'mongodb';
+
     protected $collection = 'chat_sessions';
 
     protected $fillable = [

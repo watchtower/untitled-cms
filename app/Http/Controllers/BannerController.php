@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Banner;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -69,7 +70,7 @@ class BannerController extends Controller
 
         $banner = Banner::create($validated);
 
-        \App\Services\ActivityLogger::log('create', "Created banner: {$banner->title}", $banner);
+        ActivityLogger::log('create', "Created banner: {$banner->title}", $banner);
 
         return redirect()->route('admin.banners.index')->with('success', 'Banner created successfully.');
     }
@@ -105,7 +106,7 @@ class BannerController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:banners,slug,' . $id . ',_id',
+            'slug' => 'nullable|string|max:255|unique:banners,slug,'.$id.',_id',
             'slides' => 'nullable|array',
             'slides.*.image' => 'required_with:slides|string',
             'slides.*.url' => $this->slideUrlRules(),
@@ -121,7 +122,7 @@ class BannerController extends Controller
 
         $banner->update($validated);
 
-        \App\Services\ActivityLogger::log('update', "Updated banner: {$banner->title}", $banner);
+        ActivityLogger::log('update', "Updated banner: {$banner->title}", $banner);
 
         if ($request->has('stay')) {
             return redirect()->back()->with('success', 'Banner status updated successfully.');
@@ -140,7 +141,7 @@ class BannerController extends Controller
         $title = $banner->title;
         $banner->delete();
 
-        \App\Services\ActivityLogger::log('delete', "Deleted banner: {$title}", $banner);
+        ActivityLogger::log('delete', "Deleted banner: {$title}", $banner);
 
         return redirect()->route('admin.banners.index')->with('success', 'Banner deleted successfully.');
     }

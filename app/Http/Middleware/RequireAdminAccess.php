@@ -14,6 +14,7 @@ class RequireAdminAccess
             if ($request->expectsJson()) {
                 abort(401, 'Unauthenticated.');
             }
+
             return redirect()->route('login');
         }
 
@@ -21,6 +22,7 @@ class RequireAdminAccess
             if ($request->expectsJson()) {
                 abort(403, 'Access denied.');
             }
+
             return redirect('/');
         }
 

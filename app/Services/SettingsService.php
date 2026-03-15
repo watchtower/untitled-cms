@@ -40,8 +40,8 @@ class SettingsService
                 ->mapWithKeys(fn ($setting) => [
                     $setting->key => match ($setting->type) {
                         'boolean' => (bool) $setting->value,
-                        'number'  => (float) $setting->value,
-                        default   => $setting->value,
+                        'number' => (float) $setting->value,
+                        default => $setting->value,
                     },
                 ])
                 ->toArray();

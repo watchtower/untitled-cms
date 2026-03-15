@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
 use MongoDB\Laravel\Eloquent\Model;
 
@@ -12,8 +13,8 @@ class Role extends Model
     protected $fillable = ['name', 'slug', 'description', 'permissions', 'is_active', 'backend_access'];
 
     protected $casts = [
-        'is_active'       => 'boolean',
-        'backend_access'  => 'boolean',
+        'is_active' => 'boolean',
+        'backend_access' => 'boolean',
     ];
 
     // public function permissions()
@@ -27,8 +28,8 @@ class Role extends Model
         // regardless of which code path triggered the save (controller, seeder, etc.).
         static::saved(function (Role $role) {
             foreach ($role->users()->pluck('_id') as $userId) {
-                Cache::forget('user_permissions_' . $userId);
-                Cache::forget('user_backend_access_' . $userId);
+                Cache::forget('user_permissions_'.$userId);
+                Cache::forget('user_backend_access_'.$userId);
             }
         });
     }
@@ -39,9 +40,9 @@ class Role extends Model
         $this->save(); // triggers the saved event above
     }
 
-    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function users(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\User::class);
+        return $this->belongsToMany(User::class);
     }
 
     // Check if role has specific permission

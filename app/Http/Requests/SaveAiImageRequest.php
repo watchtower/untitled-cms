@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Services\SafeHttpClient;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 
 class SaveAiImageRequest extends FormRequest
 {
@@ -20,7 +22,7 @@ class SaveAiImageRequest extends FormRequest
         ];
     }
 
-    public function getPreparedUploadedFile(): \Illuminate\Http\UploadedFile
+    public function getPreparedUploadedFile(): UploadedFile
     {
         $imageData = $this->input('image');
         $customName = $this->input('filename');
@@ -32,9 +34,9 @@ class SaveAiImageRequest extends FormRequest
         return $this->prepareRemoteImageFile($imageData, $customName);
     }
 
-    private function prepareBase64ImageFile(string $dataUri, ?string $customName): \Illuminate\Http\UploadedFile
+    private function prepareBase64ImageFile(string $dataUri, ?string $customName): UploadedFile
     {
-        if (!preg_match('/^data:(image\/[a-zA-Z+]+);base64,(.+)$/', $dataUri, $matches)) {
+        if (! preg_match('/^data:(image\/[a-zA-Z+]+);base64,(.+)$/', $dataUri, $matches)) {
             throw new \Exception('Invalid image data URI.');
         }
 
@@ -46,16 +48,16 @@ class SaveAiImageRequest extends FormRequest
         return $this->createTempUploadedFile($binaryData, $extension, $mimeType, $customName);
     }
 
-    private function prepareRemoteImageFile(string $url, ?string $customName): \Illuminate\Http\UploadedFile
+    private function prepareRemoteImageFile(string $url, ?string $customName): UploadedFile
     {
         $parsedUrl = parse_url($url);
-        if (!$parsedUrl || !isset($parsedUrl['host'])) {
+        if (! $parsedUrl || ! isset($parsedUrl['host'])) {
             throw new \Exception('Invalid image URL format.');
         }
 
-        $response = \App\Services\SafeHttpClient::get($url, 10);
-        if (!$response->successful()) {
-            throw new \Exception('Failed to download remote image. Status: ' . $response->status());
+        $response = SafeHttpClient::get($url, 10);
+        if (! $response->successful()) {
+            throw new \Exception('Failed to download remote image. Status: '.$response->status());
         }
 
         $contentType = $response->header('Content-Type') ?? 'image/png';
@@ -64,34 +66,34 @@ class SaveAiImageRequest extends FormRequest
 
         $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
         if (! in_array($mime, $allowedMimes, true)) {
-            throw new \Exception('Remote URL did not return a supported image type: ' . $mime);
+            throw new \Exception('Remote URL did not return a supported image type: '.$mime);
         }
 
         $extension = match ($mime) {
             'image/jpeg' => 'jpg',
-            'image/gif'  => 'gif',
+            'image/gif' => 'gif',
             'image/webp' => 'webp',
             'image/avif' => 'avif',
-            default      => 'png',
+            default => 'png',
         };
 
         return $this->createTempUploadedFile($response->body(), $extension, $mime, $customName);
     }
 
-    private function createTempUploadedFile(string $binaryData, string $extension, string $mimeType, ?string $customName): \Illuminate\Http\UploadedFile
+    private function createTempUploadedFile(string $binaryData, string $extension, string $mimeType, ?string $customName): UploadedFile
     {
         // tempnam() creates a zero-byte file at the base path; we need a .ext variant.
         // Delete the base file immediately to avoid an orphaned temp file.
         $basePath = tempnam(sys_get_temp_dir(), 'ai_vault_');
         @unlink($basePath);
-        $tmpPath = $basePath . '.' . $extension;
+        $tmpPath = $basePath.'.'.$extension;
         file_put_contents($tmpPath, $binaryData);
 
         $filename = $customName
-            ? preg_replace('/[^a-zA-Z0-9\-_\.]/', '-', $customName) . '.' . $extension
-            : 'ai-generated-' . now()->format('Ymd-His') . '.' . $extension;
+            ? preg_replace('/[^a-zA-Z0-9\-_\.]/', '-', $customName).'.'.$extension
+            : 'ai-generated-'.now()->format('Ymd-His').'.'.$extension;
 
-        return new \Illuminate\Http\UploadedFile(
+        return new UploadedFile(
             $tmpPath,
             $filename,
             $mimeType,

@@ -2,23 +2,25 @@
 
 namespace App\Services;
 
+use App\Jobs\OptimizeVaultImageJob;
+use App\Models\Setting;
 use App\Models\VaultAuditLog;
 use App\Models\VaultFile;
 use App\Models\VaultFolder;
-use App\Jobs\OptimizeVaultImageJob;
-use App\Models\Setting;
+use App\Vault\DTOs\VaultPipelinePayload;
 use App\Vault\Pipes\DetectDoubleExtension;
 use App\Vault\Pipes\GenerateUuid;
+use App\Vault\Pipes\ModerationCheck;
 use App\Vault\Pipes\SandboxedScan;
 use App\Vault\Pipes\SanitizeImage;
 use App\Vault\Pipes\StoreMetadata;
 use App\Vault\Pipes\ValidateMimeType;
-use App\Vault\Pipes\ModerationCheck;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class VaultService
 {
@@ -40,9 +42,9 @@ class VaultService
         }
 
         return app(Pipeline::class)
-            ->send(new \App\Vault\DTOs\VaultPipelinePayload($file, $folderId))
+            ->send(new VaultPipelinePayload($file, $folderId))
             ->through($pipes)
-            ->then(function (\App\Vault\DTOs\VaultPipelinePayload $payload) {
+            ->then(function (VaultPipelinePayload $payload) {
                 $file = $payload->created_file;
                 $this->audit('file.upload', $file, null, $file->toArray());
 
@@ -56,7 +58,7 @@ class VaultService
 
     private function ensureFolderExists(?string $folderId): void
     {
-        if ($folderId && !VaultFolder::where('id', $folderId)->exists()) {
+        if ($folderId && ! VaultFolder::where('id', $folderId)->exists()) {
             throw new \InvalidArgumentException('Folder not found.');
         }
     }
@@ -64,7 +66,7 @@ class VaultService
     public function createFolder(string $name, ?string $parentId, $ownerId): VaultFolder
     {
         $folder = VaultFolder::create([
-            'uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'name' => $name,
             'parent_id' => $parentId,
             'owner_id' => $ownerId,
@@ -143,8 +145,8 @@ class VaultService
     private function moveStorageFile(VaultFile $file, string $fromSuffix = '', string $toSuffix = ''): void
     {
         $disk = Storage::disk($this->resolveDiskPrefix($file));
-        $fromPath = $file->storage_path . $fromSuffix;
-        $toPath = $file->storage_path . $toSuffix;
+        $fromPath = $file->storage_path.$fromSuffix;
+        $toPath = $file->storage_path.$toSuffix;
 
         if ($disk->exists($fromPath)) {
             $disk->move($fromPath, $toPath);
@@ -154,7 +156,7 @@ class VaultService
     private function deleteStorageFile(VaultFile $file, string $suffix = ''): void
     {
         $disk = Storage::disk($this->resolveDiskPrefix($file));
-        $path = $file->storage_path . $suffix;
+        $path = $file->storage_path.$suffix;
 
         if ($disk->exists($path)) {
             $disk->delete($path);
@@ -206,19 +208,20 @@ class VaultService
                 'user_agent' => request()->userAgent(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to write audit log: ' . $e->getMessage());
+            Log::error('Failed to write audit log: '.$e->getMessage());
         }
     }
 
     private function generatePathSlug($name, $parentId)
     {
-        $slug = '/' . \Illuminate\Support\Str::slug($name);
+        $slug = '/'.Str::slug($name);
 
-        if (!$parentId) {
+        if (! $parentId) {
             return $slug;
         }
 
         $parent = VaultFolder::find($parentId);
-        return $parent ? $parent->path_slug . $slug : $slug;
+
+        return $parent ? $parent->path_slug.$slug : $slug;
     }
 }

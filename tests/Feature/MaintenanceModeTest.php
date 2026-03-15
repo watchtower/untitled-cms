@@ -2,13 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Role;
 use App\Models\Setting;
+use App\Models\User;
 use App\Services\SettingsService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Inertia\Testing\AssertableInertia as Assert;
 
 class MaintenanceModeTest extends TestCase
 {
@@ -18,8 +16,8 @@ class MaintenanceModeTest extends TestCase
 
         // Ensure roles exist with slugs (hasRole() matches on slug)
         Role::updateOrCreate(['slug' => 'super-admin'], ['name' => 'super-admin', 'backend_access' => true, 'is_active' => true]);
-        Role::updateOrCreate(['slug' => 'admin'],       ['name' => 'admin',       'backend_access' => true, 'is_active' => true]);
-        Role::updateOrCreate(['slug' => 'user'],        ['name' => 'user',        'backend_access' => false, 'is_active' => true]);
+        Role::updateOrCreate(['slug' => 'admin'], ['name' => 'admin',       'backend_access' => true, 'is_active' => true]);
+        Role::updateOrCreate(['slug' => 'user'], ['name' => 'user',        'backend_access' => false, 'is_active' => true]);
     }
 
     protected function tearDown(): void

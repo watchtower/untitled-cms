@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\VaultFile;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -27,7 +28,7 @@ class PruneVaultSandbox implements ShouldQueue
 
         foreach ($files as $file) {
             $lastModified = $disk->lastModified($file);
-            if ($now->diffInHours(\Carbon\Carbon::createFromTimestamp($lastModified)) > 24) {
+            if ($now->diffInHours(Carbon::createFromTimestamp($lastModified)) > 24) {
                 $disk->delete($file);
                 Log::info("Pruned stale sandbox file: {$file}");
             }

@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     protected $connection = 'mongodb';
 
     /**
@@ -12,7 +13,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        if (!Schema::connection($this->connection)->hasTable('vault_folders')) {
+        if (! Schema::connection($this->connection)->hasTable('vault_folders')) {
             Schema::connection($this->connection)->create('vault_folders', function (Blueprint $table) {
                 $table->id();
                 $table->uuid('uuid')->unique();

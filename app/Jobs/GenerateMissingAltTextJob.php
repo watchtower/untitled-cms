@@ -9,8 +9,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class GenerateMissingAltTextJob implements ShouldQueue
 {
@@ -31,16 +31,17 @@ class GenerateMissingAltTextJob implements ShouldQueue
                 $diskName = $file->is_public ? 'public' : 'vault';
                 $binary = Storage::disk($diskName)->get($file->storage_path);
 
-                if (!$binary)
+                if (! $binary) {
                     continue;
+                }
 
                 $base64 = base64_encode($binary);
-                $dataUri = 'data:' . $file->mime_type . ';base64,' . $base64;
+                $dataUri = 'data:'.$file->mime_type.';base64,'.$base64;
 
                 $altText = $aiService->generateAltTextFromBase64($dataUri, $file->mime_type);
                 $file->update(['alt_text' => $altText]);
             } catch (\Exception $e) {
-                Log::error("Job failed to generate alt text for VaultFile {$file->uuid}: " . $e->getMessage());
+                Log::error("Job failed to generate alt text for VaultFile {$file->uuid}: ".$e->getMessage());
             }
         }
     }

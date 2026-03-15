@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SaveAiImageRequest;
+use App\Jobs\GenerateMissingAltTextJob;
 use App\Models\VaultFile;
 use App\Models\VaultFolder;
 use App\Services\VaultService;
-use App\Http\Requests\SaveAiImageRequest;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -39,7 +41,7 @@ class VaultController extends Controller
     private function parsePhpIniSize(string $size): int
     {
         $value = (int) $size;
-        $unit  = strtolower(substr(trim($size), -1));
+        $unit = strtolower(substr(trim($size), -1));
 
         return match ($unit) {
             'g' => $value * 1024 * 1024 * 1024,
@@ -65,7 +67,7 @@ class VaultController extends Controller
         $request->validate([
             'files' => 'required|array',
             'files.*' => 'file', // Max size checked in VaultService/php.ini/config
-            'folder_id' => 'nullable|string|exists:' . VaultFolder::class . ',_id',
+            'folder_id' => 'nullable|string|exists:'.VaultFolder::class.',_id',
         ]);
 
         $uploadedFiles = [];
@@ -127,7 +129,7 @@ class VaultController extends Controller
         }
 
         // Check if we should serve the optimized file
-        $isOptimizedRequest = $file->is_optimized && !$file->use_original && $file->optimized_path;
+        $isOptimizedRequest = $file->is_optimized && ! $file->use_original && $file->optimized_path;
 
         if ($isOptimizedRequest) {
             // The optimized file is never renamed on delete — only storage_path gets .trashed
@@ -136,13 +138,13 @@ class VaultController extends Controller
 
         $path = Storage::disk($diskName)->path($storagePath);
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             // Fallback to original; respect .trashed suffix if the file is soft-deleted
             if ($isOptimizedRequest) {
-                $fallback = $file->storage_path . ($file->trashed() ? '.trashed' : '');
+                $fallback = $file->storage_path.($file->trashed() ? '.trashed' : '');
                 $path = Storage::disk($diskName)->path($fallback);
                 $isOptimizedRequest = false;
-                if (!file_exists($path)) {
+                if (! file_exists($path)) {
                     abort(404);
                 }
             } else {
@@ -152,12 +154,12 @@ class VaultController extends Controller
 
         $contentType = $isOptimizedRequest ? 'image/webp' : $file->mime_type;
         $filename = $isOptimizedRequest
-            ? pathinfo($file->original_name, PATHINFO_FILENAME) . '.webp'
+            ? pathinfo($file->original_name, PATHINFO_FILENAME).'.webp'
             : $file->original_name;
 
         return response()->file($path, [
             'Content-Type' => $contentType,
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
 
         /*
@@ -214,7 +216,7 @@ class VaultController extends Controller
         return response()->json([
             'message' => 'Optimization preference updated',
             'use_original' => $file->use_original,
-            'url' => $file->url // Return the new URL so the frontend can update instantly
+            'url' => $file->url, // Return the new URL so the frontend can update instantly
         ]);
     }
 
@@ -283,10 +285,10 @@ class VaultController extends Controller
     {
         $this->authorize('update', VaultFile::class);
 
-        \App\Jobs\GenerateMissingAltTextJob::dispatch();
+        GenerateMissingAltTextJob::dispatch();
 
         return response()->json([
-            'message' => 'Alt-text generation job dispatched successfully. Images will be updated in the background.'
+            'message' => 'Alt-text generation job dispatched successfully. Images will be updated in the background.',
         ]);
     }
 
@@ -298,7 +300,7 @@ class VaultController extends Controller
             abort(403);
         }
 
-        $request->validate(['folder_id' => 'nullable|string|exists:' . VaultFolder::class . ',_id']);
+        $request->validate(['folder_id' => 'nullable|string|exists:'.VaultFolder::class.',_id']);
 
         // Check write permission on target folder
         if ($request->folder_id) {
@@ -363,19 +365,19 @@ class VaultController extends Controller
 
     private function authorizeGlobalMediaView(): void
     {
-        if (!auth()->user()->hasPermission('media.view')) {
+        if (! auth()->user()->hasPermission('media.view')) {
             abort(403, 'Unauthorized');
         }
     }
 
     private function authorizeGlobalMediaCreate(): void
     {
-        if (!auth()->user()->hasPermission('media.create')) {
+        if (! auth()->user()->hasPermission('media.create')) {
             abort(403, 'Unauthorized');
         }
     }
 
-    private function buildListQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    private function buildListQuery(Request $request): Builder
     {
         $query = VaultFile::query();
 
@@ -402,6 +404,4 @@ class VaultController extends Controller
 
         return $query->orderBy('created_at', 'desc');
     }
-
-
 }

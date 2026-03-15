@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -20,7 +23,7 @@ class UserController extends Controller
 
         $users = User::with('roles')->paginate(10);
         $trashedUsers = User::onlyTrashed()->with('roles')->paginate(50, ['*'], 'trashed_page');
-        $roles = \App\Models\Role::all();
+        $roles = Role::all();
 
         $stats = [
             'total' => User::count(),
@@ -54,10 +57,10 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            'email'             => $validated['email'],
-            'name'              => explode('@', $validated['email'])[0], // Temporary name
-            'password'          => Hash::make(\Illuminate\Support\Str::random(16)),
-            'is_active'         => true,  // Admin-invited users are immediately active
+            'email' => $validated['email'],
+            'name' => explode('@', $validated['email'])[0], // Temporary name
+            'password' => Hash::make(Str::random(16)),
+            'is_active' => true,  // Admin-invited users are immediately active
             'email_verified_at' => now(), // Admin-invited users are pre-verified (admin vouches for them)
         ]);
 
@@ -125,7 +128,7 @@ class UserController extends Controller
         Gate::authorize('create', User::class);
 
         return Inertia::render('Users/Create', [
-            'roles' => \App\Models\Role::all(['id', 'name', 'slug']),
+            'roles' => Role::all(['id', 'name', 'slug']),
         ]);
     }
 
@@ -147,7 +150,7 @@ class UserController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+            'password' => Hash::make($validated['password']),
             'email_verified_at' => now(), // Auto-verify for admin-created users
             'is_active' => true, // New users are active by default
         ]);
@@ -175,7 +178,7 @@ class UserController extends Controller
 
         return Inertia::render('Users/Edit', [
             'user' => $user,
-            'roles' => \App\Models\Role::all(['id', 'name', 'slug']),
+            'roles' => Role::all(['id', 'name', 'slug']),
         ]);
     }
 
@@ -210,7 +213,7 @@ class UserController extends Controller
         // If not, use $user->roles()->sync($validated['roles']);
         $user->syncRoles($validated['roles']);
 
-        \App\Services\ActivityLogger::log('update', "Updated user: {$user->name}", $user);
+        ActivityLogger::log('update', "Updated user: {$user->name}", $user);
 
         if ($request->has('stay')) {
             return redirect()->back()->with('success', 'User status updated successfully.');
@@ -250,7 +253,7 @@ class UserController extends Controller
 
         $user->restore();
 
-        \App\Services\ActivityLogger::log('restore', "Restored user: {$user->name}", $user);
+        ActivityLogger::log('restore', "Restored user: {$user->name}", $user);
 
         return redirect()->route('admin.users.index')->with('success', 'User restored successfully.');
     }
@@ -267,7 +270,7 @@ class UserController extends Controller
         $user->roles()->detach();
         $user->forceDelete();
 
-        \App\Services\ActivityLogger::log('force_delete', "Permanently deleted user: {$name}");
+        ActivityLogger::log('force_delete', "Permanently deleted user: {$name}");
 
         return redirect()->route('admin.users.index')->with('success', 'User permanently deleted.');
     }
@@ -289,7 +292,7 @@ class UserController extends Controller
             ->where('id', '!=', session()->getId())
             ->delete();
 
-        \App\Services\ActivityLogger::log('logout_all_devices', "Logged out user from all devices: {$user->name}", $user);
+        ActivityLogger::log('logout_all_devices', "Logged out user from all devices: {$user->name}", $user);
 
         return redirect()->back()->with('success', 'User logged out from all devices.');
     }

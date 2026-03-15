@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -91,7 +92,7 @@ class ProfileController extends Controller
     {
         $request->validate(['password' => ['required', 'current_password']]);
 
-        $adminCount = \App\Models\User::where('is_active', true)
+        $adminCount = User::where('is_active', true)
             ->whereHas('roles', fn ($q) => $q->where('backend_access', true)->where('is_active', true))
             ->count();
 

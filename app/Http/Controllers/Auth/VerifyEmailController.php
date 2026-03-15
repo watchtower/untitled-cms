@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
@@ -12,10 +13,10 @@ class VerifyEmailController extends Controller
     /**
      * Mark the authenticated user's email address as verified.
      */
-    private function redirectAfterVerification(\App\Models\User $user): RedirectResponse
+    private function redirectAfterVerification(User $user): RedirectResponse
     {
         if ($user->canAccessBackend()) {
-            return redirect()->intended(route('admin.dashboard', absolute: false) . '?verified=1');
+            return redirect()->intended(route('admin.dashboard', absolute: false).'?verified=1');
         }
 
         return redirect('/')->with('status', 'email-verified');

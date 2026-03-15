@@ -16,7 +16,7 @@ class ChatSessionController extends Controller
         $sessions = ChatSession::forUser($request->user()->id)
             ->limit(20)
             ->get(['id', 'title', 'last_active_at', 'created_at'])
-            ->map(fn($s) => [
+            ->map(fn ($s) => [
                 'id' => (string) $s->id,
                 'title' => $s->title ?: 'New Conversation',
                 'last_active_at' => $s->last_active_at?->toISOString(),
@@ -71,7 +71,7 @@ class ChatSessionController extends Controller
         $messages = $request->input('messages');
 
         // Auto-title from first user message (only if not already set)
-        if (!$session->title) {
+        if (! $session->title) {
             $firstUser = collect($messages)->firstWhere('role', 'user');
             if ($firstUser) {
                 $session->title = Str::limit($firstUser['content'], 60);

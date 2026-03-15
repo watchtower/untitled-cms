@@ -2,8 +2,8 @@
 
 namespace App\Vault\Pipes;
 
-use Closure;
 use App\Vault\DTOs\VaultPipelinePayload;
+use Closure;
 use Illuminate\Validation\ValidationException;
 
 class ValidateMimeType
@@ -14,7 +14,7 @@ class ValidateMimeType
         $extension = strtolower($file->getClientOriginalExtension());
         $allowedExtensions = config('vault.allowed_extensions', []);
 
-        if (!in_array($extension, $allowedExtensions)) {
+        if (! in_array($extension, $allowedExtensions)) {
             throw ValidationException::withMessages([
                 'file' => "File type .{$extension} is not allowed.",
             ]);

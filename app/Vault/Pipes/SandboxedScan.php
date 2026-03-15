@@ -2,15 +2,15 @@
 
 namespace App\Vault\Pipes;
 
-use Closure;
 use App\Vault\DTOs\VaultPipelinePayload;
+use Closure;
 use Illuminate\Support\Facades\Log;
 
 class SandboxedScan
 {
     public function handle(VaultPipelinePayload $payload, Closure $next)
     {
-        if (!config('vault.clamav_enabled')) {
+        if (! config('vault.clamav_enabled')) {
             return $next($payload);
         }
 

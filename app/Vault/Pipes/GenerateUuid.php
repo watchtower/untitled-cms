@@ -2,8 +2,8 @@
 
 namespace App\Vault\Pipes;
 
-use Closure;
 use App\Vault\DTOs\VaultPipelinePayload;
+use Closure;
 use Illuminate\Support\Str;
 
 class GenerateUuid

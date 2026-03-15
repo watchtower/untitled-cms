@@ -64,7 +64,7 @@ class VaultFile extends Model
     {
         $servingPath = $this->resolveServingPath();
 
-        if ($this->is_public && !$this->trashed()) {
+        if ($this->is_public && ! $this->trashed()) {
             return Storage::disk('public')->url($servingPath);
         }
 
@@ -74,7 +74,7 @@ class VaultFile extends Model
 
     public function resolveServingPath(): string
     {
-        if ($this->is_optimized && !$this->use_original && $this->optimized_path) {
+        if ($this->is_optimized && ! $this->use_original && $this->optimized_path) {
             return $this->optimized_path;
         }
 

@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SettingsService;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Services\SettingsService;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckMaintenanceMode
 {
@@ -42,7 +42,7 @@ class CheckMaintenanceMode
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -51,7 +51,7 @@ class CheckMaintenanceMode
         $rawValue = $this->settingsService->get('maintenance_mode', false);
         $isMaintenanceMode = filter_var($rawValue, FILTER_VALIDATE_BOOLEAN);
 
-        if (!$isMaintenanceMode) {
+        if (! $isMaintenanceMode) {
             return $next($request);
         }
 

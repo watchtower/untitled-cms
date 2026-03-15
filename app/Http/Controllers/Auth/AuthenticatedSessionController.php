@@ -40,6 +40,7 @@ class AuthenticatedSessionController extends Controller
 
         // Non-admin: always go home — clear any stored intended URL to prevent redirect to /admin/*.
         session()->forget('url.intended');
+
         return redirect('/');
     }
 

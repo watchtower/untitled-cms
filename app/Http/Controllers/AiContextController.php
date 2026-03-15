@@ -7,9 +7,7 @@ use Illuminate\Http\Request;
 
 class AiContextController extends Controller
 {
-    public function __construct(protected AiContextService $contextService)
-    {
-    }
+    public function __construct(protected AiContextService $contextService) {}
 
     /**
      * Return live module context for the AI assistant.

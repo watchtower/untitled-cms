@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Page;
 use App\Services\AiActionService;
 use App\Services\AiService;
 use Illuminate\Http\Request;
@@ -12,8 +13,7 @@ class AiActionController extends Controller
     public function __construct(
         protected AiActionService $actionService,
         protected AiService $aiService,
-    ) {
-    }
+    ) {}
 
     /**
      * Resolve an action JSON already extracted from the AI [ACTION] block.
@@ -28,6 +28,7 @@ class AiActionController extends Controller
 
         try {
             $proposal = $this->actionService->resolveProposal($request->input('action_json'));
+
             return response()->json(['proposal' => $proposal]);
         } catch (\Exception $e) {
             return response()->json(['proposal' => null, 'error' => $e->getMessage()], 422);
@@ -47,7 +48,7 @@ class AiActionController extends Controller
         try {
             $messages = $request->input('messages');
 
-            $systemPrompt = <<<PROMPT
+            $systemPrompt = <<<'PROMPT'
 You are an action parser for a CMS admin assistant.
 Analyze the FULL conversation history and extract the admin's LATEST intent as a JSON action proposal.
 
@@ -66,18 +67,19 @@ IMPORTANT RULES:
 PROMPT;
 
             $formatted = collect($messages)
-                ->filter(fn($m) => $m['role'] !== 'system')
-                ->map(fn($m) => ucfirst($m['role']) . ': ' . $m['content'])
+                ->filter(fn ($m) => $m['role'] !== 'system')
+                ->map(fn ($m) => ucfirst($m['role']).': '.$m['content'])
                 ->join("\n");
 
             $response = $this->aiService->rawPrompt($systemPrompt, $formatted);
             $json = json_decode(preg_replace('/```(?:json)?|```/', '', (string) $response), true);
 
-            if (!$json || !($json['action'] ?? null)) {
+            if (! $json || ! ($json['action'] ?? null)) {
                 return response()->json(['proposal' => null]);
             }
 
             $proposal = $this->actionService->resolveProposal($json);
+
             return response()->json(['proposal' => $proposal]);
 
         } catch (\Exception $e) {
@@ -91,7 +93,7 @@ PROMPT;
     public function execute(Request $request)
     {
         // Requires at minimum the ability to create pages/banners
-        Gate::authorize('create', \App\Models\Page::class);
+        Gate::authorize('create', Page::class);
 
         $request->validate([
             'proposal' => 'required|array',
@@ -100,6 +102,7 @@ PROMPT;
 
         try {
             $result = $this->actionService->execute($request->input('proposal'));
+
             return response()->json(['ok' => true, 'result' => $result]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -112,10 +115,11 @@ PROMPT;
     public function revert(Request $request, string $logId)
     {
         // Only users who can manage content (editors/admins) may revert AI actions (A01)
-        Gate::authorize('update', \App\Models\Page::class);
+        Gate::authorize('update', Page::class);
 
         try {
             $result = $this->actionService->revert($logId);
+
             return response()->json(['ok' => true, 'result' => $result]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);

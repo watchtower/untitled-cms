@@ -28,6 +28,7 @@ class VaultFolderPolicy
             if ($folderHasPermissions) {
                 return false;
             }
+
             return $user->hasPermission('media.view');
         }
 
@@ -58,6 +59,7 @@ class VaultFolderPolicy
             if ($folderHasPermissions) {
                 return false;
             }
+
             return $user->hasPermission('media.edit');
         }
 
@@ -79,6 +81,7 @@ class VaultFolderPolicy
             if ($folderHasPermissions) {
                 return false;
             }
+
             return $user->hasPermission('media.delete');
         }
 

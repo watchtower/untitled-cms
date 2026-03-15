@@ -2,18 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Traits\HasRoles;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
 use MongoDB\Laravel\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRoles;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     protected $connection = 'mongodb';
 
@@ -53,9 +53,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'is_active'         => 'boolean',
-            'social_accounts'   => 'array',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
+            'social_accounts' => 'array',
         ];
     }
 
@@ -74,7 +74,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return Cache::remember('user_backend_access_' . $this->id, 60, function () {
+        return Cache::remember('user_backend_access_'.$this->id, 60, function () {
             // Query directly to avoid caching a stale in-memory roles collection.
             return $this->roles()->where('backend_access', true)->where('is_active', true)->exists();
         });
@@ -87,11 +87,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getCachedPermissions(): array
     {
-        if (!$this->id) {
+        if (! $this->id) {
             return [];
         }
 
-        return Cache::remember('user_permissions_' . $this->id, 60, function () {
+        return Cache::remember('user_permissions_'.$this->id, 60, function () {
             $permissions = [];
             foreach ($this->roles as $role) {
                 foreach ($role->permissions ?? [] as $permission) {
@@ -124,7 +124,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function syncRoles(array $roleIds): void
     {
         $this->roles()->sync($roleIds);
-        Cache::forget('user_permissions_' . $this->id);
-        Cache::forget('user_backend_access_' . $this->id);
+        Cache::forget('user_permissions_'.$this->id);
+        Cache::forget('user_backend_access_'.$this->id);
     }
 }

@@ -13,7 +13,7 @@ class ProfileTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        \App\Models\User::truncate(); // Fix for MongoDB persistence across tests
+        User::truncate(); // Fix for MongoDB persistence across tests
     }
 
     public function test_profile_page_is_displayed(): void

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\AiHub;
+use App\Services\ActivityLogger;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -24,8 +26,8 @@ class AiHubController extends Controller
             // If APP_KEY was rotated or the record was seeded with a different key,
             // DecryptException is thrown. Treat that as "no valid key stored".
             try {
-                $hasKey = !empty($hub->api_key);
-            } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+                $hasKey = ! empty($hub->api_key);
+            } catch (DecryptException) {
                 $hasKey = false;
             }
 
@@ -64,7 +66,7 @@ class AiHubController extends Controller
 
         $aiHub->update($validated);
 
-        \App\Services\ActivityLogger::log('updated', "Updated AI Integration: {$aiHub->name}", $aiHub);
+        ActivityLogger::log('updated', "Updated AI Integration: {$aiHub->name}", $aiHub);
 
         return redirect()->route('admin.ai-hubs.index')->with('success', 'AI Integration updated successfully.');
     }
@@ -79,7 +81,8 @@ class AiHubController extends Controller
         // Toggle logic: If it's already active, deactivate it.
         if ($aiHub->is_active) {
             $aiHub->update(['is_active' => false]);
-            \App\Services\ActivityLogger::log('updated', "Deactivated AI Integration: {$aiHub->name}", $aiHub);
+            ActivityLogger::log('updated', "Deactivated AI Integration: {$aiHub->name}", $aiHub);
+
             return back()->with('success', "{$aiHub->name} was deactivated.");
         }
 
@@ -87,7 +90,7 @@ class AiHubController extends Controller
         AiHub::where('id', '!=', $aiHub->id)->update(['is_active' => false]);
         $aiHub->update(['is_active' => true]);
 
-        \App\Services\ActivityLogger::log('updated', "Activated AI Integration: {$aiHub->name}", $aiHub);
+        ActivityLogger::log('updated', "Activated AI Integration: {$aiHub->name}", $aiHub);
 
         return back()->with('success', "{$aiHub->name} is now the active AI provider.");
     }
@@ -101,7 +104,7 @@ class AiHubController extends Controller
 
         $aiHub->update(['monthly_usage' => 0]);
 
-        \App\Services\ActivityLogger::log('updated', "Reset Monthly Usage for AI Integration: {$aiHub->name}", $aiHub);
+        ActivityLogger::log('updated', "Reset Monthly Usage for AI Integration: {$aiHub->name}", $aiHub);
 
         return back()->with('success', "Monthly usage for {$aiHub->name} has been reset to 0.");
     }

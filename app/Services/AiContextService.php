@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Page;
 use App\Models\Banner;
+use App\Models\Page;
 use App\Models\User;
 use App\Models\VaultFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class AiContextService
@@ -31,7 +32,7 @@ class AiContextService
 
         return [
             'module' => 'pages',
-            'stats' => Cache::remember('ai_context_pages_stats', 60, fn() => [
+            'stats' => Cache::remember('ai_context_pages_stats', 60, fn () => [
                 'total' => Page::count(),
                 'published' => Page::where('status', 'published')->count(),
                 'draft' => Page::where('status', 'draft')->count(),
@@ -46,7 +47,7 @@ class AiContextService
 
         return [
             'module' => 'banners',
-            'stats' => Cache::remember('ai_context_banners_stats', 60, fn() => [
+            'stats' => Cache::remember('ai_context_banners_stats', 60, fn () => [
                 'total' => Banner::count(),
                 'active' => Banner::where('status', 'active')->count(),
                 'inactive' => Banner::where('status', 'inactive')->count(),
@@ -59,7 +60,7 @@ class AiContextService
     {
         return [
             'module' => 'vault',
-            'stats' => Cache::remember('ai_context_vault_stats', 60, fn() => [
+            'stats' => Cache::remember('ai_context_vault_stats', 60, fn () => [
                 'total_files' => VaultFile::count(),
                 'images' => VaultFile::where('mime_type', 'like', 'image/%')->count(),
                 'documents' => VaultFile::where('mime_type', 'not like', 'image/%')->count(),
@@ -71,7 +72,7 @@ class AiContextService
     {
         return [
             'module' => 'users',
-            'stats' => Cache::remember('ai_context_users_stats', 60, fn() => [
+            'stats' => Cache::remember('ai_context_users_stats', 60, fn () => [
                 'total' => User::count(),
                 'active' => User::where('is_active', true)->count(),
                 'inactive' => User::where('is_active', false)->count(),
@@ -79,13 +80,14 @@ class AiContextService
         ];
     }
 
-    private function formatRecentModels(\Illuminate\Support\Collection $models, array $fields): array
+    private function formatRecentModels(Collection $models, array $fields): array
     {
         return $models->map(function ($model) use ($fields) {
             $data = ['id' => (string) $model->id];
             foreach ($fields as $field) {
                 $data[$field] = $model->{$field};
             }
+
             return $data;
         })->toArray();
     }
@@ -125,12 +127,12 @@ class AiContextService
             $module = $this->detectModule($url);
             $moduleLine = $module !== 'general'
                 ? "The admin is currently on the **{$module}** module."
-                : "The admin is on the CMS dashboard.";
+                : 'The admin is on the CMS dashboard.';
 
             return "{$moduleLine}\n\nCurrent CMS data (accurate — use these exact numbers):\n- Pages: {$pages['total']} total, {$pages['published']} published, {$pages['draft']} draft\n- Banners: {$banners['total']} total, {$banners['active']} active";
 
         } catch (\Exception $e) {
-            return "The admin is on the CMS admin panel.";
+            return 'The admin is on the CMS admin panel.';
         }
     }
 }

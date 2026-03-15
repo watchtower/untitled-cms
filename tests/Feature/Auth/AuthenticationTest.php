@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -33,14 +34,14 @@ class AuthenticationTest extends TestCase
     public function test_admin_users_are_redirected_to_dashboard_after_login(): void
     {
         $user = User::factory()->create();
-        $role = \App\Models\Role::updateOrCreate(
+        $role = Role::updateOrCreate(
             ['slug' => 'admin'],
             ['name' => 'admin', 'backend_access' => true, 'is_active' => true]
         );
         $user->roles()->attach($role->id);
 
         $response = $this->post('/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password',
         ]);
 
@@ -68,7 +69,7 @@ class AuthenticationTest extends TestCase
         session(['url.intended' => '/admin/users']);
 
         $response = $this->post('/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password',
         ]);
 

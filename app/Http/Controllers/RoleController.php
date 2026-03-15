@@ -73,8 +73,8 @@ class RoleController extends Controller
         $this->authorize('update', $role);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
-            'slug' => 'required|string|max:255|unique:roles,slug,' . $role->id,
+            'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
+            'slug' => 'required|string|max:255|unique:roles,slug,'.$role->id,
             'description' => 'nullable|string',
             'permissions' => 'array',
             'permissions.*' => ['string', Rule::in(Role::availablePermissions())],
@@ -83,7 +83,7 @@ class RoleController extends Controller
 
         $permissionsOverridden = false;
         if ($role->slug === 'admin') {
-            if (isset($validated['is_active']) && !$validated['is_active']) {
+            if (isset($validated['is_active']) && ! $validated['is_active']) {
                 return redirect()->back()->with('error', 'The Admin role cannot be deactivated.');
             }
             // Admin always retains the full permission set — prevent accidental lockout.

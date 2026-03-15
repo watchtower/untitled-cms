@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -37,7 +38,7 @@ class MenuController extends Controller
 
         $menu = Menu::create($validated);
 
-        \App\Services\ActivityLogger::log('create', "Created menu: {$menu->name}", $menu);
+        ActivityLogger::log('create', "Created menu: {$menu->name}", $menu);
 
         return redirect()->route('admin.menus.edit', $menu->id)->with('success', 'Menu created successfully.');
     }
@@ -65,14 +66,14 @@ class MenuController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:menus,slug,' . $id . ',_id',
+            'slug' => 'required|string|max:255|unique:menus,slug,'.$id.',_id',
             'items' => 'nullable|array',
             'is_active' => 'boolean',
         ]);
 
         $menu->update($validated);
 
-        \App\Services\ActivityLogger::log('update', "Updated menu: {$menu->name}", $menu);
+        ActivityLogger::log('update', "Updated menu: {$menu->name}", $menu);
 
         if ($request->has('stay')) {
             return redirect()->back()->with('success', 'Menu updated successfully.');
@@ -91,7 +92,7 @@ class MenuController extends Controller
         $name = $menu->name;
         $menu->delete();
 
-        \App\Services\ActivityLogger::log('delete', "Deleted menu: {$name}", $menu);
+        ActivityLogger::log('delete', "Deleted menu: {$name}", $menu);
 
         return redirect()->route('admin.menus.index')->with('success', 'Menu deleted successfully.');
     }

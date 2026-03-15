@@ -70,9 +70,9 @@ class RegistrationTest extends TestCase
         $this->enableRegistration();
 
         $response = $this->post('/register', [
-            'name'                  => 'Test User',
-            'email'                 => 'test@example.com',
-            'password'              => 'password',
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
             'password_confirmation' => 'password',
         ]);
 
@@ -91,9 +91,9 @@ class RegistrationTest extends TestCase
         $this->disableRegistration();
 
         $response = $this->post('/register', [
-            'name'                  => 'Test User',
-            'email'                 => 'test@example.com',
-            'password'              => 'password',
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
             'password_confirmation' => 'password',
         ]);
 
@@ -106,9 +106,9 @@ class RegistrationTest extends TestCase
         $this->enableRegistration();
 
         $this->post('/register', [
-            'name'                  => 'Test User',
-            'email'                 => 'test@example.com',
-            'password'              => 'password',
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
             'password_confirmation' => 'password',
         ]);
 

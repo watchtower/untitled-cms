@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\VaultFile;
 use App\Services\AiService;
+use App\Services\SafeHttpClient;
+use App\Services\VaultService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Laravel\Ai\AnonymousAgent;
 
 class AiController extends Controller
 {
@@ -47,7 +51,7 @@ class AiController extends Controller
         return response()->json($tags);
     }
 
-    public function generateSocialImage(Request $request, \App\Services\VaultService $vaultService)
+    public function generateSocialImage(Request $request, VaultService $vaultService)
     {
         $request->validate([
             'title' => 'required|string',
@@ -61,8 +65,8 @@ class AiController extends Controller
             $prompt = $this->buildSocialImagePrompt($title, $content);
             $imageUrl = $this->aiService->generateImage($prompt, '1024x1024');
 
-            if (!$imageUrl) {
-                throw new \Exception("Image generation failed.");
+            if (! $imageUrl) {
+                throw new \Exception('Image generation failed.');
             }
 
             $tmpPath = $this->downloadImageToTempFile($imageUrl);
@@ -76,7 +80,7 @@ class AiController extends Controller
             return response()->json([
                 'url' => $vaultFile->url,
                 'vault_file_uuid' => $vaultFile->uuid,
-                'prompt' => $prompt
+                'prompt' => $prompt,
             ]);
 
         } catch (\Exception $e) {
@@ -93,12 +97,13 @@ class AiController extends Controller
         $file = VaultFile::where('uuid', $request->input('vault_file_uuid'))->firstOrFail();
         $dataUri = $this->getFileDataUri($file);
 
-        if (!$dataUri) {
+        if (! $dataUri) {
             return response()->json(['error' => 'Could not read file from storage.'], 422);
         }
 
         try {
             $altText = $this->aiService->generateAltTextFromBase64($dataUri, $file->mime_type);
+
             return response()->json(['alt_text' => $altText]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -113,6 +118,7 @@ class AiController extends Controller
 
         try {
             $generatedText = $this->aiService->generateText($request->input('prompt'));
+
             return response()->json(['generated_text' => $generatedText]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -133,6 +139,7 @@ class AiController extends Controller
                 $request->input('messages'),
                 $request->input('page_url')
             );
+
             return response()->json(['message' => $response]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -151,6 +158,7 @@ class AiController extends Controller
                 $request->input('prompt'),
                 $request->input('size', '1024x1024')
             );
+
             return response()->json(['image_url' => $imageUrl]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -159,7 +167,7 @@ class AiController extends Controller
 
     private function buildSocialImagePrompt(string $title, string $content): string
     {
-        $promptAgent = new \Laravel\Ai\AnonymousAgent(
+        $promptAgent = new AnonymousAgent(
             'You are a creative director. Analyze the content and write a detailed, high-quality prompt for an image generator (like DALL-E 3) to create a professional, modern blog banner/social preview image. The prompt should be descriptive but concise (under 400 chars). Return ONLY the prompt text.',
             [],
             []
@@ -170,9 +178,9 @@ class AiController extends Controller
 
     private function downloadImageToTempFile(string $url): string
     {
-        $response = \App\Services\SafeHttpClient::get($url, 15);
+        $response = SafeHttpClient::get($url, 15);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \Exception('Failed to download AI-generated image.');
         }
 
@@ -182,11 +190,11 @@ class AiController extends Controller
         return $tmpPath;
     }
 
-    private function createUploadedFile(string $tmpPath, string $title): \Illuminate\Http\UploadedFile
+    private function createUploadedFile(string $tmpPath, string $title): UploadedFile
     {
-        return new \Illuminate\Http\UploadedFile(
+        return new UploadedFile(
             $tmpPath,
-            Str::slug($title) . '-social-banner.png',
+            Str::slug($title).'-social-banner.png',
             'image/png',
             null,
             true
@@ -198,11 +206,12 @@ class AiController extends Controller
         $diskName = $file->is_public ? 'public' : 'vault';
         $binary = Storage::disk($diskName)->get($file->storage_path);
 
-        if (!$binary) {
+        if (! $binary) {
             return null;
         }
 
         $base64 = base64_encode($binary);
-        return 'data:' . $file->mime_type . ';base64,' . $base64;
+
+        return 'data:'.$file->mime_type.';base64,'.$base64;
     }
 }

@@ -5,6 +5,7 @@ namespace App\Vault\Pipes;
 use App\Models\VaultFile;
 use App\Vault\DTOs\VaultPipelinePayload;
 use Closure;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,7 +13,7 @@ class StoreMetadata
 {
     public function handle(VaultPipelinePayload $payload, Closure $next): mixed
     {
-        /** @var \Illuminate\Http\UploadedFile $file */
+        /** @var UploadedFile $file */
         $file = $payload->file;
         $uuid = $payload->uuid;
 
@@ -25,21 +26,21 @@ class StoreMetadata
         return $next($payload);
     }
 
-    private function storeToDisk(\Illuminate\Http\UploadedFile $file, string $uuid): string
+    private function storeToDisk(UploadedFile $file, string $uuid): string
     {
         $extension = $file->extension() ?: $file->getClientOriginalExtension();
-        $storageFilename = $uuid . '.' . $extension;
+        $storageFilename = $uuid.'.'.$extension;
 
         $path = $file->storeAs('vault', $storageFilename, 'public');
 
-        if (!$path) {
+        if (! $path) {
             throw new \Exception('Failed to store file on public disk.');
         }
 
         return $path;
     }
 
-    private function createVaultFileRecord(\Illuminate\Http\UploadedFile $file, string $uuid, string $path, VaultPipelinePayload $payload): VaultFile
+    private function createVaultFileRecord(UploadedFile $file, string $uuid, string $path, VaultPipelinePayload $payload): VaultFile
     {
         $hash = hash_file('sha256', Storage::disk('public')->path($path));
 
@@ -60,9 +61,9 @@ class StoreMetadata
         ]);
     }
 
-    private function processImageDimensions(\Illuminate\Http\UploadedFile $file, string $path, VaultFile $vaultFile): void
+    private function processImageDimensions(UploadedFile $file, string $path, VaultFile $vaultFile): void
     {
-        if (!str_starts_with($file->getMimeType(), 'image/')) {
+        if (! str_starts_with($file->getMimeType(), 'image/')) {
             return;
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\VaultFile;
 use App\Models\VaultFolder;
 use App\Services\VaultService;
 use Illuminate\Http\Request;
@@ -39,13 +40,13 @@ class VaultFolderController extends Controller
 
         $folderIds = $folders->pluck('_id')->map(fn ($id) => (string) $id)->toArray();
 
-        $rawStats = \App\Models\VaultFile::raw(function ($collection) use ($folderIds) {
+        $rawStats = VaultFile::raw(function ($collection) use ($folderIds) {
             return $collection->aggregate([
                 ['$match' => ['folder_id' => ['$in' => $folderIds], 'deleted_at' => null]],
                 ['$group' => [
-                    '_id'         => '$folder_id',
+                    '_id' => '$folder_id',
                     'files_count' => ['$sum' => 1],
-                    'files_size'  => ['$sum' => '$size_bytes'],
+                    'files_size' => ['$sum' => '$size_bytes'],
                 ]],
             ]);
         });
@@ -55,8 +56,8 @@ class VaultFolderController extends Controller
         $folders->transform(function (VaultFolder $folder) use ($filesStats) {
             $stat = $filesStats->get((string) $folder->_id);
 
-            $folder->files_count  = $stat ? (int) $stat['files_count'] : 0;
-            $folder->files_size   = $stat ? (int) $stat['files_size'] : 0;
+            $folder->files_count = $stat ? (int) $stat['files_count'] : 0;
+            $folder->files_size = $stat ? (int) $stat['files_size'] : 0;
             $folder->is_restricted = $folder->permissions->isNotEmpty();
             $folder->makeHidden('permissions');
 
@@ -68,13 +69,13 @@ class VaultFolderController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->user()->hasPermission('media.create')) {
+        if (! auth()->user()->hasPermission('media.create')) {
             abort(403);
         }
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|string|exists:' . VaultFolder::class . ',_id',
+            'parent_id' => 'nullable|string|exists:'.VaultFolder::class.',_id',
         ]);
 
         // Check permission on parent

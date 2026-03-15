@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\VaultFile;
 use App\Services\AiService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class VaultGenerateAltText extends Command
@@ -37,6 +38,7 @@ class VaultGenerateAltText extends Command
 
         if ($files->isEmpty()) {
             $this->info('No images without alt text found.');
+
             return;
         }
 
@@ -50,20 +52,21 @@ class VaultGenerateAltText extends Command
                 $diskName = $file->is_public ? 'public' : 'vault';
                 $binary = Storage::disk($diskName)->get($file->storage_path);
 
-                if (!$binary) {
+                if (! $binary) {
                     $bar->advance();
+
                     continue;
                 }
 
                 $base64 = base64_encode($binary);
-                $dataUri = 'data:' . $file->mime_type . ';base64,' . $base64;
+                $dataUri = 'data:'.$file->mime_type.';base64,'.$base64;
 
                 $altText = $aiService->generateAltTextFromBase64($dataUri, $file->mime_type);
 
                 $file->update(['alt_text' => $altText]);
             } catch (\Exception $e) {
                 // Skip if fails, maybe log it
-                \Illuminate\Support\Facades\Log::error("Failed to generate alt text for VaultFile {$file->uuid}: " . $e->getMessage());
+                Log::error("Failed to generate alt text for VaultFile {$file->uuid}: ".$e->getMessage());
             }
 
             $bar->advance();

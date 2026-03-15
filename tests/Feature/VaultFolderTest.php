@@ -22,9 +22,10 @@ class VaultFolderTest extends TestCase
         $role = Role::updateOrCreate(
             ['slug' => 'super-admin'],
             ['name' => 'Super Admin', 'backend_access' => true, 'is_active' => true,
-             'permissions' => ['media.view', 'media.create', 'media.edit', 'media.delete']]
+                'permissions' => ['media.view', 'media.create', 'media.edit', 'media.delete']]
         );
         $user->roles()->attach($role->id);
+
         return $user;
     }
 
@@ -47,13 +48,13 @@ class VaultFolderTest extends TestCase
         $user = $this->createAdminUser();
 
         $parent = VaultFolder::create([
-            'uuid'     => Str::uuid()->toString(),
-            'name'     => 'Parent',
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'Parent',
             'owner_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)->postJson(route('admin.vault.folders.store'), [
-            'name'      => 'Child',
+            'name' => 'Child',
             'parent_id' => $parent->id,
         ]);
 
@@ -66,8 +67,8 @@ class VaultFolderTest extends TestCase
         $user = $this->createAdminUser();
 
         $folder = VaultFolder::create([
-            'uuid'     => Str::uuid()->toString(),
-            'name'     => 'Old Name',
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'Old Name',
             'owner_id' => $user->id,
         ]);
 
@@ -86,8 +87,8 @@ class VaultFolderTest extends TestCase
         $user = $this->createAdminUser();
 
         $folder = VaultFolder::create([
-            'uuid'     => Str::uuid()->toString(),
-            'name'     => 'To Delete',
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'To Delete',
             'owner_id' => $user->id,
         ]);
 

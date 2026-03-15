@@ -2,29 +2,33 @@
 
 namespace App\Services;
 
-use App\Services\AiContextService;
+use App\Models\AiHub;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Ai\AnonymousAgent;
+use Laravel\Ai\Files\Base64Image;
 
 class AiService
 {
     /**
-     * Bootstraps the configuration so the `laravel/ai` SDK uses 
+     * Bootstraps the configuration so the `laravel/ai` SDK uses
      * our active dynamic AI Hub and its API key.
      *
-     * @return \App\Models\AiHub|null
+     * @return AiHub|null
+     *
      * @throws \Exception
      */
     private function configureActiveAi()
     {
-        $activeHub = \App\Models\AiHub::where('is_active', true)->whereNotNull('api_key')->first();
+        $activeHub = AiHub::where('is_active', true)->whereNotNull('api_key')->first();
 
         // Local development dev fallback mock
-        if (config('app.env') === 'local' && !$activeHub) {
+        if (config('app.env') === 'local' && ! $activeHub) {
             return null;
         }
 
-        if (!$activeHub) {
+        if (! $activeHub) {
             throw new \Exception('No active AI Integration found with a configured API key.');
         }
 
@@ -34,22 +38,22 @@ class AiService
         // decryption fails with DecryptException. Surface a clear error rather than a 500.
         try {
             $apiKey = $activeHub->api_key;
-        } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+        } catch (DecryptException) {
             throw new \Exception(
-                "The API key for \"{$activeHub->name}\" could not be decrypted. " .
-                "This usually means APP_KEY was changed after the key was saved. " .
-                "Please re-enter the API key in AI Integrations."
+                "The API key for \"{$activeHub->name}\" could not be decrypted. ".
+                'This usually means APP_KEY was changed after the key was saved. '.
+                'Please re-enter the API key in AI Integrations.'
             );
         }
 
         $supportedProviders = array_keys(config('ai.providers'));
-        if (!in_array($providerName, $supportedProviders)) {
+        if (! in_array($providerName, $supportedProviders)) {
             throw new \Exception("Unsupported AI Integration provider by laravel/ai: {$providerName}");
         }
 
         // Dynamically override the configuration
         config([
-            "ai.default" => $providerName,
+            'ai.default' => $providerName,
             "ai.providers.{$providerName}.key" => $apiKey,
         ]);
 
@@ -61,7 +65,7 @@ class AiService
         try {
             $activeHub = $this->configureActiveAi();
 
-            if (!$activeHub) {
+            if (! $activeHub) {
                 return $this->getDefaultSeoMeta($title, $content);
             }
 
@@ -72,7 +76,7 @@ class AiService
             );
 
             $response = $agent->prompt(
-                "Title: {$title}\n\nContent: " . Str::limit(strip_tags($content), 2000),
+                "Title: {$title}\n\nContent: ".Str::limit(strip_tags($content), 2000),
                 [],
                 null,
                 $activeHub->default_model
@@ -102,9 +106,9 @@ class AiService
 
     public function generateAltTextFromBase64(string $dataUri, string $mimeType): string
     {
-        $activeHub = \App\Models\AiHub::where('is_active', true)->whereNotNull('api_key')->first();
+        $activeHub = AiHub::where('is_active', true)->whereNotNull('api_key')->first();
 
-        if (!$activeHub) {
+        if (! $activeHub) {
             throw new \Exception('No active AI Integration found with a configured API key.');
         }
 
@@ -117,35 +121,36 @@ class AiService
         };
     }
 
-    private function generateAltTextGemini(\App\Models\AiHub $hub, string $dataUri, string $mimeType): string
+    private function generateAltTextGemini(AiHub $hub, string $dataUri, string $mimeType): string
     {
         $base64 = preg_replace('/^data:[^;]+;base64,/', '', $dataUri);
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$hub->default_model}:generateContent?key={$hub->api_key}";
 
-        $response = \Illuminate\Support\Facades\Http::post($url, [
+        $response = Http::post($url, [
             'contents' => [
                 [
                     'parts' => [
                         ['text' => 'Describe this image concisely in 15 words or less for use as HTML alt text. Return only the description, no punctuation at the end.'],
                         ['inlineData' => ['mimeType' => $mimeType, 'data' => $base64]],
                     ],
-                ]
+                ],
             ],
         ]);
 
         if ($response->failed()) {
-            throw new \Exception('Gemini alt text generation failed: ' . $response->json('error.message', 'Unknown'));
+            throw new \Exception('Gemini alt text generation failed: '.$response->json('error.message', 'Unknown'));
         }
 
         $hub->increment('monthly_usage');
+
         return trim($response->json('candidates.0.content.parts.0.text') ?? 'Image description');
     }
 
-    private function generateAltTextOpenAi(\App\Models\AiHub $hub, string $dataUri): string
+    private function generateAltTextOpenAi(AiHub $hub, string $dataUri): string
     {
         $model = $hub->default_model ?: 'gpt-4o';
 
-        $response = \Illuminate\Support\Facades\Http::withToken($hub->api_key)
+        $response = Http::withToken($hub->api_key)
             ->post('https://api.openai.com/v1/chat/completions', [
                 'model' => $model,
                 'messages' => [
@@ -155,16 +160,17 @@ class AiService
                             ['type' => 'text', 'text' => 'Describe this image concisely in 15 words or less for alt text. Return only the description.'],
                             ['type' => 'image_url', 'image_url' => ['url' => $dataUri]],
                         ],
-                    ]
+                    ],
                 ],
                 'max_tokens' => 60,
             ]);
 
         if ($response->failed()) {
-            throw new \Exception('OpenAI vision failed: ' . $response->json('error.message', 'Unknown'));
+            throw new \Exception('OpenAI vision failed: '.$response->json('error.message', 'Unknown'));
         }
 
         $hub->increment('monthly_usage');
+
         return trim($response->json('choices.0.message.content') ?? 'Image description');
     }
 
@@ -172,7 +178,7 @@ class AiService
     {
         $activeHub = $this->configureActiveAi();
 
-        if (!$activeHub) {
+        if (! $activeHub) {
             throw new \Exception('No active AI Integration found with a configured API key.');
         }
 
@@ -188,7 +194,7 @@ class AiService
 
             return (string) $response;
         } catch (\Exception $e) {
-            throw new \Exception("{$activeHub->name} API request failed: " . $e->getMessage());
+            throw new \Exception("{$activeHub->name} API request failed: ".$e->getMessage());
         }
     }
 
@@ -197,7 +203,7 @@ class AiService
         try {
             $activeHub = $this->configureActiveAi();
 
-            if (!$activeHub) {
+            if (! $activeHub) {
                 return ['status' => 'pass', 'reason' => null];
             }
 
@@ -212,8 +218,8 @@ class AiService
             $pureBase64 = preg_replace('/^data:image\/[a-zA-Z]+;base64,/', '', $base64Image);
 
             $response = $agent->prompt(
-                "Moderate this image.",
-                [new \Laravel\Ai\Files\Base64Image($pureBase64, $mimeType)],
+                'Moderate this image.',
+                [new Base64Image($pureBase64, $mimeType)],
                 null,
                 $activeHub->default_model
             );
@@ -224,7 +230,7 @@ class AiService
 
             return [
                 'status' => $json['status'] ?? 'pass',
-                'reason' => $json['reason'] ?? null
+                'reason' => $json['reason'] ?? null,
             ];
 
         } catch (\Exception $e) {
@@ -236,7 +242,7 @@ class AiService
     {
         $activeHub = $this->configureActiveAi();
 
-        if (!$activeHub) {
+        if (! $activeHub) {
             throw new \Exception('No active AI Integration found with a configured API key.');
         }
 
@@ -257,7 +263,7 @@ class AiService
 
             return (string) $response;
         } catch (\Exception $e) {
-            throw new \Exception("Chat failed: " . $e->getMessage());
+            throw new \Exception('Chat failed: '.$e->getMessage());
         }
     }
 
@@ -268,7 +274,7 @@ class AiService
     {
         $activeHub = $this->configureActiveAi();
 
-        if (!$activeHub) {
+        if (! $activeHub) {
             throw new \Exception('No active AI Integration found.');
         }
 
@@ -284,7 +290,7 @@ class AiService
         try {
             $activeHub = $this->configureActiveAi();
 
-            if (!$activeHub) {
+            if (! $activeHub) {
                 return [];
             }
 
@@ -295,7 +301,7 @@ class AiService
             );
 
             $response = $agent->prompt(
-                "Title: {$title}\n\nContent: " . Str::limit(strip_tags($content), 2000),
+                "Title: {$title}\n\nContent: ".Str::limit(strip_tags($content), 2000),
                 [],
                 null,
                 $activeHub->default_model
@@ -318,9 +324,9 @@ class AiService
      */
     public function generateImage(string $prompt, string $size = '1024x1024'): string
     {
-        $activeHub = \App\Models\AiHub::where('is_active', true)->whereNotNull('api_key')->first();
+        $activeHub = AiHub::where('is_active', true)->whereNotNull('api_key')->first();
 
-        if (!$activeHub) {
+        if (! $activeHub) {
             throw new \Exception('No active AI Integration found with a configured API key.');
         }
 
@@ -331,17 +337,17 @@ class AiService
             $provider === 'stability' => $this->generateImageStability($activeHub, $prompt),
             $provider === 'gemini' => $this->generateImageGemini($activeHub, $prompt),
             default => throw new \Exception(
-                "Your active AI Hub \"{$activeHub->name}\" does not support image generation. " .
-                "Please activate an OpenAI, Gemini, or Stability AI hub to use this feature."
+                "Your active AI Hub \"{$activeHub->name}\" does not support image generation. ".
+                'Please activate an OpenAI, Gemini, or Stability AI hub to use this feature.'
             ),
         };
     }
 
-    private function generateImageOpenAi(\App\Models\AiHub $hub, string $prompt, string $size): string
+    private function generateImageOpenAi(AiHub $hub, string $prompt, string $size): string
     {
         $model = $hub->image_model ?: 'dall-e-3';
 
-        $response = \Illuminate\Support\Facades\Http::withToken($hub->api_key)
+        $response = Http::withToken($hub->api_key)
             ->post('https://api.openai.com/v1/images/generations', [
                 'model' => $model,
                 'prompt' => $prompt,
@@ -350,7 +356,7 @@ class AiService
             ]);
 
         if ($response->failed()) {
-            throw new \Exception("OpenAI image generation ({$model}) failed: " . $response->json('error.message', 'Unknown error'));
+            throw new \Exception("OpenAI image generation ({$model}) failed: ".$response->json('error.message', 'Unknown error'));
         }
 
         $hub->increment('monthly_usage');
@@ -358,9 +364,9 @@ class AiService
         return $response->json('data.0.url');
     }
 
-    private function generateImageStability(\App\Models\AiHub $hub, string $prompt): string
+    private function generateImageStability(AiHub $hub, string $prompt): string
     {
-        $response = \Illuminate\Support\Facades\Http::withToken($hub->api_key)
+        $response = Http::withToken($hub->api_key)
             ->withHeaders(['Accept' => 'application/json'])
             ->post('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image', [
                 'text_prompts' => [['text' => $prompt, 'weight' => 1]],
@@ -372,17 +378,18 @@ class AiService
             ]);
 
         if ($response->failed()) {
-            throw new \Exception('Stability AI image generation failed: ' . $response->json('message', 'Unknown error'));
+            throw new \Exception('Stability AI image generation failed: '.$response->json('message', 'Unknown error'));
         }
 
         $hub->increment('monthly_usage');
 
         // Stability returns base64 — convert to data URI
         $base64 = $response->json('artifacts.0.base64');
-        return 'data:image/png;base64,' . $base64;
+
+        return 'data:image/png;base64,'.$base64;
     }
 
-    private function generateImageGemini(\App\Models\AiHub $hub, string $prompt): string
+    private function generateImageGemini(AiHub $hub, string $prompt): string
     {
         // Default: gemini-2.5-flash-image ("Nano Banana" - official Google Imagen model)
         $model = $hub->image_model ?: 'gemini-2.5-flash-image';
@@ -401,11 +408,11 @@ class AiService
      * Supports: gemini-2.5-flash-image, gemini-2.0-flash-exp-image-generation
      * Docs: https://ai.google.dev/gemini-api/docs/image-generation
      */
-    private function generateImageGeminiContent(\App\Models\AiHub $hub, string $model, string $prompt): string
+    private function generateImageGeminiContent(AiHub $hub, string $model, string $prompt): string
     {
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$hub->api_key}";
 
-        $response = \Illuminate\Support\Facades\Http::post($url, [
+        $response = Http::post($url, [
             'contents' => [
                 ['parts' => [['text' => $prompt]]],
             ],
@@ -415,7 +422,7 @@ class AiService
 
         if ($response->failed()) {
             $errorMsg = $response->json('error.message', 'Unknown error');
-            throw new \Exception("Gemini image generation ({$model}) failed: " . $errorMsg);
+            throw new \Exception("Gemini image generation ({$model}) failed: ".$errorMsg);
         }
 
         $hub->increment('monthly_usage');
@@ -425,7 +432,8 @@ class AiService
         foreach ($parts as $part) {
             if (isset($part['inlineData']['data'])) {
                 $mimeType = $part['inlineData']['mimeType'] ?? 'image/png';
-                return "data:{$mimeType};base64," . $part['inlineData']['data'];
+
+                return "data:{$mimeType};base64,".$part['inlineData']['data'];
             }
         }
 
@@ -436,11 +444,11 @@ class AiService
      * Imagen model generation via the predict API endpoint.
      * Supports: imagen-3.0-generate-002, imagen-3.0-fast-generate-001
      */
-    private function generateImageGeminiImagen(\App\Models\AiHub $hub, string $model, string $prompt): string
+    private function generateImageGeminiImagen(AiHub $hub, string $model, string $prompt): string
     {
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:predict?key={$hub->api_key}";
 
-        $response = \Illuminate\Support\Facades\Http::post($url, [
+        $response = Http::post($url, [
             'instances' => [['prompt' => $prompt]],
             'parameters' => [
                 'sampleCount' => 1,
@@ -451,24 +459,24 @@ class AiService
 
         if ($response->failed()) {
             $errorMsg = $response->json('error.message', 'Unknown error');
-            throw new \Exception("Gemini Imagen ({$model}) failed: " . $errorMsg);
+            throw new \Exception("Gemini Imagen ({$model}) failed: ".$errorMsg);
         }
 
         $hub->increment('monthly_usage');
 
         $base64 = $response->json('predictions.0.bytesBase64Encoded');
-        if (!$base64) {
+        if (! $base64) {
             throw new \Exception("Gemini Imagen ({$model}) returned an empty image.");
         }
 
-        return 'data:image/png;base64,' . $base64;
+        return 'data:image/png;base64,'.$base64;
     }
 
     private function buildSystemPrompt(?string $pageUrl): string
     {
         $contextService = app(AiContextService::class);
         $liveContext = $pageUrl ? $contextService->buildContextString($pageUrl) : '';
-        $whitelist = implode(', ', app(\App\Services\AiActionService::class)->getWhitelist());
+        $whitelist = implode(', ', app(AiActionService::class)->getWhitelist());
 
         return <<<PROMPT
 You are an expert AI Assistant integrated into the Untitled CMS admin dashboard.
@@ -498,8 +506,8 @@ PROMPT;
     private function formatConversationHistory(array $messages): string
     {
         return collect($messages)
-            ->filter(fn($m) => $m['role'] !== 'system')
-            ->map(fn($m) => ucfirst($m['role']) . ': ' . ($m['content'] ?? ''))
+            ->filter(fn ($m) => $m['role'] !== 'system')
+            ->map(fn ($m) => ucfirst($m['role']).': '.($m['content'] ?? ''))
             ->join("\n");
     }
 

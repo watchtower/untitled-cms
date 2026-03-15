@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 
 class ActivityLogger
@@ -24,7 +25,7 @@ class ActivityLogger
             ]);
         } catch (\Exception $e) {
             // Fail silently to not disrupt user flow
-            \Log::error('Failed to log activity: ' . $e->getMessage());
+            Log::error('Failed to log activity: '.$e->getMessage());
         }
     }
 }

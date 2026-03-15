@@ -46,7 +46,7 @@ class LlmsController extends Controller
             $lines[] = "- [{$page->title}]({$url}){$desc}";
         }
 
-        $text = implode("\n", $lines) . "\n";
+        $text = implode("\n", $lines)."\n";
 
         return response($text, 200)
             ->header('Content-Type', 'text/plain; charset=utf-8')
@@ -92,7 +92,7 @@ class LlmsController extends Controller
             }
 
             if ($page->published_at) {
-                $lines[] = 'Published: ' . $page->published_at->format('Y-m-d');
+                $lines[] = 'Published: '.$page->published_at->format('Y-m-d');
             }
 
             $lines[] = '';

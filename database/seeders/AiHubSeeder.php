@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\AiHub;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class AiHubSeeder extends Seeder
@@ -41,7 +40,7 @@ class AiHubSeeder extends Seeder
             [
                 'name' => 'Ollama',
                 'default_model' => 'llama3.1',
-            ]
+            ],
         ];
 
         foreach ($providers as $provider) {

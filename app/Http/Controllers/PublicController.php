@@ -27,30 +27,32 @@ class PublicController extends Controller
             ->get(['id', 'title', 'slug', 'seo_description', 'published_at', 'featured_images']);
 
         if ($request->prefers(['text/html', 'text/markdown']) === 'text/markdown') {
-            $markdown = "# Welcome to " . config('app.name', 'CMS') . "\n\n";
+            $markdown = '# Welcome to '.config('app.name', 'CMS')."\n\n";
             $markdown .= "## Featured\n\n";
             foreach ($banners as $banner) {
-                $markdown .= "- **" . $banner->title . "**\n";
-                if (empty($banner->slides))
+                $markdown .= '- **'.$banner->title."**\n";
+                if (empty($banner->slides)) {
                     continue;
+                }
 
                 foreach ($banner->slides as $slide) {
-                    if (empty($slide['title']))
+                    if (empty($slide['title'])) {
                         continue;
+                    }
 
-                    $line = '  - ' . $slide['title'];
-                    if (!empty($slide['subtitle'])) {
-                        $line .= ': ' . $slide['subtitle'];
+                    $line = '  - '.$slide['title'];
+                    if (! empty($slide['subtitle'])) {
+                        $line .= ': '.$slide['subtitle'];
                     }
-                    if (!empty($slide['caption'])) {
-                        $line .= ' — ' . $slide['caption'];
+                    if (! empty($slide['caption'])) {
+                        $line .= ' — '.$slide['caption'];
                     }
-                    $markdown .= $line . "\n";
+                    $markdown .= $line."\n";
                 }
             }
             $markdown .= "\n## Recent Pages\n\n";
             foreach ($recentPages as $page) {
-                $markdown .= "- [" . $page->title . "](/" . $page->slug . ") - " . $page->seo_description . "\n";
+                $markdown .= '- ['.$page->title.'](/'.$page->slug.') - '.$page->seo_description."\n";
             }
 
             return response($markdown, 200)
@@ -75,14 +77,14 @@ class PublicController extends Controller
             && auth()->check()
             && auth()->user()->hasPermission('pages.view');
 
-        if (!$canPreview) {
+        if (! $canPreview) {
             $pageQuery->where('status', 'published');
         }
 
         $page = $pageQuery->firstOrFail();
 
         if ($request->prefers(['text/html', 'text/markdown']) === 'text/markdown') {
-            $converter = new HtmlConverter();
+            $converter = new HtmlConverter;
             $markdownContent = $converter->convert($page->content ?? '');
 
             $frontmatter = "---\n";
@@ -92,12 +94,12 @@ class PublicController extends Controller
                 $description = str_replace('"', '\"', $page->seo_description);
                 $frontmatter .= "description: \"{$description}\"\n";
             }
-            if (!empty($page->featured_images)) {
-                $frontmatter .= "image: \"" . url($page->featured_images[0]) . "\"\n";
+            if (! empty($page->featured_images)) {
+                $frontmatter .= 'image: "'.url($page->featured_images[0])."\"\n";
             }
             $frontmatter .= "---\n\n";
 
-            $markdown = $frontmatter . "# " . $page->title . "\n\n" . $markdownContent;
+            $markdown = $frontmatter.'# '.$page->title."\n\n".$markdownContent;
 
             return response($markdown, 200)
                 ->header('Content-Type', 'text/markdown; charset=utf-8')

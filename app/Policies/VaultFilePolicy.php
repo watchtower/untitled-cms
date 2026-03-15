@@ -18,6 +18,7 @@ class VaultFilePolicy
     {
         if ($file->folder_id) {
             $folder = $file->folder;
+
             return $folder && Gate::forUser($user)->allows('view', $folder);
         }
 
@@ -37,6 +38,7 @@ class VaultFilePolicy
     {
         if ($file->folder_id) {
             $folder = $file->folder;
+
             return $folder && Gate::forUser($user)->allows('update', $folder);
         }
 
@@ -47,6 +49,7 @@ class VaultFilePolicy
     {
         if ($file->folder_id) {
             $folder = $file->folder;
+
             return $folder && Gate::forUser($user)->allows('delete', $folder);
         }
 

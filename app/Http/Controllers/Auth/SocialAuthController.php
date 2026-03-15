@@ -35,9 +35,9 @@ class SocialAuthController extends Controller
         } catch (\Exception $e) {
             // Log for debugging (InvalidStateException = CSRF mismatch; others = config/network)
             Log::warning('Social login exception', [
-                'provider'  => $provider,
+                'provider' => $provider,
                 'exception' => get_class($e),
-                'message'   => $e->getMessage(),
+                'message' => $e->getMessage(),
             ]);
 
             return redirect()->route('login')->withErrors([
@@ -49,7 +49,7 @@ class SocialAuthController extends Controller
 
         if (! $email) {
             return redirect()->route('login')->withErrors([
-                'email' => 'No email address returned from ' . ucfirst($provider) . '. Please use a different login method.',
+                'email' => 'No email address returned from '.ucfirst($provider).'. Please use a different login method.',
             ]);
         }
 
@@ -123,14 +123,15 @@ class SocialAuthController extends Controller
         // Non-admin users always go to their profile — never follow a stored /admin/* URL.
         if (! $user->canAccessBackend()) {
             session()->forget('url.intended');
+
             return url('/');
         }
 
         // Admin users: honour the intended URL only if it belongs to this app's host.
         // A str_starts_with() prefix check is bypassable (e.g. app.url + ".evil.com"),
         // so we compare parsed hosts instead.
-        $intended     = session()->pull('url.intended', '');
-        $appHost      = parse_url(config('app.url'), PHP_URL_HOST);
+        $intended = session()->pull('url.intended', '');
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
         $intendedHost = parse_url($intended, PHP_URL_HOST);
 
         if ($intendedHost && $intendedHost === $appHost) {
@@ -143,13 +144,13 @@ class SocialAuthController extends Controller
     private function createSocialUser(\Laravel\Socialite\Contracts\User $socialUser, string $provider): User
     {
         $user = User::create([
-            'name'              => $socialUser->getName() ?: $socialUser->getNickname() ?: 'User',
-            'email'             => $socialUser->getEmail(),
-            'password'          => null,
-            'is_active'         => true,
+            'name' => $socialUser->getName() ?: $socialUser->getNickname() ?: 'User',
+            'email' => $socialUser->getEmail(),
+            'password' => null,
+            'is_active' => true,
             'email_verified_at' => now(),
-            'social_accounts'   => [[
-                'provider'    => $provider,
+            'social_accounts' => [[
+                'provider' => $provider,
                 'provider_id' => $socialUser->getId(),
             ]],
         ]);
@@ -174,12 +175,12 @@ class SocialAuthController extends Controller
 
         if (! $alreadyLinked) {
             $accounts[] = [
-                'provider'    => $provider,
+                'provider' => $provider,
                 'provider_id' => $socialUser->getId(),
             ];
 
             $user->update([
-                'social_accounts'   => $accounts,
+                'social_accounts' => $accounts,
                 'email_verified_at' => $user->email_verified_at ?? now(),
             ]);
         }
@@ -197,7 +198,7 @@ class SocialAuthController extends Controller
         $settingKey = "social_login_{$provider}_enabled";
 
         if (! Setting::get($settingKey, false)) {
-            abort(403, ucfirst($provider) . ' login is not enabled.');
+            abort(403, ucfirst($provider).' login is not enabled.');
         }
     }
 }
