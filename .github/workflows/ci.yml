@@ -22,7 +22,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, xml, curl, zip, gd, fileinfo, intl
+          extensions: mbstring, xml, curl, zip, gd, fileinfo, intl, mongodb
           coverage: none
 
       - name: Cache Composer packages
