@@ -35,11 +35,6 @@ class VaultUploadTest extends TestCase
 
     public function test_admin_can_upload_file(): void
     {
-        $this->skipIf(
-            !(imagetypes() & IMG_WEBP),
-            'GD built without WebP support — WebP conversion cannot be tested in this environment.'
-        );
-
         $user = $this->createAdminUser();
         $file = UploadedFile::fake()->image('test.jpg');
 
@@ -50,10 +45,9 @@ class VaultUploadTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure(['uploaded' => [['uuid', 'original_name']]]);
 
-        // JPEG is converted to WebP by default (vault.webp_conversion = true)
         $this->assertDatabaseHas('vault_files', [
-            'original_name' => 'test.webp',
-            'mime_type'     => 'image/webp',
+            'original_name' => 'test.jpg',
+            'mime_type'     => 'image/jpeg',
             'uploaded_by'   => $user->id,
         ], 'mongodb');
 

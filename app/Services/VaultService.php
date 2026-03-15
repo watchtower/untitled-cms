@@ -6,6 +6,7 @@ use App\Models\VaultAuditLog;
 use App\Models\VaultFile;
 use App\Models\VaultFolder;
 use App\Jobs\OptimizeVaultImageJob;
+use App\Models\Setting;
 use App\Vault\Pipes\DetectDoubleExtension;
 use App\Vault\Pipes\GenerateUuid;
 use App\Vault\Pipes\SandboxedScan;
@@ -44,7 +45,10 @@ class VaultService
             ->then(function (\App\Vault\DTOs\VaultPipelinePayload $payload) {
                 $file = $payload->created_file;
                 $this->audit('file.upload', $file, null, $file->toArray());
-                OptimizeVaultImageJob::dispatch($file);
+
+                if (Setting::get('vault.webp_conversion', true)) {
+                    OptimizeVaultImageJob::dispatch($file);
+                }
 
                 return $file;
             });

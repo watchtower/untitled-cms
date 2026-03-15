@@ -105,11 +105,22 @@ class SettingSeeder extends Seeder
                 'is_public' => true, // Might need middleware logic for this
             ],
 
+            // Media / Vault
+            [
+                'key' => 'vault.webp_conversion',
+                'value' => true,
+                'group' => 'media',
+                'type' => 'boolean',
+                'label' => 'Convert Uploads to WebP',
+                'description' => 'Automatically convert JPEG and PNG uploads to WebP for smaller file sizes. GIFs are not affected.',
+                'is_public' => false,
+            ],
+
             // AI Features
             [
                 'key' => 'vault.moderation_enabled',
                 'value' => false,
-                'group' => 'ai',
+                'group' => 'media',
                 'type' => 'boolean',
                 'label' => 'Enable AI Image Moderation',
                 'description' => 'Automatically moderate uploaded images using the active AI Hub.',
