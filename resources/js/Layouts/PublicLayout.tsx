@@ -41,6 +41,7 @@ interface NavItem {
 }
 
 interface SharedProps {
+    appName: string;
     auth: {
         user: { name: string; email: string } | null;
         canAccessBackend: boolean;
@@ -50,7 +51,7 @@ interface SharedProps {
 }
 
 export default function PublicLayout({ children }: PropsWithChildren) {
-    const { auth, menus, settings } = usePage<SharedProps>().props;
+    const { auth, menus, settings } = usePage().props as unknown as SharedProps;
     const user = auth.user;
     const primaryNav = menus?.['app_header']?.items || [];
     const footerNav = menus?.['footer-navigation']?.items || [];

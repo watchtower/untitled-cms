@@ -187,9 +187,18 @@ else
             DB_PORT="${DB_PORT:-27017}"
             read -rp "  Database name [untitled_cms]: " DB_NAME
             DB_NAME="${DB_NAME:-untitled_cms}"
+            read -rp "  MongoDB username (leave blank if auth disabled): " DB_USERNAME
+            read -rsp "  MongoDB password (leave blank if auth disabled): " DB_PASSWORD
+            echo ""
             sed -i.bak "s|DB_HOST=.*|DB_HOST=${DB_HOST}|" .env
             sed -i.bak "s|DB_PORT=.*|DB_PORT=${DB_PORT}|" .env
             sed -i.bak "s|DB_DATABASE=.*|DB_DATABASE=${DB_NAME}|" .env
+            if [ -n "$DB_USERNAME" ]; then
+                sed -i.bak "s|DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" .env
+            fi
+            if [ -n "$DB_PASSWORD" ]; then
+                sed -i.bak "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" .env
+            fi
             echo -e " $PASS Local MongoDB configured."
             ;;
     esac
