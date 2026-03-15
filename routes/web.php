@@ -113,6 +113,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
         Route::get('/folders', [\App\Http\Controllers\VaultFolderController::class, 'list'])->name('folders.list');
         Route::post('/folders', [\App\Http\Controllers\VaultFolderController::class, 'store'])->name('folders.store');
         Route::patch('/folders/{id}/rename', [\App\Http\Controllers\VaultFolderController::class, 'rename'])->name('folders.rename');
+        Route::post('/folders/{id}/restore', [\App\Http\Controllers\VaultFolderController::class, 'restore'])->name('folders.restore');
         Route::delete('/folders/{id}', [\App\Http\Controllers\VaultFolderController::class, 'destroy'])->name('folders.destroy');
     });
 });

@@ -109,6 +109,19 @@ class VaultFolderController extends Controller
         return response()->json($folder);
     }
 
+    public function restore(string $id)
+    {
+        $folder = VaultFolder::onlyTrashed()->findOrFail($id);
+
+        if (Gate::denies('delete', $folder)) {
+            abort(403);
+        }
+
+        $this->vaultService->restoreFolder($folder);
+
+        return response()->json(['message' => 'Restored successfully']);
+    }
+
     public function destroy(string $id)
     {
         $folder = VaultFolder::findOrFail($id);

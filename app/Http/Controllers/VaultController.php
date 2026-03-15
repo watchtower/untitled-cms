@@ -130,23 +130,17 @@ class VaultController extends Controller
         $isOptimizedRequest = $file->is_optimized && !$file->use_original && $file->optimized_path;
 
         if ($isOptimizedRequest) {
+            // The optimized file is never renamed on delete — only storage_path gets .trashed
             $storagePath = $file->optimized_path;
-
-            // If the optimized file was trashed alongside the original, it would need '.trashed'
-            // For now, our deleteFile logic only trashes the original storage_path. 
-            // We should ensure the optimized file is also accessible or handled in delete, 
-            // but assuming the optimized path is intact if not trashed.
-            if ($file->trashed()) {
-                $storagePath .= '.trashed';
-            }
         }
 
         $path = Storage::disk($diskName)->path($storagePath);
 
         if (!file_exists($path)) {
-            // Fallback to original if optimized is missing
+            // Fallback to original; respect .trashed suffix if the file is soft-deleted
             if ($isOptimizedRequest) {
-                $path = Storage::disk($diskName)->path($file->storage_path);
+                $fallback = $file->storage_path . ($file->trashed() ? '.trashed' : '');
+                $path = Storage::disk($diskName)->path($fallback);
                 $isOptimizedRequest = false;
                 if (!file_exists($path)) {
                     abort(404);

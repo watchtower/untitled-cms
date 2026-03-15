@@ -270,7 +270,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
     const handleDelete = async (type: 'file' | 'folder', id: string) => {
         if (!confirm('Are you sure you want to delete this item?')) return;
         try {
-            const routeName = type === 'file' ? 'vault.file.destroy' : 'vault.folders.destroy';
+            const routeName = type === 'file' ? 'admin.vault.file.destroy' : 'admin.vault.folders.destroy';
             await axios.delete(route(routeName, id));
             toast.success(`${type === 'file' ? 'File' : 'Folder'} deleted`);
             if (type === 'file') setSelectedFiles(prev => prev.filter(f => f.uuid !== id));
@@ -282,7 +282,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
 
     const handleRestore = async (type: 'file' | 'folder', id: string) => {
         try {
-            const routeName = type === 'file' ? 'vault.file.restore' : 'vault.folders.restore';
+            const routeName = type === 'file' ? 'admin.vault.file.restore' : 'admin.vault.folders.restore';
             await axios.post(route(routeName, id));
             toast.success(`${type === 'file' ? 'File' : 'Folder'} restored`);
             if (type === 'file') setSelectedFiles(prev => prev.filter(f => f.uuid !== id));
@@ -295,7 +295,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
     const handleForceDelete = async (type: 'file' | 'folder', id: string) => {
         if (!confirm('Are you sure you want to PERMANENTLY delete this item? This cannot be undone.')) return;
         try {
-            const routeName = type === 'file' ? 'vault.file.force_destroy' : 'vault.folders.force_destroy';
+            const routeName = type === 'file' ? 'admin.vault.file.force_destroy' : 'admin.vault.folders.force_destroy';
             await axios.delete(route(routeName, id));
             toast.success(`${type === 'file' ? 'File' : 'Folder'} permanently deleted`);
             if (type === 'file') setSelectedFiles(prev => prev.filter(f => f.uuid !== id));
