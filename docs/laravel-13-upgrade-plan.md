@@ -1,236 +1,71 @@
-# Laravel 13 Upgrade Report & Implementation Plan
+# Laravel 13 Upgrade — Post-Mortem
 
-## 1. Overview
-
-This document outlines the strategy, risks, and step-by-step implementation plan for upgrading Untitled CMS from Laravel 12 to Laravel 13. The goal is a smooth transition with minimal downtime, improved performance, and long-term maintainability. Since this is a one-version hop (12 → 13), a direct upgrade is appropriate.
+Completed on `feature/laravel-13-upgrade`. All 53 tests pass. Branch ready for staging.
 
 ---
 
-## 2. Objectives
+## What Changed
 
-- Upgrade from `laravel/framework ^12.0` to `^13.0`
-- Maintain compatibility with MongoDB, Inertia.js, and the AI service layer
-- Adopt any new Laravel 13 conventions where applicable
-- Keep the test suite green throughout
+### Framework & direct dependencies
 
----
+| Package | Before | After | Notes |
+|---|---|---|---|
+| `laravel/framework` | `^12.0` (v12.54.1) | `^13.0` (v13.4.0) | Core upgrade |
+| `laravel/tinker` | `^2.10.1` (v2.11.1) | `^3.0` (v3.0.0) | v2 didn't declare L13 support |
+| `laravel/ai` | `^0.2.1` (v0.2.8) | `^0.5` (v0.5.1) | Needed for L13; no API changes required |
+| `mongodb/laravel-mongodb` | `^5.5` (v5.6.0) | `^5.7` (v5.7.0) | v5.6 capped at L12 |
+| `resend/resend-laravel` | `*` (v0.12 resolved) | `^1.0` (v1.3.2) | Major version jump; wildcard constraint fixed |
+| `mews/purifier` | `^3.4` (v3.4.3) | **removed** | No L13-compatible release exists |
+| `ezyang/htmlpurifier` | transitive | `^4.19` (v4.19.0) | Promoted to direct dep |
 
-## 3. Current System Assessment
+### Codebase changes
 
-### 3.1 Framework & Environment
-
-| Item | Value |
-|---|---|
-| Laravel Version | 12.x |
-| PHP Version | 8.4 |
-| Database | MongoDB (production), SQLite in-memory (tests) |
-| Driver | `mongodb/laravel-mongodb ^5.5` |
-| Frontend | React 18 + TypeScript, Inertia.js, Vite 7 |
-| Auth | Sanctum 4.0 + Socialite 5.24 |
-| Queue | Laravel Queue (sync/database) |
-
-**Key production dependencies:**
-
+**`app/helpers.php`** (new) — global `clean()` helper preserving the `mews/purifier` API:
+```php
+function clean(string $dirty, string $config = 'default'): string {
+    return app(\App\Services\HtmlSanitizer::class)->clean($dirty, $config);
+}
 ```
-laravel/framework          ^12.0
-laravel/sanctum            ^4.0
-laravel/socialite          ^5.24
-laravel/ai                 ^0.2.1
-inertiajs/inertia-laravel  ^2.0
-mongodb/laravel-mongodb    ^5.5
-tightenco/ziggy            ^2.0
-guzzlehttp/guzzle          ^7.10
-intervention/image         ^3.11
-mews/purifier              ^3.4
-league/html-to-markdown    ^5.1
-resend/resend-laravel      *
-```
+Registered via `autoload.files` in `composer.json`. Zero changes to the 5 call sites in `PageController` and `AiActionService`.
 
-### 3.2 Risk Areas
+**`app/Services/HtmlSanitizer.php`** (new) — thin wrapper around `ezyang/htmlpurifier` that reads `config/purifier.php` directly. Existing purifier config untouched.
 
-| Area | Risk Level | Notes |
-|---|---|---|
-| `mongodb/laravel-mongodb` | **High** | Must verify L13 support in `^5.x` or bump to `^6.x`; all models override `$connection` and `$collection` |
-| `laravel/ai ^0.2.1` | **High** | First-party package; may lag the framework release |
-| `inertiajs/inertia-laravel ^2.0` | **Medium** | Track whether `^2.x` supports L13 or needs `^3.x` |
-| Custom middleware order | **Medium** | `HandleInertiaRequests`, `CheckRedirects`, `CheckMaintenanceMode` depend on framework middleware contracts |
-| `SafeHttpClient` + SSRF protection | **Low** | Wraps Guzzle 7; no direct framework coupling |
-| `resend/resend-laravel: *` | **Medium** | Pinned to `*`, will pull anything — verify L13 compatibility and pin a real constraint |
-| `mews/purifier` | **Low** | Third-party; verify L13 support |
-| PHPUnit 11 / test suite | **Low** | Already on PHPUnit 11; likely L13-compatible |
+**`app/Providers/AppServiceProvider.php`** — manually registers the Resend mail transport and client singleton. Required because `resend/resend-laravel` is excluded from auto-discovery (see below).
+
+**`composer.json`** — `resend/resend-laravel` added to `dont-discover`. The v1 package auto-registers `POST /resend/webhook` via its service provider. The app uses its own `POST /webhooks/email` endpoint for all providers, so the built-in route was an unused open endpoint.
+
+**`.env.example`** — added `RESEND_API_KEY` alias. The v1 SDK reads `RESEND_API_KEY` first, falling back to `RESEND_KEY`. Both env vars are documented; existing deployments using `RESEND_KEY` continue to work.
 
 ---
 
-## 4. Key Changes in Laravel 13 (To Validate Before Starting)
+## Zero-change areas (verified)
 
-Laravel 13 targets PHP 8.4+ (already met). Verify these against the official upgrade guide:
-
-- Any removed facades or deprecated method aliases from L12
-- Changes to `Illuminate\Http\Middleware\HandleCors` or middleware base classes
-- Eloquent model casting or serialization changes (affects all MongoDB model `$casts` arrays)
-- Service provider `boot()`/`register()` contract changes
-- Routing — check if `CheckRedirects` middleware still hooks correctly
-- Queue contract changes (affects AI job dispatching)
-- `php artisan optimize` behavior changes (cache paths, etc.)
+- `AnonymousAgent` constructor and `prompt()` signature — unchanged in `laravel/ai` v0.5
+- `Base64Image` — still exists at same namespace
+- All 6 custom middleware files — no framework contract changes
+- `bootstrap/app.php` — L11-style bootstrapping, fully compatible with L13
+- `HandleInertiaRequests::share()` — no signature changes
+- `laravel/breeze` (dev) — already declared L13 support in v2.4.1
 
 ---
 
-## 5. Upgrade Strategy
+## Deployment checklist
 
-**Approach:** Direct upgrade (L12 → L13). Only one version hop; incremental is unnecessary.
-
-**Branching:**
-
-```bash
-git checkout -b feature/laravel-13-upgrade
-```
-
----
-
-## 6. Implementation Plan
-
-### Phase 1 — Preparation
-
-- [ ] Run `composer outdated` and capture the full output
-- [ ] Pin `resend/resend-laravel` away from `*` — identify current resolved version and set a real constraint
-- [ ] Confirm `mongodb/laravel-mongodb` releases a L13-compatible version (check their GitHub releases)
-- [ ] Confirm `laravel/ai` releases a L13-compatible version
-- [ ] Run `composer run test` on the current branch and ensure all tests pass before touching anything
-
-### Phase 2 — Environment
-
-- PHP 8.4 is already the minimum for L13 — no PHP bump needed
-- Ensure local MongoDB 7.x+ is running
-- CI already has a MongoDB service container (added in commit `94fb850`)
-
-### Phase 3 — Dependency Upgrade
-
-Update `composer.json`:
-
-```json
-"laravel/framework": "^13.0",
-"laravel/sanctum": "^5.0",
-"laravel/socialite": "^6.0"
-```
-
-> **Note:** Sanctum and Socialite typically bump major versions alongside the framework. Verify the correct constraints on release.
-
-Then:
-
-```bash
-composer update laravel/framework --with-all-dependencies
-composer update
-```
-
-Resolve conflicts package by package. The most likely friction points are `mongodb/laravel-mongodb` and `laravel/ai`.
-
-### Phase 4 — Codebase Refactor
-
-Focus areas specific to this project:
-
-- All custom middleware in `app/Http/Middleware/` — verify constructor signatures against new framework contracts
-- `HandleInertiaRequests::share()` — check if the `$request` parameter signature changed
-- `ActivityLogger::log()` — verify `Illuminate\Support\Facades\Log` API is unchanged
-- `SafeHttpClient` — check if any Guzzle integration points changed in `Http` facade internals
-- `AiService` — if `laravel/ai` bumps major, review API surface changes carefully
-- All MongoDB models: test `$casts`, `$dates`, relationship methods after upgrade
-- Review any usage of `app()->version()` checks or conditional logic keyed to the framework version
-
-### Phase 5 — Testing
-
-```bash
-composer run test
-```
-
-Manual QA checklist:
-
-- [ ] Login + OAuth flows (Google, GitHub) via Socialite
-- [ ] Admin dashboard loads, Inertia props hydrate correctly
-- [ ] Vault upload pipeline (all 6 pipes)
-- [ ] AI Hub: text generation (OpenAI / Gemini), image generation, chat
-- [ ] Page publish/unpublish, `Accept: text/markdown` response on `/{slug}`
-- [ ] `/llms.txt`, `/llms-full.txt`, `/sitemap.md` endpoints
-- [ ] Background queue jobs drain correctly
-- [ ] Settings cache busting (role save → cache bust)
-- [ ] Maintenance mode toggle via SettingsService
-
-### Phase 6 — Performance & Security Review
-
-```bash
-php artisan optimize
-php artisan route:cache
-php artisan view:cache
-```
-
-- Verify `CheckRedirects` middleware doesn't regress (it hits MongoDB on every request — confirm indexing is intact)
-- Re-run SSRF test cases through `SafeHttpClient`
-
-### Phase 7 — Deployment
-
-- Deploy to staging first; run full QA
-- Production deploy during low-traffic window
-- After deploy: `php artisan optimize`, `php artisan queue:restart`
+- [ ] Add `RESEND_API_KEY` to staging/production `.env` (same value as `RESEND_KEY`)
+- [ ] `composer install --no-dev`
+- [ ] `php artisan migrate --force` (no schema changes; safe to run)
+- [ ] `php artisan optimize`
+- [ ] `php artisan queue:restart`
+- [ ] Smoke test: login, page publish, vault upload, AI hub, chat
 
 ---
 
-## 7. Rollback Plan
+## Blockers hit during upgrade
 
-- The `feature/laravel-13-upgrade` branch is isolated — `master` remains on L12
-- MongoDB data is schema-less; no migration rollback risk
-- If production deploy fails: revert to previous release tag, run `php artisan queue:restart`
-- Keep a `composer.lock` snapshot from the L12 state committed before the upgrade begins
+All resolved without workarounds on the framework itself.
 
----
-
-## 8. Timeline
-
-| Phase | Duration |
-|---|---|
-| Preparation + dependency audit | 0.5 day |
-| Dependency resolution | 0.5–1 day |
-| Codebase refactor | 1–2 days |
-| Testing + regression fixes | 1–2 days |
-| Staging deploy + UAT | 0.5 day |
-| Production deploy | 0.5 day |
-| **Total** | **4–6 days** |
-
----
-
-## 9. Success Criteria
-
-- `php artisan --version` reports Laravel 13.x
-- `composer run test` passes with zero failures
-- All manual QA checklist items pass on staging
-- No MongoDB query regressions (`activity_logs`, `vault_files`, `chat_sessions` writes)
-- Inertia shared props (`auth`, `settings`, `menus`) hydrate correctly on all pages
-
----
-
-## 10. Appendix
-
-### Useful Commands
-
-```bash
-# Check current versions
-php artisan --version
-composer show laravel/framework | grep versions
-
-# Upgrade
-composer update laravel/framework --with-all-dependencies
-composer update
-
-# After upgrade
-php artisan migrate --force
-composer run test
-php artisan optimize
-
-# Diff what changed in vendor contracts
-git diff vendor/laravel/framework/src/Illuminate/Http/Middleware/
-```
-
-### References
-
-- [Laravel Upgrade Guide — 12.x → 13.x](https://laravel.com/docs/13.x/upgrade)
-- [mongodb/laravel-mongodb releases](https://github.com/mongodb/laravel-mongodb/releases)
-- [inertiajs/inertia-laravel releases](https://github.com/inertiajs/inertia-laravel/releases)
-- [laravel/ai releases](https://github.com/laravel/ai/releases)
+1. **`laravel/tinker` v2.11.1** — declared support up to L12 only. v3.0.0 was available and added.
+2. **`mews/purifier` v3.4.3** — no L13 release exists (as of April 2026). Replaced with `HtmlSanitizer` service. Only 5 call sites, all using the default profile.
+3. **`laravel/ai` v0.2.8** — needed explicit bump to `^0.5`; Composer wouldn't unlock it automatically.
+4. **`mongodb/laravel-mongodb` v5.6.0** — capped at L12. v5.7.0 adds L13 support.
+5. **`resend/resend-laravel *`** — resolved to v0.12.0 which caps at L11. Bumped to `^1.0`; wildcard constraint also fixed.
