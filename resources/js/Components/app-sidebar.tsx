@@ -105,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold">{appName}</span>
-            <span className="truncate text-xs">v0.1.0</span>
+            <span className="truncate text-xs">v0.2.0</span>
           </div>
         </div>
       </SidebarHeader>

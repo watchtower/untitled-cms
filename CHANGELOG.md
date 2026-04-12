@@ -11,6 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.2.0] — 2026-04-12
+
+### Added
+- **OpenRouter Integration** — Native support for OpenRouter in the AI Hub for text and vision generation tasks.
+- **AI Hub Security Refactor** — Implemented explicit API key revocation UI and optimized `AiContextService`.
+- **LLM Wiki** — Established a persistent, agent-maintained knowledge base (`wiki/`) enforcing Automated Retrieval Protocols for AI assistants.
+
+### Changed
+- **Laravel 13 Upgrade** — Migrated framework from Laravel 12 to 13.4, bumping MongoDB, Laravel AI, and dependencies. Replaced deprecated HTML Purifier wrapper with native service.
+- **Email Webhook Abstraction** — Unified webhook handling across Resend, Mailgun, and SendGrid to a generic `/webhooks/email` endpoint.
+
+---
+
 ## [0.1.0] — 2026-03-15
 
 Initial public release.
@@ -41,5 +54,6 @@ Initial public release.
 - **Dark mode** — System-preference aware, toggle in admin UI
 - **34 permissions** — Organised by resource group across all modules
 
-[Unreleased]: https://github.com/watchtower/untitled-cms/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/watchtower/untitled-cms/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/watchtower/untitled-cms/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/watchtower/untitled-cms/releases/tag/v0.1.0
