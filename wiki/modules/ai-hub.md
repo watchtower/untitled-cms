@@ -14,9 +14,10 @@ config files or .env**. The config is patched dynamically by `AiService`.
 
 | Provider | Capabilities |
 |---------|-------------|
-| OpenAI | Text generation, chat |
-| Gemini | Text generation |
+| OpenAI | Text generation, Vision, Image generation |
+| Gemini | Text generation, Vision, Image generation |
 | Stability AI | Image generation |
+| OpenRouter | Text generation, Vision |
 
 ## Rate limits (enforced at route level)
 

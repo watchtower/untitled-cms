@@ -33,7 +33,7 @@ export function AiTextarea({
 
         setIsGenerating(true);
         try {
-            const response = await axios.post('/ai/generate', {
+            const response = await axios.post(route('admin.ai.generate'), {
                 prompt: prompt
             });
 

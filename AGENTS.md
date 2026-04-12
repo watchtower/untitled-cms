@@ -3,6 +3,17 @@
 ## Project Structure & Module Organization
 This repository is a Laravel 12 CMS with a React + Inertia admin UI. Backend code lives in `app/`, routes in `routes/`, database migrations and seeders in `database/`, and tests in `tests/Feature`. Frontend code is under `resources/js/` and `resources/css/`, with pages in `resources/js/Pages`, shared UI in `resources/js/Components`, and layouts in `resources/js/Layouts`. Project notes and architecture docs live in `wiki/` and `docs/`, with module-specific pages such as `wiki/modules/vault.md` and `wiki/architecture/request-flow.md`.
 
+## LLM Wiki & Knowledge Base Management
+A persistent, LLM-maintained knowledge base lives in the `wiki/` directory. This is the single source of truth for structural context.
+
+**CRITICAL INSTRUCTION FOR ALL AGENTS:** 
+You MUST proactively construct and update the `wiki/` whenever new information, database schemas, API integrations, or architectural changes emerge. Do not leave the system in an undocumented state.
+
+To leverage the wiki automatically in future operations:
+1. Always read `wiki/index.md` at the start of complex requests to map out the current structure and available module documentation.
+2. Read `wiki/SCHEMA.md` for specific instructions on how to format, link, and structure updates.
+3. Keep the `wiki/log.md` appended as a history of your major architectural modifications.
+
 ## Build, Test, and Development Commands
 - `composer run dev`: starts the Laravel server, queue listener, log viewer, and Vite HMR together.
 - `npm run dev`: runs the Vite dev server for frontend assets.

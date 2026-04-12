@@ -117,7 +117,8 @@ class AiService
         return match ($provider) {
             'gemini' => $this->generateAltTextGemini($activeHub, $dataUri, $mimeType),
             'openai' => $this->generateAltTextOpenAi($activeHub, $dataUri),
-            default => throw new \Exception("Your active AI Hub \"{$activeHub->name}\" does not support vision. Please use Gemini or OpenAI.")
+            'openrouter' => $this->generateAltTextOpenRouter($activeHub, $dataUri),
+            default => throw new \Exception("Your active AI Hub \"{$activeHub->name}\" does not support vision. Please use Gemini, OpenAI, or OpenRouter.")
         };
     }
 
@@ -167,6 +168,34 @@ class AiService
 
         if ($response->failed()) {
             throw new \Exception('OpenAI vision failed: '.$response->json('error.message', 'Unknown'));
+        }
+
+        $hub->increment('monthly_usage');
+
+        return trim($response->json('choices.0.message.content') ?? 'Image description');
+    }
+
+    private function generateAltTextOpenRouter(AiHub $hub, string $dataUri): string
+    {
+        $model = $hub->default_model ?: 'openai/gpt-4o';
+
+        $response = Http::withToken($hub->api_key)
+            ->post('https://openrouter.ai/api/v1/chat/completions', [
+                'model' => $model,
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => [
+                            ['type' => 'text', 'text' => 'Describe this image concisely in 15 words or less for alt text. Return only the description.'],
+                            ['type' => 'image_url', 'image_url' => ['url' => $dataUri]],
+                        ],
+                    ],
+                ],
+                'max_tokens' => 60,
+            ]);
+
+        if ($response->failed()) {
+            throw new \Exception('OpenRouter vision failed: '.$response->json('error.message', 'Unknown'));
         }
 
         $hub->increment('monthly_usage');

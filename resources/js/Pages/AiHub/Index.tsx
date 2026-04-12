@@ -15,7 +15,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/Components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Bot, RotateCcw } from 'lucide-react';
+import { MoreHorizontal, Edit, Bot, RotateCcw, KeyRound, Pencil } from 'lucide-react';
 import { Switch } from '@/Components/ui/switch';
 import { Progress } from '@/Components/ui/progress';
 import { router, useForm } from '@inertiajs/react';
@@ -47,21 +47,25 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
     const canEdit = auth.permissions.includes('ai-integrations.edit');
 
     const [editingHub, setEditingHub] = useState<AiHub | null>(null);
+    const [editingKey, setEditingKey] = useState(false);
 
     const { data, setData, put, processing, errors, reset } = useForm({
         is_active: false,
         default_model: '',
         image_model: '',
         api_key: '',
+        clear_key: false,
     });
 
     useEffect(() => {
         if (editingHub) {
+            setEditingKey(!editingHub.has_key);
             setData({
                 is_active: editingHub.is_active,
                 default_model: editingHub.default_model || '',
                 image_model: editingHub.image_model || '',
-                api_key: editingHub.api_key || '',
+                api_key: '',
+                clear_key: false,
             });
         }
     }, [editingHub]);
@@ -286,14 +290,70 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
 
                                 <div className="space-y-2">
                                     <Label htmlFor="api_key">API Key</Label>
-                                    <Input
-                                        id="api_key"
-                                        type="text"
-                                        value={data.api_key}
-                                        onChange={(e) => setData('api_key', e.target.value)}
-                                        placeholder={`Enter your ${editingHub.name} API Key`}
-                                        className="font-mono"
-                                    />
+                                    {editingHub.has_key && !editingKey ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className={`flex-1 flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-mono ${data.clear_key ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-muted text-muted-foreground'}`}>
+                                                <KeyRound className="h-3.5 w-3.5 shrink-0" />
+                                                <span className={data.clear_key ? "line-through" : ""}>
+                                                    {data.clear_key ? "Key will be removed" : "••••••••••••••••••••••••"}
+                                                </span>
+                                            </div>
+                                            {!data.clear_key ? (
+                                                <>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setEditingKey(true)}
+                                                    >
+                                                        <Pencil className="h-3.5 w-3.5 mr-1" />
+                                                        Change
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                        onClick={() => setData('clear_key', true)}
+                                                    >
+                                                        Remove
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setData('clear_key', false)}
+                                                >
+                                                    Undo
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Input
+                                                id="api_key"
+                                                type="text"
+                                                value={data.api_key}
+                                                onChange={(e) => setData('api_key', e.target.value)}
+                                                placeholder={`Enter your ${editingHub.name} API Key`}
+                                                className="font-mono"
+                                                autoFocus={editingHub.has_key}
+                                            />
+                                            {editingHub.has_key && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-auto p-0 text-xs text-muted-foreground"
+                                                    onClick={() => { setEditingKey(false); setData(d => ({ ...d, api_key: '', clear_key: false })); }}
+                                                >
+                                                    Cancel key change
+                                                </Button>
+                                            )}
+                                        </>
+                                    )}
                                     {errors.api_key && <p className="text-sm text-destructive">{errors.api_key}</p>}
                                 </div>
 

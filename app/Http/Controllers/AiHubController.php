@@ -62,7 +62,18 @@ class AiHubController extends Controller
             'api_key' => 'nullable|string',
             'default_model' => 'nullable|string',
             'image_model' => 'nullable|string',
+            'clear_key' => 'nullable|boolean',
         ]);
+
+        // Handle explicit API key revocation
+        if (! empty($validated['clear_key'])) {
+            $validated['api_key'] = null;
+        } elseif (empty($validated['api_key'])) {
+            // Never wipe an existing key with an empty submission unless requested
+            unset($validated['api_key']);
+        }
+        
+        unset($validated['clear_key']); // Remove before db update
 
         $aiHub->update($validated);
 

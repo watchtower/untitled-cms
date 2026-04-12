@@ -130,7 +130,16 @@ Inertia form pattern: use `useForm()` from `@inertiajs/react` — handles loadin
 
 ## Project Wiki
 
-A persistent, LLM-maintained knowledge base lives in `wiki/`. Open the `wiki/` directory as an Obsidian vault for graph view and backlink navigation.
+A persistent, LLM-maintained knowledge base lives in `wiki/` (relative to the project root). The wiki acts as the centralized memory for this repository.
+
+**CRITICAL INSTRUCTION FOR AGENTS:** You MUST proactively capture and update the `wiki/` whenever new features, architectural changes, database modifications, or API configurations are introduced. Do not let system knowledge decay in transient chat histories.
+
+To automatically fetch and reference wiki content during future operational runs:
+1. Initialize by reading `wiki/index.md` via your file tool to traverse the master content catalog.
+2. Read `wiki/SCHEMA.md` for strict instructions on how to ingest sources, query, update, and lint the wiki structure.
+3. Access specific documents under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/` when performing localized tasks.
+
+Open the `wiki/` directory as an Obsidian vault for graph view and backlink navigation.
 
 - `wiki/SCHEMA.md` — how to ingest sources, query, update, and lint the wiki
 - `wiki/index.md` — content catalog with links to all pages

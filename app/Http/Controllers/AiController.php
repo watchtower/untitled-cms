@@ -129,7 +129,7 @@ class AiController extends Controller
     {
         $request->validate([
             'messages' => 'required|array',
-            'messages.*.role' => 'required|string|in:user,assistant',
+            'messages.*.role' => 'required|string|in:user,assistant,system',
             'messages.*.content' => 'required|string|max:10000',
             'page_url' => 'nullable|string|max:500',
         ]);
@@ -141,7 +141,9 @@ class AiController extends Controller
             );
 
             return response()->json(['message' => $response]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            \Log::error('AI Chat error', ['class' => get_class($e), 'message' => $e->getMessage()]);
+
             return response()->json(['error' => $e->getMessage()], 422);
         }
     }

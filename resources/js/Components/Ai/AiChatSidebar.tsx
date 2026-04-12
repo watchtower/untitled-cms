@@ -80,7 +80,7 @@ export default function AiChatSidebar() {
     // Load sessions when history panel opens or sidebar opens
     const loadSessions = useCallback(async () => {
         try {
-            const { data } = await axios.get('/ai/chat/sessions');
+            const { data } = await axios.get(route('admin.ai.sessions.index'));
             setSessions(data);
         } catch { }
     }, []);
@@ -99,7 +99,7 @@ export default function AiChatSidebar() {
             .filter(m => m.role !== 'system')
             .map(m => ({ role: m.role, content: m.content }));
         try {
-            const { data } = await axios.put(`/ai/chat/sessions/${id}`, { messages: persistable });
+            const { data } = await axios.put(route('admin.ai.sessions.update', id), { messages: persistable });
             // Update title in session list if auto-generated
             if (data.title) {
                 setSessions(prev => prev.map(s => s.id === id ? { ...s, title: data.title } : s));
@@ -109,14 +109,14 @@ export default function AiChatSidebar() {
 
     const startNewSession = useCallback(async () => {
         try {
-            const { data } = await axios.post('/ai/chat/sessions');
+            const { data } = await axios.post(route('admin.ai.sessions.store'));
             setSessionId(data.id);
         } catch { }
     }, []);
 
     const loadSession = useCallback(async (id: string) => {
         try {
-            const { data } = await axios.get(`/ai/chat/sessions/${id}`);
+            const { data } = await axios.get(route('admin.ai.sessions.show', id));
             setSessionId(id);
             setMessages(data.messages?.length
                 ? data.messages
@@ -131,7 +131,7 @@ export default function AiChatSidebar() {
 
     const deleteSession = useCallback(async (id: string) => {
         try {
-            await axios.delete(`/ai/chat/sessions/${id}`);
+            await axios.delete(route('admin.ai.sessions.destroy', id));
             setSessions(prev => prev.filter(s => s.id !== id));
             if (sessionId === id) {
                 setSessionId(null);
@@ -150,7 +150,7 @@ export default function AiChatSidebar() {
         let currentSessionId = sessionId;
         if (!currentSessionId) {
             try {
-                const { data } = await axios.post('/ai/chat/sessions');
+                const { data } = await axios.post(route('admin.ai.sessions.store'));
                 currentSessionId = data.id;
                 setSessionId(data.id);
             } catch { }
@@ -171,7 +171,7 @@ export default function AiChatSidebar() {
         setIsLoading(true);
 
         try {
-            const { data } = await axios.post('/ai/chat', { messages: apiMessages });
+            const { data } = await axios.post(route('admin.ai.chat'), { messages: apiMessages, page_url: url ?? window.location.pathname });
             const rawContent: string = data.message;
 
             // Detect [ACTION]...[/ACTION] block — use [\ s\S] for multiline JSON
@@ -183,7 +183,7 @@ export default function AiChatSidebar() {
                 let resolveError: string | null = null;
                 try {
                     const actionJson = JSON.parse(actionMatch[1].trim());
-                    const { data: resolveData } = await axios.post('/ai/actions/resolve', {
+                    const { data: resolveData } = await axios.post(route('admin.ai.actions.resolve'), {
                         action_json: actionJson,
                     });
                     proposal = resolveData.proposal ?? null;
@@ -228,7 +228,12 @@ export default function AiChatSidebar() {
             }
 
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'AI Chat failed. Please check your AI Hub configuration.');
+            const serverMsg = error.response?.data?.error || error.response?.data?.message;
+            const status = error.response?.status;
+            const msg = serverMsg
+                ? `AI Chat error (${status}): ${serverMsg}`
+                : (error.message || 'AI Chat failed. Please check your AI Hub configuration.');
+            toast.error(msg);
         } finally {
             setIsLoading(false);
         }
@@ -239,7 +244,7 @@ export default function AiChatSidebar() {
         setIsExecuting(true);
 
         try {
-            const { data } = await axios.post('/ai/actions/execute', { proposal: pendingProposal.proposal });
+            const { data } = await axios.post(route('admin.ai.actions.execute'), { proposal: pendingProposal.proposal });
             const result: ActionResult = data.result;
 
             // Replace the message's proposal with the result

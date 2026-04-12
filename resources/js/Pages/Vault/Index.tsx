@@ -132,7 +132,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
         setIsGeneratingAlt(true);
         setGeneratedAltText(null);
         try {
-            const response = await axios.post('/ai/generate-alt-text', { vault_file_uuid: fileUuid });
+            const response = await axios.post(route('admin.ai.alt-text'), { vault_file_uuid: fileUuid });
             setGeneratedAltText(response.data.alt_text);
             toast.success('Alt text generated!');
         } catch (e: any) {
@@ -172,7 +172,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
         setGeneratedImageUrl(null);
         try {
             // Step 1: Generate the image
-            const genResponse = await axios.post('/ai/generate-image', { prompt: imageGenPrompt });
+            const genResponse = await axios.post(route('admin.ai.generate-image'), { prompt: imageGenPrompt });
             const imageData = genResponse.data.image_url;
             setGeneratedImageUrl(imageData);
             toast.success('Image generated — saving to Vault...');

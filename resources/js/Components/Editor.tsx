@@ -135,7 +135,7 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
                                     ? `Based on this selection, suggest the next logical paragraph or section:\n\n"${selection}"`
                                     : `Continue writing the following content smoothly and engagingly. Return ONLY the new content without repeating what is already there:\n\n"${context}"`;
 
-                                const response = await axios.post('/ai/generate', { prompt });
+                                const response = await axios.post(route('admin.ai.generate'), { prompt });
                                 if (response.data?.generated_text) {
                                     // Insert at cursor or replace selection
                                     editor.execCommand('mceInsertContent', false, response.data.generated_text);
@@ -169,7 +169,7 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
 
                             toast.loading('AI is rewriting...', { id: 'ai-gen' });
                             try {
-                                const response = await axios.post('/ai/generate', {
+                                const response = await axios.post(route('admin.ai.generate'), {
                                     prompt: `Rewrite the following text to be more professional, engaging, and concise. Do NOT add any extra conversational filler, just return the rewritten text directly:\n\n"${selectedText}"`
                                 });
                                 if (response.data?.generated_text) {
@@ -194,7 +194,7 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
 
                             toast.loading('AI is expanding...', { id: 'ai-gen' });
                             try {
-                                const response = await axios.post('/ai/generate', {
+                                const response = await axios.post(route('admin.ai.generate'), {
                                     prompt: `Expand on the following text by adding 2-3 more sentences of relevant, detailed context. Do NOT add any extra conversational filler, just return the expanded text directly:\n\n"${selectedText}"`
                                 });
                                 if (response.data?.generated_text) {

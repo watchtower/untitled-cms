@@ -41,6 +41,10 @@ class AiHubSeeder extends Seeder
                 'name' => 'Ollama',
                 'default_model' => 'llama3.1',
             ],
+            [
+                'name' => 'OpenRouter',
+                'default_model' => 'openai/gpt-4o',
+            ],
         ];
 
         foreach ($providers as $provider) {

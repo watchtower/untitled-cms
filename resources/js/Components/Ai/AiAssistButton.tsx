@@ -43,7 +43,7 @@ export function AiAssistButton({
         try {
             const finalPrompt = systemInstruction ? `${systemInstruction}\n\nUser Request: ${prompt}` : prompt;
 
-            const response = await axios.post('/ai/generate', {
+            const response = await axios.post(route('admin.ai.generate'), {
                 prompt: finalPrompt
             });
 

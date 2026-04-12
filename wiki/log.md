@@ -4,6 +4,11 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-04-12] feat | OpenRouter & AI Hub Security Refactor
+Integrated OpenRouter as a supported AI provider for text generation and vision. 
+Implemented `clear_key` explicit API key revocation UI within the AI Hub dashboard.
+Optimized `AiContextService` to prevent unconditional database context loading out of scope.
+
 ## [2026-04-06] refactor | Multi-provider Email Abstraction
 Abstracted all email provider logic into [[Services/EmailWebhooks/Contracts/WebhookProvider]].
 Created Support for Resend (Svix), Mailgun (HMAC), and SendGrid (ECDSA).
