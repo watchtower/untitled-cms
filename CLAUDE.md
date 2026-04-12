@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Untitled CMS** is an AI-native Content Management System built on Laravel 12 with MongoDB and a React + Inertia.js admin SPA. Public pages are served as HTML by default and as Markdown+YAML frontmatter when requested with `Accept: text/markdown` (for AI crawlers/agents).
+**Untitled CMS** is an AI-native Content Management System built on Laravel 13 with MongoDB and a React + Inertia.js admin SPA. Public pages are served as HTML by default and as Markdown+YAML frontmatter when requested with `Accept: text/markdown` (for AI crawlers/agents).
 
 ## Common Commands
 
@@ -34,7 +34,7 @@ npm run build     # tsc + vite build (TypeScript errors will fail the build)
 ## Architecture
 
 ### Stack
-- **Backend:** Laravel 12, PHP 8.4, MongoDB (`mongodb/laravel-mongodb`)
+- **Backend:** Laravel 13, PHP 8.4, MongoDB (`mongodb/laravel-mongodb`)
 - **Frontend:** React 18 + TypeScript, Inertia.js (props-based routing, no client-side router), Tailwind CSS, Shadcn/Radix UI
 - **Build:** Vite 7 (frontend build runs `tsc && vite build`)
 - **Auth:** Laravel Sanctum + Sessions, Laravel Socialite (Google, GitHub, Apple, Twitter — toggled via Settings UI)

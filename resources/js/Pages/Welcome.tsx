@@ -60,7 +60,7 @@ export default function Welcome({
                                 Modern Admin Panel for <span className="text-primary">Next-Gen Apps</span>
                             </h1>
                             <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                                Built with Laravel 12, Inertia.js, React, and Shadcn UI. A powerful foundation for your next big idea.
+                                Built with Laravel 13, Inertia.js, React, and Shadcn UI. A powerful foundation for your next big idea.
                             </p>
                         </div>
                         <div className="flex gap-4">
@@ -123,7 +123,7 @@ export default function Welcome({
                             <Card className="bg-card">
                                 <CardHeader>
                                     <Database className="h-10 w-10 text-primary mb-2" />
-                                    <CardTitle>Laravel 12</CardTitle>
+                                    <CardTitle>Laravel 13</CardTitle>
                                     <CardDescription>
                                         The latest and greatest PHP framework backend.
                                     </CardDescription>

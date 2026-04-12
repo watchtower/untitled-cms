@@ -141,7 +141,7 @@ export default function Home({ banners, recentPages }: Props) {
             {/* Features Strip */}
             <div className="border-b bg-muted/20">
                 <div className="container max-w-7xl mx-auto px-4 py-6 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />Laravel 12 + MongoDB</span>
+                    <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />Laravel 13 + MongoDB</span>
                     <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />React + Inertia.js SPA</span>
                     <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />Multi-Provider AI Hub</span>
                     <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />Role-Based Access Control</span>

@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "nava/untitled-cms",
     "type": "project",
-    "description": "AI-native CMS built on Laravel 12 + MongoDB with a React + Inertia.js admin SPA.",
+    "description": "AI-native CMS built on Laravel 13 + MongoDB with a React + Inertia.js admin SPA.",
     "keywords": [
         "laravel",
         "mongodb",

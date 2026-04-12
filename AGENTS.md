@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This repository is a Laravel 12 CMS with a React + Inertia admin UI. Backend code lives in `app/`, routes in `routes/`, database migrations and seeders in `database/`, and tests in `tests/Feature`. Frontend code is under `resources/js/` and `resources/css/`, with pages in `resources/js/Pages`, shared UI in `resources/js/Components`, and layouts in `resources/js/Layouts`. Project notes and architecture docs live in `wiki/` and `docs/`, with module-specific pages such as `wiki/modules/vault.md` and `wiki/architecture/request-flow.md`.
+This repository is a Laravel 13 CMS with a React + Inertia admin UI. Backend code lives in `app/`, routes in `routes/`, database migrations and seeders in `database/`, and tests in `tests/Feature`. Frontend code is under `resources/js/` and `resources/css/`, with pages in `resources/js/Pages`, shared UI in `resources/js/Components`, and layouts in `resources/js/Layouts`. Project notes and architecture docs live in `wiki/` and `docs/`, with module-specific pages such as `wiki/modules/vault.md` and `wiki/architecture/request-flow.md`.
 
 ## LLM Wiki & Knowledge Base Management
 A persistent, LLM-maintained knowledge base lives in the `wiki/` directory. This is the single source of truth for structural context.

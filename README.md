@@ -3,14 +3,14 @@
 <p align="center">
   <a href="https://github.com/watchtower/untitled-cms/actions/workflows/ci.yml"><img src="https://github.com/watchtower/untitled-cms/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/PHP-8.2%2B-blue?logo=php" alt="PHP 8.2+">
-  <img src="https://img.shields.io/badge/Laravel-12-red?logo=laravel" alt="Laravel 12">
+  <img src="https://img.shields.io/badge/Laravel-13-red?logo=laravel" alt="Laravel 13">
   <img src="https://img.shields.io/badge/MongoDB-6%2B-green?logo=mongodb" alt="MongoDB 6+">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License">
 </p>
 
 <p align="center">
   <strong>An AI-native Content Management System built for the age of agents.</strong><br>
-  Laravel 12 · MongoDB · React + Inertia.js · Multi-provider AI Hub · Markdown-for-Agents
+  Laravel 13 · MongoDB · React + Inertia.js · Multi-provider AI Hub · Markdown-for-Agents
 </p>
 
 ---
@@ -29,7 +29,7 @@
 | Secure media management          | 7-stage upload pipeline: double-extension detection → MIME check → image sanitization → optional ClamAV scan |
 | Flexible AI integration          | Swap providers at runtime — OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama                       |
 | Granular access control          | 34 permissions across 8 policy classes, cached RBAC, invite-only user flow                                   |
-| A developer-friendly stack       | Laravel 12 + React + TypeScript + Tailwind CSS + Shadcn UI, all in one repo                                  |
+| A developer-friendly stack       | Laravel 13 + React + TypeScript + Tailwind CSS + Shadcn UI, all in one repo                                  |
 | Easy self-hosting                | Interactive installer, Docker Compose, systemd + Nginx templates                                             |
 
 ---
@@ -212,7 +212,7 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 
 | Package                                                                     | Version  | Purpose                            |
 | --------------------------------------------------------------------------- | -------- | ---------------------------------- |
-| [Laravel](https://laravel.com/)                                             | `^12.0`  | Core framework                     |
+| [Laravel](https://laravel.com/)                                             | `^13.0`  | Core framework                     |
 | [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb)       | `^5.5`   | MongoDB ODM                        |
 | [laravel/sanctum](https://laravel.com/docs/sanctum)                         | `^4.0`   | Session & token authentication     |
 | [laravel/socialite](https://laravel.com/docs/socialite)                     | `^5.24`  | OAuth (Google, GitHub)             |

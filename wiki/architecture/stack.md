@@ -8,7 +8,7 @@ Last updated: 2026-04-05
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Laravel 12, PHP |
+| Backend | Laravel 13, PHP |
 | Database | MongoDB (`mongodb/laravel-mongodb`) |
 | Frontend | React 18 + TypeScript, Inertia.js |
 | Styling | Tailwind CSS, Shadcn/Radix UI |

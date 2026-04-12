@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Deploy Script for Laravel 12 + MongoDB CMS
+# Deploy Script for Laravel 13 + MongoDB CMS
 # Usage: ./deploy.sh
 
 set -e

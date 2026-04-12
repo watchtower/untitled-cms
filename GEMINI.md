@@ -1,6 +1,6 @@
 # Gemini Project Configuration & Context
 
-**Untitled CMS** is an AI-native Content Management System built on Laravel 12 with a MongoDB backend and a React + Inertia.js administration layer.
+**Untitled CMS** is an AI-native Content Management System built on Laravel 13 with a MongoDB backend and a React + Inertia.js administration layer.
 
 ## LLM Wiki & Knowledge Base Management
 All enduring project documentation, architectural patterns, and module guidelines are housed in the `wiki/` directory. This serves as the local persistent memory across operational runs.

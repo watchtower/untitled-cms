@@ -1,6 +1,6 @@
 # Overview
 
-> AI-native CMS built on Laravel 12 + MongoDB with a React/Inertia admin SPA.
+> AI-native CMS built on Laravel 13 + MongoDB with a React/Inertia admin SPA.
 
 Last updated: 2026-04-05
 

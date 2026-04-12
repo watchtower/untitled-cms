@@ -37,7 +37,7 @@ echo "               ██║     ██╔████╔██║████
 echo "               ██║     ██║╚██╔╝██║╚════██║"
 echo "               ╚██████╗██║ ╚═╝ ██║███████║"
 echo "                ╚═════╝╚═╝     ╚═╝╚══════╝"
-echo -e "  ${NC}${CYN}AI-native CMS · Laravel 12 · MongoDB · React + Inertia.js${NC}"
+echo -e "  ${NC}${CYN}AI-native CMS · Laravel 13 · MongoDB · React + Inertia.js${NC}"
 echo ""
 echo -e "  This script will check your environment and set up the project."
 echo -e "  It will NOT overwrite an existing ${BOLD}.env${NC} file."
