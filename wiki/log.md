@@ -4,6 +4,13 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-04-06] refactor | Multi-provider Email Abstraction
+Abstracted all email provider logic into [[Services/EmailWebhooks/Contracts/WebhookProvider]].
+Created Support for Resend (Svix), Mailgun (HMAC), and SendGrid (ECDSA).
+Renamed `resend_id` → `provider_message_id` across `email_logs` and updated indexes.
+Unified webhook endpoint to `/webhooks/email` with generic middleware/job.
+Restored legacy SDK compatibility while centralizing config under `services.email_webhook`.
+
 ## [2026-04-05] init | Wiki created from CLAUDE.md seed
 Scaffolded wiki structure. Created SCHEMA.md, index.md, log.md, and 9 seed pages
 derived from CLAUDE.md: overview, architecture, services, vault-pipeline, permissions,

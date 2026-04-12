@@ -25,6 +25,7 @@
         "league/html-to-markdown": "^5.1",
         "mews/purifier": "^3.4",
         "mongodb/laravel-mongodb": "^5.5",
+        "resend/resend-laravel": "*",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {

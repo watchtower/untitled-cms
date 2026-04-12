@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Banner;
+use App\Models\EmailLog;
 use App\Models\Page;
 use App\Models\User;
 use App\Models\VaultFile;
@@ -22,8 +23,31 @@ class AiContextService
             'banners' => $this->bannersContext(),
             'vault' => $this->vaultContext(),
             'users' => $this->usersContext(),
+            'email-logs' => $this->emailContext(),
             default => [],
         };
+    }
+
+    private function emailContext(): array
+    {
+        return ['module' => 'email', 'stats' => $this->emailStats()];
+    }
+
+    private function emailStats(): array
+    {
+        return Cache::remember('ai_context_email_stats', 60, function () {
+            $total = EmailLog::count();
+            $delivered = EmailLog::where('status', 'delivered')->count();
+            $opened = EmailLog::whereNotNull('opened_at')->count();
+            $bounced = EmailLog::where('status', 'bounced')->count();
+
+            return [
+                'total' => $total,
+                'delivery_rate' => $total > 0 ? round(($delivered / $total) * 100, 1) : 0,
+                'open_rate' => $total > 0 ? round(($opened / $total) * 100, 1) : 0,
+                'bounce_rate' => $total > 0 ? round(($bounced / $total) * 100, 1) : 0,
+            ];
+        });
     }
 
     private function pagesContext(): array
@@ -103,6 +127,7 @@ class AiContextService
             '/vault' => 'vault',
             '/users' => 'users',
             '/roles' => 'roles',
+            '/email-logs' => 'email-logs',
         ];
 
         foreach ($segments as $prefix => $module) {
@@ -123,13 +148,14 @@ class AiContextService
         try {
             $pages = $this->pagesContext()['stats'];
             $banners = $this->bannersContext()['stats'];
+            $email = $this->emailStats();
 
             $module = $this->detectModule($url);
             $moduleLine = $module !== 'general'
                 ? "The admin is currently on the **{$module}** module."
                 : 'The admin is on the CMS dashboard.';
 
-            return "{$moduleLine}\n\nCurrent CMS data (accurate — use these exact numbers):\n- Pages: {$pages['total']} total, {$pages['published']} published, {$pages['draft']} draft\n- Banners: {$banners['total']} total, {$banners['active']} active";
+            return "{$moduleLine}\n\nCurrent CMS data (accurate — use these exact numbers):\n- Pages: {$pages['total']} total, {$pages['published']} published, {$pages['draft']} draft\n- Banners: {$banners['total']} total, {$banners['active']} active\n- Email health: {$email['delivery_rate']}% delivery, {$email['open_rate']}% open rate, {$email['bounce_rate']}% bounce rate.";
 
         } catch (\Exception $e) {
             return 'The admin is on the CMS admin panel.';

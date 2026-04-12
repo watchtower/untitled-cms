@@ -101,6 +101,9 @@ class Role extends Model
             'ai-integrations.view',
             'ai-integrations.edit',
 
+            // Email Logs
+            'email_logs.view',
+
             // System
             'manage-settings', // used in SettingController + CheckMaintenanceMode bypass
         ];

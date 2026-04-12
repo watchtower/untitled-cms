@@ -80,6 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           { title: "Users", url: route('admin.users.index') },
           { title: "Roles", url: route('admin.roles.index') },
           { title: "AI Integrations", url: route('admin.ai-hubs.index') },
+          { title: "Email Logs", url: route('admin.email-logs.index') },
           { title: "Activity", url: route('admin.activity-log.index') },
           { title: "Settings", url: route('admin.settings.index') },
         ]

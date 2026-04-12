@@ -1,14 +1,12 @@
 # Email
 
-> Resend-powered outbound email with delivery tracking, suppression, and RFC 8058 unsubscribe support.
+> Multi-provider outbound email with delivery tracking, suppression, and RFC 8058 unsubscribe support.
 
-Last updated: 2026-04-05
+Last updated: 2026-04-12
 
 ## Overview
 
-All outbound email is sent via [Resend](https://resend.com). Three event listeners hook into
-Laravel's mail pipeline to intercept every send, inject unsubscribe headers, and log the result.
-Incoming delivery events arrive as signed webhooks and are processed off the queue.
+All outbound email is sent via supported providers (Resend, Mailgun, SendGrid) configured via the `MAIL_WEBHOOK_PROVIDER` environment variable. Three event listeners hook into Laravel's mail pipeline to intercept every send, inject unsubscribe headers, and log the result. Incoming delivery events arrive as signed webhooks and are processed off the queue.
 
 ## Event listener pipeline
 
@@ -38,25 +36,23 @@ token (`email|expiry`, 30-day window) and stamps three headers onto the outgoing
 
 ### LogSentEmail (`app/Listeners/LogSentEmail.php`)
 
-Fires on `MessageSent`. Creates an `EmailLog` record with `resend_id`, recipient, subject,
-mailable class, and the unsubscribe token from `X-Unsubscribe-Token`. Fails silently — a
-logging failure must never block the user flow.
+Fires on `MessageSent`. Creates an `EmailLog` record with `provider_message_id`, recipient, subject,
+mailable class, and the unsubscribe token from `X-Unsubscribe-Token`. It handles resolving the unique message ID dynamically via the `WebhookProvider` contract. Fails silently — a logging failure must never block the user flow.
 
 ## Webhook processing
 
-### VerifyResendWebhook middleware (`app/Http/Middleware/VerifyResendWebhook.php`)
+### VerifyEmailWebhook middleware (`app/Http/Middleware/VerifyEmailWebhook.php`)
 
-Registered as the `resend.webhook` alias. Applied to `POST /webhooks/resend` (CSRF-exempt).
-Verifies incoming requests using Standard Webhooks v1 (Svix) HMAC-SHA256:
-- Rejects requests where `abs(now - svix-timestamp) > 300` seconds (replay protection in both directions)
-- Handles the `whsec_` prefix on the base64-encoded secret
-- Supports multiple signatures in `svix-signature` header
-- Secret read from `config('services.resend.webhook_secret')` — never `env()` directly
+Registered as the `webhook.email` alias. Applied to `POST /webhooks/email` (CSRF-exempt).
+Verifies incoming requests using the provider corresponding to the `MAIL_WEBHOOK_PROVIDER` env variable:
+- **Resend**: Standard Webhooks v1 (Svix) HMAC-SHA256
+- **Mailgun**: HMAC-SHA256 timestamp + token
+- **SendGrid**: ECDSA public-key verification (`openssl_verify`)
 
-### ProcessResendWebhook job (`app/Jobs/ProcessResendWebhook.php`)
+### ProcessEmailWebhook job (`app/Jobs/ProcessEmailWebhook.php`)
 
-Queued. Maps Resend event types to status strings and updates `email_logs` via
-`updateOrCreate(['resend_id' => $emailId], ...)`. On bounce or complaint, also writes to
+Queued. Normalizes provider-specific events to unified status strings and updates `email_logs` via
+`updateOrCreate(['provider_message_id' => $emailId], ...)`. On bounce or complaint, also writes to
 `suppressed_emails` and flags the user's `bounce_hard` field.
 
 **Gotcha:** `ActivityLogger::log()` third argument must be a model object or `null` — never an
@@ -92,19 +88,22 @@ registered in `AppServiceProvider`.
 
 | Collection | Key fields | Indexes |
 |---|---|---|
-| `email_logs` | `resend_id`, `recipient`, `subject`, `status`, `*_at` timestamps | unique `resend_id`, `recipient`, `subject`, `status` |
+| `email_logs` | `provider_message_id`, `recipient`, `subject`, `status`, `*_at` timestamps | unique `provider_message_id`, `recipient`, `subject`, `status` |
 | `suppressed_emails` | `email`, `reason`, `metadata` | unique `email` |
 
 ## Environment variables
 
 | Variable | Purpose |
 |---|---|
-| `RESEND_API_KEY` | Resend sending key (`config('services.resend.key')`) |
-| `RESEND_WEBHOOK_SECRET` | Svix webhook secret, prefixed `whsec_` (`config('services.resend.webhook_secret')`) |
+| `MAIL_WEBHOOK_PROVIDER` | Determines active webhook handling scheme (resend, mailgun, sendgrid) |
+| `RESEND_KEY` | Resend core API key and sending key (`config('services.resend.key')`) |
+| `RESEND_WEBHOOK_SECRET` | Resend Svix webhook secret, prefixed `whsec_` |
+| `MAILGUN_WEBHOOK_SIGNING_KEY` | Mailgun webhook verifier |
+| `SENDGRID_WEBHOOK_PUBLIC_KEY` | SendGrid public key for ECDSA |
 
 ## See also
 
 - [[database/collections]] — full collection list
-- [[architecture/middleware]] — VerifyResendWebhook middleware alias
+- [[architecture/middleware]] — VerifyEmailWebhook middleware alias
 - [[modules/permissions]] — email_logs.view permission
 - [[modules/services]] — ActivityLogger usage pattern

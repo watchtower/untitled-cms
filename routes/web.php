@@ -7,6 +7,9 @@ use App\Http\Controllers\AiController;
 use App\Http\Controllers\AiHubController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\ChatSessionController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailLogController;
+use App\Http\Controllers\EmailWebhookController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\LlmsController;
 use App\Http\Controllers\MenuController;
@@ -16,11 +19,11 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\UnsubscribeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VaultController;
 use App\Http\Controllers\VaultFolderController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // Non-admin profile — auth only, no admin middleware
 Route::middleware('auth')->group(function () {
@@ -38,9 +41,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::delete('/profile', [ProfileController::class, 'adminDestroy'])->name('profile.destroy');
 
     // Dashboard
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Users
     Route::post('/users/invite', [UserController::class, 'invite'])->name('users.invite');
@@ -108,6 +109,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings/{key}', [SettingController::class, 'update'])->name('settings.update');
 
+    // Email Logs
+    Route::get('/email-logs', [EmailLogController::class, 'index'])->name('email-logs.index')->middleware('can:email_logs.view');
+
     // Vault Manager Routes
     Route::prefix('vault')->name('vault.')->group(function () {
         Route::get('/', [VaultController::class, 'adminPage'])->name('index');
@@ -147,6 +151,14 @@ Route::get('/llms-full.txt', [LlmsController::class, 'full'])->name('llms-full.t
 // RSS Feed
 Route::get('/rss', [FeedController::class, 'rss'])->name('feed.rss');
 Route::get('/feed', [FeedController::class, 'rss']);
+
+// Email Webhooks
+Route::post('/webhooks/email', EmailWebhookController::class)
+    ->name('webhooks.email')
+    ->middleware('webhook.email');
+
+// Unsubscribe
+Route::get('/unsubscribe/{token}', UnsubscribeController::class)->name('unsubscribe');
 
 // Public Routes (Must be last to allow {slug} wildcard)
 Route::controller(PublicController::class)->group(function () {

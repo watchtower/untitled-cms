@@ -18,8 +18,22 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
-    'resend' => [
-        'key' => env('RESEND_API_KEY'),
+    'email_webhook' => [
+        'provider' => env('MAIL_WEBHOOK_PROVIDER', 'resend'),
+
+        'resend' => [
+            'api_key' => env('RESEND_KEY'),
+            'webhook_secret' => env('RESEND_WEBHOOK_SECRET'),
+            'key' => env('RESEND_KEY'), // Compatibility with Resend SDK
+        ],
+
+        'mailgun' => [
+            'webhook_signing_key' => env('MAILGUN_WEBHOOK_SIGNING_KEY'),
+        ],
+
+        'sendgrid' => [
+            'webhook_public_key' => env('SENDGRID_WEBHOOK_PUBLIC_KEY'),
+        ],
     ],
 
     'ses' => [
@@ -53,6 +67,10 @@ return [
         'redirect' => env('GITHUB_REDIRECT_URI', '/auth/github/callback'),
         // Note: set GITHUB_REDIRECT_URI to the full absolute URL in production
         // e.g. https://yourdomain.com/auth/github/callback
+    ],
+
+    'resend' => [
+        'key' => env('RESEND_KEY'),
     ],
 
 ];

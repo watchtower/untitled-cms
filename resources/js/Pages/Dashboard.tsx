@@ -12,7 +12,18 @@ import {
   CardTitle,
 } from "@/Components/ui/card"
 
-// Mock data for now, replacing data.json
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend
+} from 'recharts';
+
+// TODO: replace with real activity feed from the backend
 const recentSales = [
   {
     name: "Olivia Martin",
@@ -41,7 +52,15 @@ const recentSales = [
   },
 ]
 
-export default function Dashboard() {
+interface Props {
+  emailHealth: {
+    name: string;
+    sent: number;
+    delivered: number;
+  }[];
+}
+
+export default function Dashboard({ emailHealth }: Props) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('verified') === '1') {
@@ -57,6 +76,8 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SectionCards />
         </div>
+        
+        {/* Main Charts Row */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <div className="col-span-4">
             <ChartAreaInteractive />
@@ -65,7 +86,7 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
               <CardDescription>
-                You made 265 sales this month.
+                Recent site-wide sales and interactions.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -82,6 +103,59 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Email Health Row */}
+        <div className="grid gap-4">
+          <Card className="col-span-4">
+            <CardHeader>
+              <CardTitle>Email Delivery Health</CardTitle>
+              <CardDescription>
+                Outbound mail performance over the last 7 days (Sent vs Delivered).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={emailHealth}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#888888" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                  />
+                  <YAxis 
+                    stroke="#888888" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tickFormatter={(value) => `${value}`}
+                  />
+                  <Tooltip />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="sent" 
+                    name="Sent"
+                    stroke="#8884d8" 
+                    strokeWidth={2} 
+                    dot={{ r: 4 }} 
+                    activeDot={{ r: 6 }} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="delivered" 
+                    name="Delivered"
+                    stroke="#82ca9d" 
+                    strokeWidth={2} 
+                    dot={{ r: 4 }} 
+                    activeDot={{ r: 6 }} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>

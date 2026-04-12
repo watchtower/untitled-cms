@@ -31,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active',
         'email_verified_at',
         'social_accounts',
+        'bounce_hard',
     ];
 
     /**
@@ -55,6 +56,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'bounce_hard' => 'boolean',
             'social_accounts' => 'array',
         ];
     }
