@@ -17,8 +17,11 @@ use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Resend\Contracts\Client as ResendClient;
+use Resend\Laravel\Transport\ResendTransportFactory;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,6 +37,15 @@ class AppServiceProvider extends ServiceProvider
                 default => new ResendWebhookProvider,
             };
         });
+
+        // Bind the Resend client (normally done by ResendServiceProvider, which we exclude
+        // from auto-discovery to suppress its built-in /resend/webhook route).
+        $this->app->singleton(ResendClient::class, function () {
+            $apiKey = config('resend.api_key') ?? config('services.resend.key');
+            return \Resend::client($apiKey);
+        });
+        $this->app->alias(ResendClient::class, 'resend');
+        $this->app->alias(ResendClient::class, \Resend\Client::class);
     }
 
     /**
@@ -41,6 +53,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Re-register the Resend mail transport manually because resend/resend-laravel
+        // is excluded from auto-discovery (see composer.json) to prevent its built-in
+        // webhook route from being registered — the app uses its own /webhooks/email endpoint.
+        Mail::extend('resend', function (array $config = []) {
+            return new ResendTransportFactory($this->app->make(ResendClient::class), $config['options'] ?? []);
+        });
+
         Vite::prefetch(concurrency: 3);
         Gate::policy(Setting::class, SettingPolicy::class);
         Gate::policy(EmailLog::class, EmailLogPolicy::class);
