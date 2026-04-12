@@ -4,15 +4,17 @@
 This repository is a Laravel 13 CMS with a React + Inertia admin UI. Backend code lives in `app/`, routes in `routes/`, database migrations and seeders in `database/`, and tests in `tests/Feature`. Frontend code is under `resources/js/` and `resources/css/`, with pages in `resources/js/Pages`, shared UI in `resources/js/Components`, and layouts in `resources/js/Layouts`. Project notes and architecture docs live in `wiki/` and `docs/`, with module-specific pages such as `wiki/modules/vault.md` and `wiki/architecture/request-flow.md`.
 
 ## LLM Wiki & Knowledge Base Management
-A persistent, LLM-maintained knowledge base lives in the `wiki/` directory. This is the single source of truth for structural context.
+A persistent, LLM-maintained knowledge base lives in the `wiki/` directory. This is the single source of truth for architectural context and module guidelines.
 
 **CRITICAL INSTRUCTION FOR ALL AGENTS:** 
-You MUST proactively construct and update the `wiki/` whenever new information, database schemas, API integrations, or architectural changes emerge. Do not leave the system in an undocumented state.
+You **MUST proactively construct and update the `wiki/`** immediately whenever you introduce new features, database schemas, API integrations, or architectural changes. Do not leave the system in an undocumented state; knowledge MUST be persisted here across operational runs.
 
-To leverage the wiki automatically in future operations:
-1. Always read `wiki/index.md` at the start of complex requests to map out the current structure and available module documentation.
-2. Read `wiki/SCHEMA.md` for specific instructions on how to format, link, and structure updates.
-3. Keep the `wiki/log.md` appended as a history of your major architectural modifications.
+### Automatic Retrieval Protocol
+To effectively reference this knowledge in future runs and avoid redundant analysis:
+1. **Initialize**: Read `wiki/index.md` at the start of complex requests to map out the current structure and available documentation.
+2. **Navigate**: Use file tools to access detailed breakdowns under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/`.
+3. **Comply**: Read `wiki/SCHEMA.md` to understand formatting rules, update conventions, and query mechanics.
+4. **Log**: Update the `wiki/log.md` with a timestamped note after making documented adjustments.
 
 ## Build, Test, and Development Commands
 - `composer run dev`: starts the Laravel server, queue listener, log viewer, and Vite HMR together.

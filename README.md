@@ -10,7 +10,7 @@
 
 <p align="center">
   <strong>An AI-native Content Management System built for the age of agents.</strong><br>
-  Laravel 13 · MongoDB · React + Inertia.js · Multi-provider AI Hub · Markdown-for-Agents
+  Laravel 13 · MongoDB · React + Inertia.js · Multi-provider AI Hub · OpenRouter · Markdown-for-Agents
 </p>
 
 ---
@@ -19,7 +19,7 @@
 
 ---
 
-**Untitled CMS** is a production-ready, open-source CMS that treats AI as a first-class citizen — not an afterthought. Built on a modern monolithic SPA stack, it ships with a full-featured **Media Vault**, a multi-provider **AI Hub** (OpenAI, Gemini, Anthropic, and more), and native **Markdown-for-Agents** delivery so AI crawlers and coding assistants can consume your content directly.
+**Untitled CMS** is a production-ready, open-source CMS that treats AI as a first-class citizen — not an afterthought. Built on a modern monolithic SPA stack, it ships with a full-featured **Media Vault**, a multi-provider **AI Hub** (OpenRouter, OpenAI, Gemini, Anthropic, and more), and native **Markdown-for-Agents** delivery so AI crawlers and coding assistants can consume your content directly.
 
 ### Why Untitled CMS?
 
@@ -27,7 +27,7 @@
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | A CMS that works _with_ AI tools | `/llms.txt`, `/llms-full.txt`, `Accept: text/markdown` on every page, and YAML frontmatter for agents        |
 | Secure media management          | 7-stage upload pipeline: double-extension detection → MIME check → image sanitization → optional ClamAV scan |
-| Flexible AI integration          | Swap providers at runtime — OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama                       |
+| Flexible AI integration          | Swap providers at runtime — OpenRouter, OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama           |
 | Granular access control          | 34 permissions across 8 policy classes, cached RBAC, invite-only user flow                                   |
 | A developer-friendly stack       | Laravel 13 + React + TypeScript + Tailwind CSS + Shadcn UI, all in one repo                                  |
 | Easy self-hosting                | Interactive installer, Docker Compose, systemd + Nginx templates                                             |
@@ -42,14 +42,15 @@
 | **Pages**               | CKEditor 5 rich text · Draft/Published workflow · SEO meta fields · AI-generated meta · Dynamic public routing · Scheduled publishing                                                                   |
 | **Banners**             | Drag-and-drop reordering (`@dnd-kit`) · Active/inactive scheduling with `start_at / end_at`                                                                                                             |
 | **The Vault**           | Hierarchical media manager · 3-panel resizable layout · Secure 7-stage upload pipeline · Folder-level permissions · Full audit log · AI-generated alt text                                              |
-| **AI Hub**              | Multi-provider manager (OpenAI, Gemini, Anthropic, Groq, Mistral, Deepseek, Ollama) · Per-hub monthly usage tracking · Text generation · SEO meta generation · Vision-based alt text · Image generation |
+| **AI Hub**              | Multi-provider manager (OpenRouter, OpenAI, Gemini, Anthropic, Groq, Mistral, Deepseek, Ollama) · Per-hub monthly usage tracking · Text generation · SEO meta generation · Vision-based alt text · Image generation |
 | **Markdown for Agents** | Every public page responds with clean Markdown + YAML frontmatter when `Accept: text/markdown` is sent — ready for AI crawlers and coding assistants                                                    |
 | **`/llms.txt`**         | AI-discoverability standard (llmstxt.org) — index of all published pages for LLM ingestion. `/llms-full.txt` delivers full page content as plain Markdown                                               |
 | **Dashboard**           | Analytics cards + Recharts charts · Recent activity feed                                                                                                                                                |
 | **Activity Log**        | Comprehensive audit trail for all admin actions, filterable in the admin panel                                                                                                                          |
 | **Settings**            | Site-wide key/value settings store · Custom maintenance mode & error pages                                                                                                                              |
 | **Menus**               | Drag-and-drop navigation builder                                                                                                                                                                        |
-| **Social Login**        | OAuth via Google and GitHub                                                                                                                                                                             |
+| **Social Login**        | OAuth via Google and GitHub                                                                                                                                                                            |
+| **LLM Wiki**            | Persistent, agent-maintained knowledge base (`wiki/`) with automated retrieval protocols for AI development                                                                                             |
 
 ---
 
@@ -216,7 +217,7 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 | [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb)       | `^5.5`   | MongoDB ODM                        |
 | [laravel/sanctum](https://laravel.com/docs/sanctum)                         | `^4.0`   | Session & token authentication     |
 | [laravel/socialite](https://laravel.com/docs/socialite)                     | `^5.24`  | OAuth (Google, GitHub)             |
-| [laravel/ai](https://github.com/laravel/ai)                                 | `^0.2.1` | LLM provider abstraction           |
+| [laravel/ai](https://github.com/laravel/ai)                                 | `^0.5`   | LLM provider abstraction           |
 | [inertiajs/inertia-laravel](https://inertiajs.com/)                         | `^2.0`   | Server-side SPA bridge             |
 | [intervention/image](https://image.intervention.io/v3)                      | `^3.11`  | Image processing & sanitization    |
 | [league/html-to-markdown](https://github.com/thephpleague/html-to-markdown) | `^5.1`   | HTML → Markdown for AI delivery    |

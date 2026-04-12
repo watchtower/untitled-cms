@@ -130,19 +130,20 @@ Inertia form pattern: use `useForm()` from `@inertiajs/react` — handles loadin
 
 ## Project Wiki
 
-A persistent, LLM-maintained knowledge base lives in `wiki/` (relative to the project root). The wiki acts as the centralized memory for this repository.
+A persistent, LLM-maintained knowledge base lives in `wiki/` (relative to the project root). This serves as the single source of truth for architectural context and module guidelines.
 
-**CRITICAL INSTRUCTION FOR AGENTS:** You MUST proactively capture and update the `wiki/` whenever new features, architectural changes, database modifications, or API configurations are introduced. Do not let system knowledge decay in transient chat histories.
+**CRITICAL INSTRUCTION FOR ALL AGENTS:** 
+You **MUST proactively update the `wiki/`** immediately whenever you introduce new features, routing patterns, schemas, or architectural changes. Do not leave the system in an undocumented state; knowledge MUST be persisted here across operational runs.
 
-To automatically fetch and reference wiki content during future operational runs:
-1. Initialize by reading `wiki/index.md` via your file tool to traverse the master content catalog.
-2. Read `wiki/SCHEMA.md` for strict instructions on how to ingest sources, query, update, and lint the wiki structure.
-3. Access specific documents under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/` when performing localized tasks.
-
-Open the `wiki/` directory as an Obsidian vault for graph view and backlink navigation.
+### Automatic Retrieval Protocol
+To effectively reference this knowledge in future runs and avoid redundant analysis:
+1. **Initialize**: Read `wiki/index.md` at the start of complex requests to map out the current structure and available documentation.
+2. **Navigate**: Follow links in the index to specific breakdown files under `architecture/`, `database/`, `frontend/`, and `modules/`.
+3. **Comply**: Read `wiki/SCHEMA.md` to understand formatting rules, update conventions, and query mechanics.
+4. **Log**: Update `wiki/log.md` with a brief note after making documented adjustments.
 
 - `wiki/SCHEMA.md` — how to ingest sources, query, update, and lint the wiki
-- `wiki/index.md` — content catalog with links to all pages
+- `wiki/index.md` — master content catalog with links to all pages
 - `wiki/log.md` — append-only history of wiki operations
 
 Pages are organized under `architecture/`, `database/`, `frontend/`, and `modules/`. Use `[[folder/page]]` wiki-link syntax for cross-references.
