@@ -255,6 +255,12 @@ Want to completely change the look and feel of your admin panel in minutes? It's
 5. Replace the existing `@theme { ... }` block with your copied code.
 6. Run `npm run dev` and watch your entire CMS instantly transform!
 
+**Want to start your own project with our exact UI preset?**
+You can scaffold a brand new app using the same sleek `b2fA` preset with a single command:
+```bash
+npx shadcn@latest init --preset b2fA --template next
+```
+
 ---
 
 ## Architecture Overview
