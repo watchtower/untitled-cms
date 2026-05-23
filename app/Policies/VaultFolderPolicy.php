@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\User;
 use App\Models\VaultFolder;
 use App\Models\VaultFolderPermission;
+use Illuminate\Support\Collection;
 
 class VaultFolderPolicy
 {
@@ -15,24 +16,13 @@ class VaultFolderPolicy
 
     public function view(User $user, VaultFolder $folder): bool
     {
-        $hasPermission = VaultFolderPermission::where('folder_id', $folder->id)
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->orWhereIn('role_id', $user->roles->pluck('id'));
-            })
-            ->whereIn('permission', ['read', 'write', 'delete'])
-            ->exists();
+        $permissions = $this->loadPermissions($folder);
 
-        if (! $hasPermission) {
-            $folderHasPermissions = VaultFolderPermission::where('folder_id', $folder->id)->exists();
-            if ($folderHasPermissions) {
-                return false;
-            }
-
+        if ($permissions->isEmpty()) {
             return $user->hasPermission('media.view');
         }
 
-        return $hasPermission;
+        return $this->userMatchesPermission($user, $permissions, ['read', 'write', 'delete']);
     }
 
     public function create(User $user, ?VaultFolder $parent = null): bool
@@ -46,45 +36,51 @@ class VaultFolderPolicy
 
     public function update(User $user, VaultFolder $folder): bool
     {
-        $hasPermission = VaultFolderPermission::where('folder_id', $folder->id)
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->orWhereIn('role_id', $user->roles->pluck('id'));
-            })
-            ->whereIn('permission', ['write', 'delete'])
-            ->exists();
+        $permissions = $this->loadPermissions($folder);
 
-        if (! $hasPermission) {
-            $folderHasPermissions = VaultFolderPermission::where('folder_id', $folder->id)->exists();
-            if ($folderHasPermissions) {
-                return false;
-            }
-
+        if ($permissions->isEmpty()) {
             return $user->hasPermission('media.edit');
         }
 
-        return $hasPermission;
+        return $this->userMatchesPermission($user, $permissions, ['write', 'delete']);
     }
 
     public function delete(User $user, VaultFolder $folder): bool
     {
-        $hasPermission = VaultFolderPermission::where('folder_id', $folder->id)
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->orWhereIn('role_id', $user->roles->pluck('id'));
-            })
-            ->where('permission', 'delete')
-            ->exists();
+        $permissions = $this->loadPermissions($folder);
 
-        if (! $hasPermission) {
-            $folderHasPermissions = VaultFolderPermission::where('folder_id', $folder->id)->exists();
-            if ($folderHasPermissions) {
-                return false;
-            }
-
+        if ($permissions->isEmpty()) {
             return $user->hasPermission('media.delete');
         }
 
-        return $hasPermission;
+        return $this->userMatchesPermission($user, $permissions, ['delete']);
+    }
+
+    /**
+     * Return the folder's permissions collection.
+     * Uses the already-loaded relation (eager-loaded by VaultFolderController::list)
+     * to avoid an extra query per folder in list views.
+     */
+    private function loadPermissions(VaultFolder $folder): Collection
+    {
+        if ($folder->relationLoaded('permissions')) {
+            return $folder->permissions;
+        }
+
+        return VaultFolderPermission::where('folder_id', $folder->id)->get();
+    }
+
+    /**
+     * Check whether the user (by ID or any of their role IDs) matches at least
+     * one permission entry with the required permission type.
+     */
+    private function userMatchesPermission(User $user, Collection $permissions, array $allowed): bool
+    {
+        $roleIds = $user->roles->pluck('id')->map(fn ($id) => (string) $id);
+
+        return $permissions->contains(function (VaultFolderPermission $p) use ($user, $roleIds, $allowed) {
+            return in_array($p->permission, $allowed)
+                && ((string) $p->user_id === (string) $user->id || $roleIds->contains((string) $p->role_id));
+        });
     }
 }

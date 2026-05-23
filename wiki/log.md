@@ -4,6 +4,26 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-05-23] update | Media Vault Security Gates & Scaling
+Improved security, query performance, and scaling across the Media Vault:
+- Added sibling unique name checks on folder create, rename, and move to prevent path/slug collisions.
+- Added destination folder authorization checks to prevent folder move privilege bypasses.
+- Added strict fail-closed toggle options on ClamAV scanner timeouts or daemon connectivity outages.
+- Eager-loaded the folder relationship in file listings to resolve N+1 database queries.
+- Optimised the Artisan purge command via chunking to maintain a low and constant memory footprint.
+- Added client memory protection in upload dialog, bypassing pre-upload hashing on files larger than 10MB.
+- Updated [[modules/vault]] to document the dynamic scanning stages and fail-closed options.
+
+## [2026-04-13] feat | Media Vault Hardening & Optimizations
+Implemented [[docs/vault-improvements-plan.md]].
+- Phase 1: Cascade slugs and physical relocation for folder rename/move in `VaultService`.
+- Phase 2: Added `PruneVaultSandbox` job and `vault:purge` Artisan command.
+- Phase 3: Added CDN-friendly `/media/{uuid}` route and RFC 7232 headers for caching.
+- Phase 4: Added batch-restore, empty-trash, and folder force-delete endpoints.
+- Phase 5: Implemented client-side SHA-256 duplicate detection with `VaultUploadDialog` warnings.
+- Phase 6: Created `useVaultPicker` React hook for global media selection.
+
+
 ## [2026-04-12] feat | OpenRouter & AI Hub Security Refactor
 Integrated OpenRouter as a supported AI provider for text generation and vision. 
 Implemented `clear_key` explicit API key revocation UI within the AI Hub dashboard.

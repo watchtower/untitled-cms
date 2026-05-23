@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/Components/ui/dialog';
 import { Button } from '@/Components/ui/button';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, AlertTriangle, Loader2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import UploadPipelineTracker, { PipelineStage } from './UploadPipelineTracker';
@@ -16,12 +16,15 @@ interface VaultUploadDialogProps {
 }
 
 interface FileUploadState {
-    id: string; // unique ID for key
+    id: string;
     file: File;
     progress: number;
-    status: 'idle' | 'uploading' | 'processing' | 'completed' | 'error';
+    status: 'idle' | 'hashing' | 'checking' | 'ready' | 'uploading' | 'processing' | 'completed' | 'error';
     errorStage?: PipelineStage | null;
     errorMessage?: string | null;
+    hash?: string;
+    duplicateInfo?: any;
+    forceUpload?: boolean;
 }
 
 export default function VaultUploadDialog({
@@ -59,19 +62,52 @@ export default function VaultUploadDialog({
         setUploads(prev => prev.filter(u => u.status !== 'completed'));
     };
 
+    const hashFile = async (file: File): Promise<string> => {
+        const buffer = await file.arrayBuffer();
+        const digest = await crypto.subtle.digest('SHA-256', buffer);
+        return Array.from(new Uint8Array(digest))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+    };
+
+    const runHashAndCheck = useCallback(async (upload: FileUploadState) => {
+        updateUploadState(upload.id, { status: 'hashing' });
+        try {
+            const hash = await hashFile(upload.file);
+            updateUploadState(upload.id, { status: 'checking' });
+
+            const dupResponse = await axios.get(route('admin.vault.check-duplicate'), {
+                params: { hash }
+            });
+
+            if (dupResponse.data.isDuplicate && !upload.forceUpload) {
+                updateUploadState(upload.id, {
+                    status: 'error',
+                    errorMessage: 'Duplicate detected',
+                    duplicateInfo: dupResponse.data.file,
+                    hash
+                });
+            } else {
+                updateUploadState(upload.id, { status: 'ready', hash });
+            }
+        } catch (error) {
+            updateUploadState(upload.id, { status: 'error', errorMessage: 'Hash calculation failed' });
+        }
+    }, [updateUploadState]);
+
     const processUpload = useCallback(async (upload: FileUploadState) => {
         setIsUploading(true);
 
-        // Update status to uploading
-        updateUploadState(upload.id, { status: 'uploading', progress: 0 });
-
-        const formData = new FormData();
-        formData.append('files[]', upload.file);
-        if (currentFolderId) {
-            formData.append('folder_id', currentFolderId);
-        }
-
         try {
+            // Actual Upload
+            updateUploadState(upload.id, { status: 'uploading', progress: 0 });
+
+            const formData = new FormData();
+            formData.append('files[]', upload.file);
+            if (currentFolderId) {
+                formData.append('folder_id', currentFolderId);
+            }
+
             const response = await axios.post(route('admin.vault.upload'), formData, {
                 onUploadProgress: (progressEvent) => {
                     const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
@@ -87,7 +123,6 @@ export default function VaultUploadDialog({
 
             const { uploaded, errors } = response.data;
             const hasError = errors && errors.some((e: any) => e.filename === upload.file.name);
-            const isSuccess = uploaded && uploaded.some((u: any) => u.original_name === upload.file.name);
 
             if (hasError) {
                 const errorData = errors.find((e: any) => e.filename === upload.file.name);
@@ -132,13 +167,33 @@ export default function VaultUploadDialog({
         }
     }, [currentFolderId, onUploadComplete, updateUploadState]);
 
-    // Effect to process queue
+    // Effect to handle hashing idle files
     useEffect(() => {
-        const nextUpload = uploads.find(u => u.status === 'idle');
+        const isHashing = uploads.some(u => u.status === 'hashing' || u.status === 'checking');
+        if (isHashing) return;
+
+        const nextToHash = uploads.find(u => u.status === 'idle');
+        if (nextToHash) {
+            // Skip client-side hashing for files larger than 10MB to protect client memory
+            if (nextToHash.file.size > 10 * 1024 * 1024) {
+                updateUploadState(nextToHash.id, { status: 'ready' });
+            } else {
+                runHashAndCheck(nextToHash);
+            }
+        }
+    }, [uploads, runHashAndCheck, updateUploadState]);
+
+    // Effect to process upload queue
+    useEffect(() => {
+        const nextUpload = uploads.find(u => u.status === 'ready');
         if (nextUpload && !isUploading) {
             processUpload(nextUpload);
         }
     }, [uploads, isUploading, processUpload]);
+
+    const handleForceUpload = (id: string) => {
+        setUploads(prev => prev.map(u => u.id === id ? { ...u, status: 'ready', forceUpload: true } : u));
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -178,8 +233,35 @@ export default function VaultUploadDialog({
                                     uploadProgress={upload.progress}
                                     status={upload.status}
                                     errorStage={upload.errorStage}
-                                    errorMessage={upload.errorMessage}
+                                    errorMessage={upload.errorMessage === 'Duplicate detected' ? null : upload.errorMessage}
                                 />
+
+                                {upload.errorMessage === 'Duplicate detected' && (upload as any).duplicateInfo && (
+                                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900 shadow-sm animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex items-start gap-3">
+                                            <div className="bg-amber-100 p-2 rounded-full mt-0.5">
+                                                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="font-semibold">Duplicate Detected</p>
+                                                <p className="text-amber-800/80 mt-1">
+                                                    This file exactly matches <strong>{(upload as any).duplicateInfo.original_name}</strong>, 
+                                                    uploaded on {new Date((upload as any).duplicateInfo.created_at).toLocaleDateString()} 
+                                                    {(upload as any).duplicateInfo.folder ? ` in ${(upload as any).duplicateInfo.folder.name}` : ''}.
+                                                </p>
+                                                <div className="mt-3 flex gap-2">
+                                                    <Button size="sm" variant="outline" className="h-8 border-amber-200 hover:bg-amber-100 hover:text-amber-900" onClick={() => removeUpload(upload.id)}>
+                                                        Skip
+                                                    </Button>
+                                                    <Button size="sm" className="h-8 bg-amber-600 hover:bg-amber-700 text-white border-0" onClick={() => handleForceUpload(upload.id)}>
+                                                        Upload Anyway
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {upload.status !== 'uploading' && upload.status !== 'processing' && (
                                     <button
                                         onClick={() => removeUpload(upload.id)}

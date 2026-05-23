@@ -349,7 +349,7 @@ class AiService
      * Generate an image from a text prompt.
      * Routes to the appropriate provider's image generation API based on the active AI Hub.
      *
-     * Supported providers: openai (DALL-E 3), stability (Stable Diffusion SDXL), gemini (Imagen 3)
+     * Supported providers: openai (DALL-E 3), stability (Stable Diffusion SDXL), gemini (Imagen 3), openrouter (image-capable models)
      */
     public function generateImage(string $prompt, string $size = '1024x1024'): string
     {
@@ -365,9 +365,10 @@ class AiService
             $provider === 'openai' => $this->generateImageOpenAi($activeHub, $prompt, $size),
             $provider === 'stability' => $this->generateImageStability($activeHub, $prompt),
             $provider === 'gemini' => $this->generateImageGemini($activeHub, $prompt),
+            $provider === 'openrouter' => $this->generateImageOpenRouter($activeHub, $prompt),
             default => throw new \Exception(
                 "Your active AI Hub \"{$activeHub->name}\" does not support image generation. ".
-                'Please activate an OpenAI, Gemini, or Stability AI hub to use this feature.'
+                'Please activate an OpenAI, Gemini, Stability AI, or OpenRouter hub to use this feature.'
             ),
         };
     }
@@ -499,6 +500,43 @@ class AiService
         }
 
         return 'data:image/png;base64,'.$base64;
+    }
+
+    /**
+     * OpenRouter image generation via the chat completions API with modalities.
+     * Supports any model listed at https://openrouter.ai/collections/image-models
+     * Default: google/gemini-2.5-flash-image
+     */
+    private function generateImageOpenRouter(AiHub $hub, string $prompt): string
+    {
+        $model = $hub->image_model ?: 'google/gemini-2.5-flash-image';
+
+        $response = Http::withToken($hub->api_key)
+            ->withHeaders(['HTTP-Referer' => config('app.url')])
+            ->post('https://openrouter.ai/api/v1/chat/completions', [
+                'model' => $model,
+                'modalities' => ['image', 'text'],
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+            ]);
+
+        if ($response->failed()) {
+            throw new \Exception('OpenRouter image generation failed: '.$response->json('error.message', 'Unknown error'));
+        }
+
+        $hub->increment('monthly_usage');
+
+        // Images are returned as objects: {"type":"image_url","image_url":{"url":"data:image/png;base64,..."}}
+        $images = $response->json('choices.0.message.images', []);
+        foreach ($images as $image) {
+            $url = $image['image_url']['url'] ?? null;
+            if ($url) {
+                return $url;
+            }
+        }
+
+        throw new \Exception("OpenRouter ({$model}) returned no image in the response. Ensure the model supports image output.");
     }
 
     private function buildSystemPrompt(?string $pageUrl): string

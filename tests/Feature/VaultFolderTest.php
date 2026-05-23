@@ -97,4 +97,81 @@ class VaultFolderTest extends TestCase
         $response->assertStatus(200);
         $this->assertSoftDeleted($folder);
     }
+
+    public function test_cannot_create_folder_with_duplicate_name_under_same_parent(): void
+    {
+        $user = $this->createAdminUser();
+
+        VaultFolder::create([
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'Duplicate Name',
+            'parent_id' => null,
+            'owner_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('admin.vault.folders.store'), [
+            'name' => 'Duplicate Name',
+            'parent_id' => null,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson(['error' => 'A folder with this name already exists in this directory.']);
+    }
+
+    public function test_cannot_rename_folder_to_duplicate_name_under_same_parent(): void
+    {
+        $user = $this->createAdminUser();
+
+        VaultFolder::create([
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'Duplicate Name',
+            'parent_id' => null,
+            'owner_id' => $user->id,
+        ]);
+
+        $folder = VaultFolder::create([
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'Unique Name',
+            'parent_id' => null,
+            'owner_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->patchJson(route('admin.vault.folders.rename', $folder->id), [
+            'name' => 'Duplicate Name',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson(['error' => 'A folder with this name already exists in this directory.']);
+    }
+
+    public function test_cannot_move_folder_to_directory_with_colliding_name(): void
+    {
+        $user = $this->createAdminUser();
+
+        $destination = VaultFolder::create([
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'Destination',
+            'owner_id' => $user->id,
+        ]);
+
+        VaultFolder::create([
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'Collide',
+            'parent_id' => $destination->id,
+            'owner_id' => $user->id,
+        ]);
+
+        $folderToMove = VaultFolder::create([
+            'uuid' => Str::uuid()->toString(),
+            'name' => 'Collide',
+            'owner_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->patchJson(route('admin.vault.folders.move', $folderToMove->id), [
+            'parent_id' => $destination->id,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson(['error' => 'A folder with the same name already exists in the destination directory.']);
+    }
 }

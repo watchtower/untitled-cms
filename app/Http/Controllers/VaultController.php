@@ -73,16 +73,19 @@ class VaultController extends Controller
         $uploadedFiles = [];
         $errors = [];
 
+        $targetFolder = null;
         if ($request->folder_id) {
-            $folder = VaultFolder::find($request->folder_id);
-            if (Gate::denies('update', $folder)) {
+            $targetFolder = VaultFolder::findOrFail($request->folder_id);
+            if (Gate::denies('update', $targetFolder)) {
                 abort(403, 'Permission denied for folder');
             }
         }
 
+        $isPublic = $request->boolean('is_public', true);
+
         foreach ($request->file('files') as $file) {
             try {
-                $uploadedFiles[] = $this->vaultService->upload($file, $request->folder_id);
+                $uploadedFiles[] = $this->vaultService->upload($file, $request->folder_id, $targetFolder, $isPublic);
             } catch (\Exception $e) {
                 $errors[] = [
                     'filename' => $file->getClientOriginalName(),
@@ -138,37 +141,132 @@ class VaultController extends Controller
 
         $path = Storage::disk($diskName)->path($storagePath);
 
-        if (! file_exists($path)) {
-            // Fallback to original; respect .trashed suffix if the file is soft-deleted
-            if ($isOptimizedRequest) {
-                $fallback = $file->storage_path.($file->trashed() ? '.trashed' : '');
-                $path = Storage::disk($diskName)->path($fallback);
-                $isOptimizedRequest = false;
-                if (! file_exists($path)) {
-                    abort(404);
-                }
-            } else {
-                abort(404);
-            }
+        $etag = md5($file->updated_at.$file->size_bytes);
+        $lastModified = $file->updated_at->toRfc7231String();
+
+        if (request()->header('If-None-Match') === "\"{$etag}\"") {
+            return response('', 304);
         }
 
-        $contentType = $isOptimizedRequest ? 'image/webp' : $file->mime_type;
-        $filename = $isOptimizedRequest
-            ? pathinfo($file->original_name, PATHINFO_FILENAME).'.webp'
-            : $file->original_name;
+        $contentType = ($file->is_optimized && ! $file->use_original && str_ends_with($storagePath, '.webp'))
+            ? 'image/webp'
+            : $file->mime_type;
+
+        $filename = $file->original_name;
 
         return response()->file($path, [
+            'ETag' => "\"{$etag}\"",
+            'Last-Modified' => $lastModified,
+            'Cache-Control' => $file->is_public ? 'public, max-age=31536000' : 'private, no-store',
             'Content-Type' => $contentType,
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
+    }
 
-        /*
-        // For X-Accel-Redirect (Production optimization)
-        return response()->make('', 200, [
-            'Content-Type' => $file->mime_type,
-            'X-Accel-Redirect' => '/internal_vault/' . basename($file->storage_path),
+    public function servePublic(string $uuid, string $extension = '')
+    {
+        // $extension is the segment after the dot in /media/{uuid}.{extension}.
+        // It is intentionally ignored — the file is resolved by UUID alone.
+        // Its only purpose is to give browsers and CDNs a proper file extension in the URL.
+        $file = VaultFile::where('uuid', $uuid)->where('is_public', true)->firstOrFail();
+
+        $diskName = 'public';
+        $storagePath = $file->resolveServingPath();
+
+        $path = Storage::disk($diskName)->path($storagePath);
+
+        if (! file_exists($path)) {
+            abort(404);
+        }
+
+        $etag = md5($file->updated_at.$file->size_bytes);
+        $lastModified = $file->updated_at->toRfc7231String();
+
+        // Fix #6: compare If-Modified-Since as a parsed HTTP date rather than a string.
+        // CDNs may normalise the date format slightly (e.g. extra whitespace, different
+        // day-name capitalisation), so string equality produces false mismatches.
+        $ifModifiedSince = request()->header('If-Modified-Since');
+        $notModified = request()->header('If-None-Match') === "\"{$etag}\""
+            || ($ifModifiedSince && $this->parseHttpDate($ifModifiedSince) >= $file->updated_at->timestamp);
+
+        if ($notModified) {
+            return response('', 304);
+        }
+
+        $contentType = ($file->is_optimized && str_ends_with($storagePath, '.webp')) ? 'image/webp' : $file->mime_type;
+
+        return response()->file($path, [
+            'ETag' => "\"{$etag}\"",
+            'Last-Modified' => $lastModified,
+            'Cache-Control' => 'public, max-age=31536000',
+            'Content-Type' => $contentType,
         ]);
-        */
+    }
+
+    public function checkDuplicate(Request $request)
+    {
+        $this->authorizeGlobalMediaView();
+
+        $request->validate(['hash' => 'required|string']);
+
+        $file = VaultFile::where('hash_sha256', $request->hash)
+            ->whereNull('deleted_at')
+            ->with('folder')
+            ->first();
+
+        return response()->json([
+            'isDuplicate' => (bool) $file,
+            'file' => $file ? $file->only(['uuid', 'original_name', 'created_at', 'folder']) : null,
+        ]);
+    }
+
+    public function batchRestore(Request $request)
+    {
+        $request->validate([
+            'uuids' => 'required|array',
+            'uuids.*' => 'string|exists:vault_files,uuid',
+        ]);
+
+        $files = VaultFile::onlyTrashed()->whereIn('uuid', $request->uuids)->get();
+        $restoredCount = 0;
+
+        foreach ($files as $file) {
+            if (Gate::allows('delete', $file)) {
+                $this->vaultService->restoreFile($file);
+                $restoredCount++;
+            }
+        }
+
+        return response()->json([
+            'message' => "Successfully restored {$restoredCount} item(s).",
+            'restored_count' => $restoredCount,
+        ]);
+    }
+
+    public function emptyTrash(Request $request)
+    {
+        $user = auth()->user();
+
+        $query = VaultFile::onlyTrashed();
+
+        // Unless they have global delete permission, only empty THEIR trash
+        if (! $user->hasPermission('media.delete')) {
+            $query->where('uploaded_by', $user->id);
+        }
+
+        $deletedCount = 0;
+
+        $query->chunk(100, function ($files) use (&$deletedCount) {
+            foreach ($files as $file) {
+                $this->vaultService->purgeFile($file);
+                $deletedCount++;
+            }
+        });
+
+        return response()->json([
+            'message' => "Trash emptied. {$deletedCount} items permanently deleted.",
+            'deleted_count' => $deletedCount,
+        ]);
     }
 
     public function rename(Request $request, string $uuid)
@@ -379,7 +477,7 @@ class VaultController extends Controller
 
     private function buildListQuery(Request $request): Builder
     {
-        $query = VaultFile::query();
+        $query = VaultFile::with('folder');
 
         $folderId = $request->query('folder_id');
         if ($folderId) {
@@ -403,5 +501,17 @@ class VaultController extends Controller
         }
 
         return $query->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Parse an HTTP-date header value (RFC 7231 / RFC 850 / asctime) into a Unix timestamp.
+     * Returns 0 if the value cannot be parsed, which causes the 304 condition to be false
+     * (safe fallback — serves the full response rather than a wrong 304).
+     */
+    private function parseHttpDate(string $value): int
+    {
+        $ts = strtotime($value);
+
+        return $ts !== false ? $ts : 0;
     }
 }

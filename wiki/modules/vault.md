@@ -17,10 +17,13 @@ the upload fails with an appropriate error.
 |---|-----------|--------------|
 | 1 | `DetectDoubleExtension` | Rejects files like `image.php.jpg` — disguised executables |
 | 2 | `ValidateMimeType` | Checks MIME type against allowlist in `config/vault.php` |
+| * | `SandboxedScan` | Optional ClamAV antivirus daemon scanning (TCP stream INSTREAM mode; dynamically injected at pos 2 when enabled) |
 | 3 | `SanitizeImage` | Strips EXIF/metadata from images via Intervention Image |
 | 4 | `ModerationCheck` | Optional AI content moderation check |
 | 5 | `GenerateUuid` | Assigns a UUID filename to prevent path traversal / collisions |
 | 6 | `StoreMetadata` | Persists file record to MongoDB `vault_files` collection |
+
+*Note: `SandboxedScan` connects to a clamd daemon via TCP. By default, it fails open, but can be configured to fail closed using the `CLAMAV_FAIL_CLOSED` setting, blocking uploads when the scanner is offline.*
 
 ## Configuration (`config/vault.php`)
 

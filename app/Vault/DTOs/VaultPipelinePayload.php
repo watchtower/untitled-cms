@@ -17,11 +17,16 @@ class VaultPipelinePayload
 
     public ?string $moderation_reason = null;
 
+    public ?\App\Models\VaultFolder $folder = null;
+
     public ?string $validation_status = null;
 
-    public function __construct(UploadedFile $file, ?string $folder_id = null)
+    public bool $is_public = true;
+
+    public function __construct(UploadedFile $file, ?string $folder_id = null, ?\App\Models\VaultFolder $folder = null)
     {
         $this->file = $file;
         $this->folder_id = $folder_id;
+        $this->folder = $folder;
     }
 }

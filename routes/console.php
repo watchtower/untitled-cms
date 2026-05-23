@@ -9,4 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('vault:purge --days=30')->daily();
+Schedule::job(new \App\Jobs\PruneVaultSandbox)->hourly();
 Schedule::command('vault:generate-alt-text')->weekly();

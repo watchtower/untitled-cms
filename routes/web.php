@@ -25,6 +25,23 @@ use App\Http\Controllers\VaultController;
 use App\Http\Controllers\VaultFolderController;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Public Media Serving Endpoint
+ * Serves optimized/original vault files with RFC 7232 caching headers.
+ * Throttled to 1000 requests per minute to accommodate high-density image pages while preventing scraping/DoS.
+ * Monitoring recommended if deployed behind a gateway or CDN.
+ */
+// Primary route — UUID with extension e.g. /media/bb440a63-....jpg
+// The extension is cosmetic (browsers and CDNs use it for type hints and cache keying);
+// the controller resolves the file by UUID only.
+Route::get('/media/{uuid}.{extension}', [VaultController::class, 'servePublic'])
+    ->middleware('throttle:1000,1')
+    ->name('vault.public');
+
+// Fallback for any legacy URLs already stored without an extension.
+Route::get('/media/{uuid}', [VaultController::class, 'servePublic'])
+    ->middleware('throttle:1000,1');
+
 // Non-admin profile — auth only, no admin middleware
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -117,11 +134,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
         Route::get('/', [VaultController::class, 'adminPage'])->name('index');
         Route::get('/files', [VaultController::class, 'list'])->name('files.list');
         Route::get('/trash', [VaultController::class, 'trash'])->name('trash.list');
+        Route::delete('/trash', [VaultController::class, 'emptyTrash'])->middleware('throttle:5,1')->name('trash.empty');
         Route::post('/upload', [VaultController::class, 'upload'])->name('upload');
         Route::post('/save-ai-image', [VaultController::class, 'saveAiImage'])->name('save-ai-image');
+        Route::get('/check-duplicate', [VaultController::class, 'checkDuplicate'])->middleware('throttle:120,1')->name('check-duplicate');
         Route::get('/file/{uuid}', [VaultController::class, 'serve'])->name('file.serve');
         Route::post('/files/batch-move', [VaultController::class, 'batchMove'])->name('files.batch_move');
         Route::post('/files/batch-delete', [VaultController::class, 'batchDelete'])->name('files.batch_delete');
+        Route::post('/files/batch-restore', [VaultController::class, 'batchRestore'])->middleware('throttle:30,1')->name('files.batch_restore');
         Route::post('/generate-alt-text', [VaultController::class, 'generateMissingAltText'])->name('generate-alt-text');
         Route::delete('/file/{uuid}', [VaultController::class, 'destroy'])->name('file.destroy');
         Route::post('/file/{uuid}/restore', [VaultController::class, 'restore'])->name('file.restore');
@@ -134,7 +154,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
         Route::get('/folders', [VaultFolderController::class, 'list'])->name('folders.list');
         Route::post('/folders', [VaultFolderController::class, 'store'])->name('folders.store');
         Route::patch('/folders/{id}/rename', [VaultFolderController::class, 'rename'])->name('folders.rename');
+        Route::patch('/folders/{id}/move', [VaultFolderController::class, 'move'])->name('folders.move');
         Route::post('/folders/{id}/restore', [VaultFolderController::class, 'restore'])->name('folders.restore');
+        Route::delete('/folders/{id}/force', [VaultFolderController::class, 'forceDestroy'])->name('folders.force_destroy');
         Route::delete('/folders/{id}', [VaultFolderController::class, 'destroy'])->name('folders.destroy');
     });
 });

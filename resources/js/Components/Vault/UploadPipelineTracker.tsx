@@ -23,7 +23,7 @@ export const ALL_STAGES: PipelineStage[] = [
 interface UploadPipelineTrackerProps {
     file: File;
     uploadProgress: number; // 0-100
-    status: 'idle' | 'uploading' | 'processing' | 'completed' | 'error';
+    status: 'idle' | 'hashing' | 'checking' | 'ready' | 'uploading' | 'processing' | 'completed' | 'error';
     errorStage?: PipelineStage | null;
     errorMessage?: string | null;
 }
@@ -94,6 +94,9 @@ export default function UploadPipelineTracker({
 
                 <div className="text-xs font-medium">
                     {status === 'idle' && 'Waiting...'}
+                    {status === 'hashing' && 'Hashing...'}
+                    {status === 'checking' && 'Checking Duplicate...'}
+                    {status === 'ready' && 'Ready to Upload'}
                     {status === 'uploading' && `${uploadProgress}% Uploading`}
                     {status === 'processing' && 'Processing...'}
                     {status === 'completed' && <span className="text-green-600">Completed</span>}
@@ -126,9 +129,9 @@ export default function UploadPipelineTracker({
                                         !isPast && !isCurrent && "border-muted text-muted-foreground"
                                     )}>
                                         {isCompleted && <Check className="w-3 h-3" />}
-                                        {isCurrent && !isError && <Loader2 className="w-3 h-3 animate-spin" />}
+                                        {(isCurrent || status === 'hashing' || status === 'checking') && !isError && <Loader2 className="w-3 h-3 animate-spin" />}
                                         {isError && <X className="w-3 h-3" />}
-                                        {!isPast && !isCurrent && <Circle className="w-2 h-2 fill-muted-foreground/20" />}
+                                        {!isPast && !isCurrent && status !== 'hashing' && status !== 'checking' && <Circle className="w-2 h-2 fill-muted-foreground/20" />}
                                     </div>
                                     <span className={cn(
                                         "text-[10px] font-medium max-w-[60px] text-center leading-tight transition-colors",

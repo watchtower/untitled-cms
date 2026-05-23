@@ -17,7 +17,7 @@ class StoreMetadata
         $file = $payload->file;
         $uuid = $payload->uuid;
 
-        $path = $this->storeToDisk($file, $uuid);
+        $path = $this->storeToDisk($file, $uuid, $payload);
         $vaultFile = $this->createVaultFileRecord($file, $uuid, $path, $payload);
         $this->processImageDimensions($file, $path, $vaultFile);
 
@@ -26,15 +26,21 @@ class StoreMetadata
         return $next($payload);
     }
 
-    private function storeToDisk(UploadedFile $file, string $uuid): string
+    private function storeToDisk(UploadedFile $file, string $uuid, VaultPipelinePayload $payload): string
     {
         $extension = $file->extension() ?: $file->getClientOriginalExtension();
         $storageFilename = $uuid.'.'.$extension;
+        $disk = $payload->is_public ? 'public' : 'vault';
 
-        $path = $file->storeAs('vault', $storageFilename, 'public');
+        $folderPath = '';
+        if ($payload->folder) {
+            $folderPath = '/'.ltrim($payload->folder->path_slug, '/');
+        }
+
+        $path = $file->storeAs('vault'.$folderPath, $storageFilename, $disk);
 
         if (! $path) {
-            throw new \Exception('Failed to store file on public disk.');
+            throw new \Exception("Failed to store file on $disk disk.");
         }
 
         return $path;
@@ -42,7 +48,8 @@ class StoreMetadata
 
     private function createVaultFileRecord(UploadedFile $file, string $uuid, string $path, VaultPipelinePayload $payload): VaultFile
     {
-        $hash = hash_file('sha256', Storage::disk('public')->path($path));
+        $disk = $payload->is_public ? 'public' : 'vault';
+        $hash = hash_file('sha256', Storage::disk($disk)->path($path));
 
         return VaultFile::create([
             'uuid' => $uuid,
@@ -54,7 +61,7 @@ class StoreMetadata
             'size_bytes' => $file->getSize(),
             'hash_sha256' => $hash,
             'uploaded_by' => Auth::id(),
-            'is_public' => true,
+            'is_public' => $payload->is_public,
             'validation_status' => $payload->validation_status ?? 'safe',
             'moderation_reason' => $payload->moderation_reason ?? null,
             'alt_text' => strip_tags($file->getClientOriginalName()), // Default
@@ -67,7 +74,8 @@ class StoreMetadata
             return;
         }
 
-        $fullPath = Storage::disk('public')->path($path);
+        $disk = $vaultFile->is_public ? 'public' : 'vault';
+        $fullPath = Storage::disk($disk)->path($path);
 
         try {
             if ($dimensions = @getimagesize($fullPath)) {
@@ -77,7 +85,7 @@ class StoreMetadata
                 ]);
             }
         } catch (\Exception $e) {
-            // Ignore if getimagesize fails (e.g., SVG or corrupted)
+            // Ignore if getimagesize fails
         }
     }
 }

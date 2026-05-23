@@ -24,9 +24,9 @@ use Illuminate\Support\Str;
 
 class VaultService
 {
-    public function upload(UploadedFile $file, ?string $folderId = null): VaultFile
+    public function upload(UploadedFile $file, ?string $folderId = null, ?VaultFolder $targetFolder = null, bool $isPublic = true): VaultFile
     {
-        $this->ensureFolderExists($folderId);
+        $folder = $targetFolder ?? $this->ensureFolderExists($folderId);
 
         $pipes = [
             DetectDoubleExtension::class,
@@ -41,8 +41,11 @@ class VaultService
             array_splice($pipes, 2, 0, SandboxedScan::class);
         }
 
+        $payload = new VaultPipelinePayload($file, $folderId, $folder);
+        $payload->is_public = $isPublic;
+
         return app(Pipeline::class)
-            ->send(new VaultPipelinePayload($file, $folderId))
+            ->send($payload)
             ->through($pipes)
             ->then(function (VaultPipelinePayload $payload) {
                 $file = $payload->created_file;
@@ -56,11 +59,19 @@ class VaultService
             });
     }
 
-    private function ensureFolderExists(?string $folderId): void
+    private function ensureFolderExists(?string $folderId): ?VaultFolder
     {
-        if ($folderId && ! VaultFolder::where('id', $folderId)->exists()) {
+        if (! $folderId) {
+            return null;
+        }
+
+        $folder = VaultFolder::find($folderId);
+
+        if (! $folder) {
             throw new \InvalidArgumentException('Folder not found.');
         }
+
+        return $folder;
     }
 
     public function createFolder(string $name, ?string $parentId, $ownerId): VaultFolder
@@ -165,11 +176,137 @@ class VaultService
 
     public function renameFolder(VaultFolder $folder, string $newName): void
     {
-        $oldValues = ['name' => $folder->name];
-        $folder->update(['name' => $newName]);
-        // Note: path_slug regeneration for children would be needed for a full implementation
+        $oldPathSlug = $folder->path_slug;
+        $oldValues = ['name' => $folder->name, 'path_slug' => $oldPathSlug];
 
-        $this->audit('folder.rename', $folder, $oldValues, ['name' => $newName]);
+        $folder->name = $newName;
+        $folder->path_slug = $this->generatePathSlug($newName, $folder->parent_id);
+        $folder->save();
+
+        $this->cascadeFolderUpdate($folder, $oldPathSlug);
+
+        $this->audit('folder.rename', $folder, $oldValues, ['name' => $newName, 'path_slug' => $folder->path_slug]);
+    }
+
+    public function moveFolder(VaultFolder $folder, ?string $parentId): void
+    {
+        $oldPathSlug = $folder->path_slug;
+        $oldValues = ['parent_id' => $folder->parent_id, 'path_slug' => $oldPathSlug];
+
+        // Block if moving into self or child
+        if ($parentId) {
+            $target = VaultFolder::findOrFail($parentId);
+            if ($target->id === $folder->id || str_starts_with($target->path_slug, $folder->path_slug.'/')) {
+                throw new \InvalidArgumentException('Cannot move a folder into itself or its children.');
+            }
+        }
+
+        $folder->parent_id = $parentId;
+        $folder->path_slug = $this->generatePathSlug($folder->name, $parentId);
+        $folder->save();
+
+        $this->cascadeFolderUpdate($folder, $oldPathSlug);
+
+        $this->audit('folder.move', $folder, $oldValues, ['parent_id' => $parentId, 'path_slug' => $folder->path_slug]);
+    }
+
+    protected function cascadeFolderUpdate(VaultFolder $folder, ?string $oldPathSlug): void
+    {
+        if (empty($oldPathSlug)) {
+            return;
+        }
+
+        // 1. Update children path_slugs
+        VaultFolder::where('path_slug', 'like', $oldPathSlug.'/%')->chunk(100, function ($children) use ($oldPathSlug, $folder) {
+            foreach ($children as $child) {
+                $relativePart = Str::after($child->path_slug, $oldPathSlug);
+                $newChildSlug = $folder->path_slug.$relativePart;
+                $child->update(['path_slug' => $newChildSlug]);
+            }
+        });
+
+        // 2. Relocate physical files
+        $childrenSlugs = VaultFolder::where('path_slug', 'like', $folder->path_slug.'/%')->pluck('path_slug', '_id')->toArray();
+        $folderIds = array_merge(array_keys($childrenSlugs), [$folder->id]);
+
+        // Pre-build a folder_id → path_slug map
+        $slugMap = [];
+        foreach ($childrenSlugs as $id => $slug) {
+            $slugMap[(string) $id] = $slug;
+        }
+        $slugMap[(string) $folder->id] = $folder->path_slug;
+
+        $moved = [];
+        try {
+            VaultFile::whereIn('folder_id', $folderIds)->chunk(100, function ($files) use (&$moved, $slugMap) {
+                foreach ($files as $file) {
+                    $disk = Storage::disk($this->resolveDiskPrefix($file));
+                    $oldStoragePath = $file->storage_path;
+
+                    // Determine new storage path using the pre-built map (no DB query per file)
+                    $filename = basename($oldStoragePath);
+                    $folderPath = $slugMap[(string) $file->folder_id] ?? '';
+                    $newStoragePath = 'vault'.($folderPath ? '/'.ltrim($folderPath, '/') : '').'/'.$filename;
+
+                    if ($oldStoragePath === $newStoragePath) {
+                        continue;
+                    }
+
+                    if ($disk->exists($oldStoragePath)) {
+                        // Ensure target directory exists
+                        $disk->makeDirectory(dirname($newStoragePath));
+                        $disk->move($oldStoragePath, $newStoragePath);
+                        $moved[] = [$oldStoragePath, $newStoragePath, $file, null, null];
+
+                        $updates = ['storage_path' => $newStoragePath];
+
+                        // Fix #4: also relocate the WebP optimized variant so
+                        // resolveServingPath() doesn't return a stale/orphaned path.
+                        $newOptPath = null;
+                        if ($file->is_optimized && $file->optimized_path) {
+                            $optFilename = basename($file->optimized_path);
+                            $newOptPath = 'vault'.($folderPath ? '/'.ltrim($folderPath, '/') : '').'/'.$optFilename;
+                            if ($file->optimized_path !== $newOptPath && $disk->exists($file->optimized_path)) {
+                                // Skip makeDirectory if the opt file shares the same target
+                                // directory as the main file (the common case) — it was already
+                                // created above and the call would be a redundant filesystem round-trip.
+                                if (dirname($newOptPath) !== dirname($newStoragePath)) {
+                                    $disk->makeDirectory(dirname($newOptPath));
+                                }
+                                $disk->move($file->optimized_path, $newOptPath);
+                                $updates['optimized_path'] = $newOptPath;
+                            }
+                        }
+
+                        // Update the rollback entry with the old optimized path for reversal
+                        $moved[array_key_last($moved)] = [$oldStoragePath, $newStoragePath, $file, $file->optimized_path, $newOptPath];
+
+                        $file->update($updates);
+                    }
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::warning("Folder relocation failed. Starting rollback for " . count($moved) . " files. Error: " . $e->getMessage());
+            // Rollback disk moves on failure
+            foreach (array_reverse($moved) as [$from, $to, $f, $oldOptPath, $newOptPath]) {
+                try {
+                    $disk = Storage::disk($this->resolveDiskPrefix($f));
+                    $disk->move($to, $from);
+                    $rollbackUpdates = ['storage_path' => $from];
+
+                    if ($newOptPath && $oldOptPath && $disk->exists($newOptPath)) {
+                        $disk->move($newOptPath, $oldOptPath);
+                        $rollbackUpdates['optimized_path'] = $oldOptPath;
+                    }
+
+                    $f->update($rollbackUpdates);
+                } catch (\Throwable $rollbackError) {
+                    Log::error("Relocation rollback failed for file: " . $f->uuid . ". From: $to, To: $from. Error: " . $rollbackError->getMessage());
+                }
+            }
+            Log::info("Folder relocation rollback complete.");
+            throw $e;
+        }
     }
 
     public function deleteFolder(VaultFolder $folder): void
@@ -187,8 +324,20 @@ class VaultService
 
     public function purgeFolder(VaultFolder $folder): void
     {
-        // Actual deletion of folder and cascading could be complex.
-        // For MVP, we just forceDelete the folder record.
+        // Cascade delete children records
+        VaultFolder::where('path_slug', 'like', $folder->path_slug.'/%')->chunk(50, function ($children) {
+            foreach ($children as $child) {
+                $this->purgeFolder($child);
+            }
+        });
+
+        // Purge files in this folder
+        VaultFile::where('folder_id', $folder->id)->withTrashed()->chunk(100, function ($files) {
+            foreach ($files as $file) {
+                $this->purgeFile($file);
+            }
+        });
+
         $folderData = $folder->toArray();
         $folder->forceDelete();
         $this->audit('folder.purge', $folder, $folderData, null);

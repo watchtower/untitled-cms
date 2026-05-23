@@ -62,10 +62,13 @@ class VaultFile extends Model
 
     public function getUrlAttribute(): string
     {
-        $servingPath = $this->resolveServingPath();
-
         if ($this->is_public && ! $this->trashed()) {
-            return Storage::disk('public')->url($servingPath);
+            // Include the file extension in the URL so browsers and CDNs can infer
+            // the content type from the path — e.g. /media/bb440a63-....jpg
+            return route('vault.public', [
+                'uuid'      => $this->uuid,
+                'extension' => $this->extension,
+            ]);
         }
 
         // Fallback for private files and trashed files
