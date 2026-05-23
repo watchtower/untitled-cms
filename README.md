@@ -29,7 +29,7 @@
 | Secure media management          | 7-stage upload pipeline: double-extension detection → MIME check → image sanitization → optional ClamAV scan |
 | Flexible AI integration          | Swap providers at runtime — OpenRouter, OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama           |
 | Granular access control          | 34 permissions across 8 policy classes, cached RBAC, invite-only user flow                                   |
-| A developer-friendly stack       | Laravel 13 + React + TypeScript + Tailwind CSS + Shadcn UI, all in one repo                                  |
+| A developer-friendly stack       | Laravel 13 + React 19 + TypeScript + Tailwind CSS v4 + Shadcn UI, all in one repo                            |
 | Easy self-hosting                | Interactive installer, Docker Compose, systemd + Nginx templates                                             |
 
 ---
@@ -228,7 +228,7 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 
 | Package                                             | Version | Purpose                      |
 | --------------------------------------------------- | ------- | ---------------------------- |
-| [React](https://reactjs.org/)                       | `^18.2` | UI framework                 |
+| [React](https://reactjs.org/)                       | `^19.0` | UI framework                 |
 | TypeScript                                          | `^5.0`  | Type safety                  |
 | [Tailwind CSS](https://tailwindcss.com/)            | v4      | Utility-first styling        |
 | [Shadcn UI](https://ui.shadcn.com/)                 | latest  | Accessible component library |
@@ -238,6 +238,22 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 | [Recharts](https://recharts.org/)                   | `^2`    | Dashboard charts             |
 | [Sonner](https://sonner.emilkowal.ski/)             | `^2`    | Toast notifications          |
 | [Zod](https://zod.dev/)                             | `^4`    | Frontend schema validation   |
+
+---
+
+## 🎨 UI & Theming (Shadcn UI)
+
+Untitled CMS uses [Shadcn UI](https://ui.shadcn.com/) for its component library, powered by Tailwind CSS v4.
+
+Want to completely change the look and feel of your admin panel in minutes? It's incredibly easy using Shadcn's new visual theming engine.
+
+**How to generate and apply a new theme:**
+1. Visit **[ui.shadcn.com/create](https://ui.shadcn.com/create)**.
+2. Use the interactive tools to pick your base color, radius, and dark mode preferences.
+3. Once you have a design you love, click **Copy code**.
+4. Open `resources/css/app.css` in this project.
+5. Replace the existing `@theme { ... }` block with your copied code.
+6. Run `npm run dev` and watch your entire CMS instantly transform!
 
 ---
 
@@ -398,7 +414,7 @@ Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.2.0**.
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.3.0**.
 
 ---
 
