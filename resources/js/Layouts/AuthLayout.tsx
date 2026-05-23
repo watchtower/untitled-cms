@@ -23,7 +23,7 @@ export default function AuthLayout({ children, title, description }: PropsWithCh
                     <img
                         src={bgImage}
                         alt=""
-                        className="h-full w-full object-cover blur-sm scale-110 opacity-50 dark:opacity-30"
+                        className="h-full w-full object-cover blur-xs scale-110 opacity-50 dark:opacity-30"
                     />
                     <div className="absolute inset-0 bg-background/40 backdrop-blur-[2px]" />
                 </div>
@@ -61,7 +61,7 @@ export default function AuthLayout({ children, title, description }: PropsWithCh
                         </div>
                     </CardContent>
                 </Card>
-                <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary mt-4">
+                <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary mt-4">
                     By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
                     and <a href="#">Privacy Policy</a>.
                 </div>

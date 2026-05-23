@@ -145,7 +145,7 @@ export default function Index({ auth, banners }: BannersIndexProps) {
         <div className="p-4 space-y-3">
             <div className="flex items-start justify-between">
                 <div className="flex gap-3">
-                    <div className="h-12 w-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                    <div className="h-12 w-12 bg-muted rounded overflow-hidden shrink-0">
                         {banner.slides?.[0]?.image ? (
                             <img src={banner.slides[0].image} alt={banner.title} className="h-full w-full object-cover" />
                         ) : (

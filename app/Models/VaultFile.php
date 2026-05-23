@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 use MongoDB\Laravel\Eloquent\Model;
 
 class VaultFile extends Model
@@ -66,7 +65,7 @@ class VaultFile extends Model
             // Include the file extension in the URL so browsers and CDNs can infer
             // the content type from the path — e.g. /media/bb440a63-....jpg
             return route('vault.public', [
-                'uuid'      => $this->uuid,
+                'uuid' => $this->uuid,
                 'extension' => $this->extension,
             ]);
         }

@@ -237,7 +237,7 @@ export default function VaultUploadDialog({
                                 />
 
                                 {upload.errorMessage === 'Duplicate detected' && (upload as any).duplicateInfo && (
-                                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900 shadow-sm animate-in fade-in slide-in-from-top-2">
+                                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900 shadow-xs animate-in fade-in slide-in-from-top-2">
                                         <div className="flex items-start gap-3">
                                             <div className="bg-amber-100 p-2 rounded-full mt-0.5">
                                                 <AlertTriangle className="h-4 w-4 text-amber-600" />

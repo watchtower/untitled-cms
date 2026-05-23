@@ -22,12 +22,12 @@ return new class extends Migration
             // MongoDB-Laravel provider handles index management
             try {
                 $table->dropIndex(['resend_id']);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Ignore if it doesn't exist (e.g. fresh DBs)
             }
             try {
                 $table->unique('provider_message_id');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Ignore if it already exists
             }
         });
@@ -41,12 +41,12 @@ return new class extends Migration
         Schema::connection('mongodb')->table('email_logs', function (Blueprint $table) {
             try {
                 $table->dropIndex(['provider_message_id']);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Ignore if it doesn't exist
             }
             try {
                 $table->unique('resend_id');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Ignore if it already exists
             }
         });

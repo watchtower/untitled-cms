@@ -72,7 +72,7 @@ class AiHubController extends Controller
             // Never wipe an existing key with an empty submission unless requested
             unset($validated['api_key']);
         }
-        
+
         unset($validated['clear_key']); // Remove before db update
 
         $aiHub->update($validated);

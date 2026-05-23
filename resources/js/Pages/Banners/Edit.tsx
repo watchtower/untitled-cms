@@ -285,7 +285,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
 
                                                 {/* Full-Width Image at Top */}
                                                 {data.slides[activeSlideIndex].image && (
-                                                    <div className="w-full aspect-[21/9] bg-muted relative overflow-hidden">
+                                                    <div className="w-full aspect-21/9 bg-muted relative overflow-hidden">
                                                         <img
                                                             src={data.slides[activeSlideIndex].image}
                                                             alt={`Slide ${activeSlideIndex + 1}`}
@@ -470,7 +470,7 @@ export default function Edit({ auth, banner }: BannerEditProps) {
                                         <CardContent className="p-4 space-y-3">
                                             {/* Image Thumbnail Preview */}
                                             {slide.image && (
-                                                <div className="w-full aspect-[21/9] bg-muted relative overflow-hidden rounded-md">
+                                                <div className="w-full aspect-21/9 bg-muted relative overflow-hidden rounded-md">
                                                     <img
                                                         src={slide.image}
                                                         alt={`Slide ${index + 1}`}

@@ -86,7 +86,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
-            <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b">
+            <header className="bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60 sticky top-0 z-50 w-full border-b">
                 <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
                     <div className="flex gap-6 md:gap-10 items-center">
                         <Link href="/" className="flex items-center space-x-2">
@@ -111,7 +111,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                                                         <NavigationMenuLink asChild>
                                                                             <NavLink
                                                                                 item={sub}
-                                                                                className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                                                                className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                                                             >
                                                                                 <div className="text-sm font-medium leading-none">{sub.title}</div>
                                                                             </NavLink>

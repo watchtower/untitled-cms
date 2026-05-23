@@ -4,6 +4,20 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-05-23] update | Shadcn Preset & React 19
+Updated UI stack documentation and dependencies:
+- Upgraded React to v19 in package.json and reflected the change in CLAUDE.md, wiki/architecture/stack.md, and wiki/frontend/ui-stack.md.
+- Initialized Shadcn with the custom b2fA preset and unified radix imports.
+- Created a baseline restore point for the Tailwind v4 + React 19 + b2fA UI state.
+
+## [2026-05-23] update | Tailwind v4 & Shadcn Preset Migration
+Migrated the front-end style stack from Tailwind CSS v3 to v4 and updated the shadcn setup:
+- Run `@tailwindcss/upgrade` to move dependency packages and translate stylesheet settings to native CSS `@theme`.
+- Unified 20 individual `@radix-ui/react-*` dependencies under a single `radix-ui` library.
+- Updated `components.json` and regenerated/overwrote all 36 components under `resources/js/Components/ui/` with modern v4 registry code.
+- Fixed TypeScript errors in `resizable.tsx` and `UploadPipelineTracker.tsx`.
+- Updated [[frontend/ui-stack]] with the new stack information.
+
 ## [2026-05-23] update | Media Vault Security Gates & Scaling
 Improved security, query performance, and scaling across the Media Vault:
 - Added sibling unique name checks on folder create, rename, and move to prevent path/slug collisions.

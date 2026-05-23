@@ -132,7 +132,7 @@ export default function EmailLogIndex({ logs, stats, filters }: Props) {
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 items-end bg-white p-4 rounded-lg shadow-sm border">
+                <div className="flex flex-col md:flex-row gap-4 items-end bg-white p-4 rounded-lg shadow-xs border">
                     <div className="flex-1 space-y-2">
                         <label className="text-sm font-medium">Search Recipient or Subject</label>
                         <div className="relative">
@@ -169,7 +169,7 @@ export default function EmailLogIndex({ logs, stats, filters }: Props) {
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                <div className="bg-white rounded-lg shadow-xs border overflow-hidden">
                     <Table>
                         <TableHeader>
                             <TableRow>

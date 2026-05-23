@@ -1,15 +1,15 @@
 # UI Stack
 
-> React 18 + TypeScript + Inertia.js admin SPA patterns and conventions.
+> React 19 + TypeScript + Inertia.js admin SPA patterns and conventions.
 
-Last updated: 2026-04-05
+Last updated: 2026-05-23
 
 ## Stack
 
-- **React 18 + TypeScript** — component framework
+- **React 19 + TypeScript** — component framework
 - **Inertia.js** — props-based routing (no client-side router, no API layer)
-- **Tailwind CSS** — utility-first styling
-- **Shadcn/Radix UI** — accessible component primitives
+- **Tailwind CSS v4** — utility-first styling with native CSS `@theme` and OKLCH variables
+- **Shadcn/Radix UI** — accessible component primitives using unified `radix-ui` dependency
 - **Vite 7** — build tool with HMR
 
 ## Key libraries by concern

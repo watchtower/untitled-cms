@@ -71,7 +71,7 @@ export default function AiActionCard({ proposal, onConfirm, onCancel, isExecutin
                                 <span className="text-muted-foreground w-20 shrink-0 capitalize">
                                     {key.replace(/_/g, ' ')}:
                                 </span>
-                                <span className="text-foreground break-words min-w-0">
+                                <span className="text-foreground wrap-break-word min-w-0">
                                     {display}
                                 </span>
                             </div>

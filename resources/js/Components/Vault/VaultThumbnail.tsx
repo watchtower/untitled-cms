@@ -32,7 +32,7 @@ export default function VaultThumbnail({
         >
             {/* Selection Checkmark */}
             {selected && (
-                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-0.5 shadow-sm z-10">
+                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-0.5 shadow-xs z-10">
                     <Check className="h-3 w-3" />
                 </div>
             )}
@@ -49,7 +49,7 @@ export default function VaultThumbnail({
                         />
                         {/* WebP Indicator */}
                         {file.is_optimized && !file.use_original && (
-                            <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-sm rounded p-0.5 shadow-sm">
+                            <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs rounded p-0.5 shadow-xs">
                                 <Zap className="h-3 w-3 text-amber-400 fill-amber-400" />
                             </div>
                         )}

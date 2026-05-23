@@ -35,7 +35,7 @@ npm run build     # tsc + vite build (TypeScript errors will fail the build)
 
 ### Stack
 - **Backend:** Laravel 13, PHP 8.4, MongoDB (`mongodb/laravel-mongodb`)
-- **Frontend:** React 18 + TypeScript, Inertia.js (props-based routing, no client-side router), Tailwind CSS, Shadcn/Radix UI
+- **Frontend:** React 19 + TypeScript, Inertia.js (props-based routing, no client-side router), Tailwind CSS v4, Shadcn/Radix UI
 - **Build:** Vite 7 (frontend build runs `tsc && vite build`)
 - **Auth:** Laravel Sanctum + Sessions, Laravel Socialite (Google, GitHub, Apple, Twitter — toggled via Settings UI)
 

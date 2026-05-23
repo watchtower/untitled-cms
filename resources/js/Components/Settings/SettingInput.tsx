@@ -52,7 +52,7 @@ export default function SettingInput({ setting, onChange, onSave }: SettingInput
     // Custom layout for boolean settings (Switch with description)
     if (setting.type === 'boolean') {
         return (
-            <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
+            <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-xs">
                 <div className="space-y-0.5">
                     <Label htmlFor={setting.key} className="text-base font-medium text-foreground">
                         {setting.label}

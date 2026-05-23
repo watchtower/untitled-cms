@@ -48,7 +48,7 @@ export default function Unsubscribed({ email, error }: Props) {
 
                     <Link
                         href="/"
-                        className="group relative inline-flex items-center justify-center px-8 py-3.5 font-bold text-white transition-all duration-200 bg-indigo-600 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 overflow-hidden hover:bg-indigo-500"
+                        className="group relative inline-flex items-center justify-center px-8 py-3.5 font-bold text-white transition-all duration-200 bg-indigo-600 font-pj rounded-xl focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 overflow-hidden hover:bg-indigo-500"
                     >
                         <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
                         <span>Return to Site</span>

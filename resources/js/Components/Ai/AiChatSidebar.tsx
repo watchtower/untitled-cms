@@ -284,7 +284,7 @@ export default function AiChatSidebar() {
                 <Button
                     variant="outline"
                     size="icon"
-                    className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg border-primary/20 bg-background/80 backdrop-blur-sm z-50 group hover:scale-110 transition-transform"
+                    className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg border-primary/20 bg-background/80 backdrop-blur-xs z-50 group hover:scale-110 transition-transform"
                     title="AI Assistant"
                 >
                     <Sparkles className="h-6 w-6 text-primary group-hover:animate-pulse" />
@@ -352,7 +352,7 @@ export default function AiChatSidebar() {
                                     msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                                 )}>
                                     <div className={cn(
-                                        'h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-sm',
+                                        'h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-xs',
                                         msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
                                     )}>
                                         {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4 text-primary" />}

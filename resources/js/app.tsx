@@ -4,6 +4,8 @@ import './bootstrap';
 import { ThemeProvider } from "@/Components/theme-provider"
 import { Toaster } from "@/Components/ui/sonner"
 
+import { TooltipProvider } from "@/Components/ui/tooltip"
+
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
@@ -21,8 +23,10 @@ createInertiaApp({
         const root = createRoot(el);
         root.render(
             <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-                <App {...props} />
-                <Toaster />
+                <TooltipProvider>
+                    <App {...props} />
+                    <Toaster />
+                </TooltipProvider>
             </ThemeProvider>
         );
     },

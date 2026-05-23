@@ -234,7 +234,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
 
                     <div className="mb-8">
                         <h2 className="text-lg font-semibold mb-4">Active Provider</h2>
-                        <div className="bg-card text-card-foreground shadow-sm sm:rounded-lg border-2 border-primary/20 overflow-hidden">
+                        <div className="bg-card text-card-foreground shadow-xs sm:rounded-lg border-2 border-primary/20 overflow-hidden">
                             <div className="p-6">
                                 {integrations.filter(i => i.is_active).length > 0 ? (
                                     <DataTable
@@ -252,7 +252,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
 
                     <div>
                         <h2 className="text-lg font-semibold mb-4">Available Providers</h2>
-                        <div className="bg-card text-card-foreground shadow-sm sm:rounded-lg opacity-80 hover:opacity-100 transition-opacity overflow-hidden">
+                        <div className="bg-card text-card-foreground shadow-xs sm:rounded-lg opacity-80 hover:opacity-100 transition-opacity overflow-hidden">
                             <div className="p-6">
                                 <DataTable
                                     columns={columns.filter(c => c.id !== 'is_active')}
@@ -275,7 +275,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
                     {editingHub && (
                         <form onSubmit={handleSave} className="space-y-6 flex flex-col mt-6">
                             <div className="space-y-4 flex-1">
-                                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                                <div className="flex items-center justify-between rounded-lg border p-3 shadow-xs">
                                     <div className="space-y-0.5">
                                         <Label>Active Provider</Label>
                                         <p className="text-sm text-muted-foreground w-[180px]">

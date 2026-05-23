@@ -1,4 +1,5 @@
-import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Dialog, DialogPortal, DialogOverlay } from '@/Components/ui/dialog';
+import { Dialog as DialogPrimitive } from 'radix-ui';
 import { PropsWithChildren } from 'react';
 
 export default function Modal({
@@ -28,17 +29,17 @@ export default function Modal({
     }[maxWidth];
 
     return (
-        <DialogPrimitive.Root open={show} onOpenChange={(isOpen) => !isOpen && close()}>
-            <DialogPrimitive.Portal>
-                <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <Dialog open={show} onOpenChange={(isOpen) => !isOpen && close()}>
+            <DialogPortal>
+                <DialogOverlay className="bg-black/80 backdrop-blur-none" />
                 <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6 sm:px-0">
                     <DialogPrimitive.Content
-                        className={`mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl sm:mx-auto sm:w-full data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] ${maxWidthClass}`}
+                        className={`mb-6 transform overflow-hidden rounded-lg bg-background text-foreground shadow-xl sm:mx-auto sm:w-full data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-closed:slide-out-to-left-1/2 data-closed:slide-out-to-top-[48%] data-open:slide-in-from-left-1/2 data-open:slide-in-from-top-[48%] ${maxWidthClass}`}
                     >
                         {children}
                     </DialogPrimitive.Content>
                 </div>
-            </DialogPrimitive.Portal>
-        </DialogPrimitive.Root>
+            </DialogPortal>
+        </Dialog>
     );
 }

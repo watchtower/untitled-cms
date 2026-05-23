@@ -71,11 +71,11 @@ export default function UploadPipelineTracker({
     }, [status, errorStage]);
 
     return (
-        <div className="space-y-3 p-3 border rounded-lg bg-card shadow-sm">
+        <div className="space-y-3 p-3 border rounded-lg bg-card shadow-xs">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 overflow-hidden">
                     <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
-                        {file.type.startsWith('image/') ? (
+                        {file?.type?.startsWith('image/') ? (
                             <img
                                 src={URL.createObjectURL(file)}
                                 alt="preview"
@@ -129,9 +129,9 @@ export default function UploadPipelineTracker({
                                         !isPast && !isCurrent && "border-muted text-muted-foreground"
                                     )}>
                                         {isCompleted && <Check className="w-3 h-3" />}
-                                        {(isCurrent || status === 'hashing' || status === 'checking') && !isError && <Loader2 className="w-3 h-3 animate-spin" />}
+                                        {isCurrent && !isError && <Loader2 className="w-3 h-3 animate-spin" />}
                                         {isError && <X className="w-3 h-3" />}
-                                        {!isPast && !isCurrent && status !== 'hashing' && status !== 'checking' && <Circle className="w-2 h-2 fill-muted-foreground/20" />}
+                                        {!isPast && !isCurrent && <Circle className="w-2 h-2 fill-muted-foreground/20" />}
                                     </div>
                                     <span className={cn(
                                         "text-[10px] font-medium max-w-[60px] text-center leading-tight transition-colors",
@@ -145,7 +145,7 @@ export default function UploadPipelineTracker({
                         })}
                     </div>
                     {/* Connecting Line */}
-                    <div className="absolute top-[19px] left-3 right-3 h-0.5 bg-muted -z-0">
+                    <div className="absolute top-[19px] left-3 right-3 h-0.5 bg-muted z-0">
                         <div
                             className={cn("h-full bg-green-500 transition-all duration-500 ease-out", status === 'error' ? 'bg-destructive' : '')}
                             style={{ width: `${(Math.max(0, currentStageIndex) / (ALL_STAGES.length - 1)) * 100}%` }}

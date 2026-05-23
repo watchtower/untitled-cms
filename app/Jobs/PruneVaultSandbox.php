@@ -28,7 +28,7 @@ class PruneVaultSandbox implements ShouldQueue
                     $count++;
                 }
             } catch (\Exception $e) {
-                Log::warning("Failed to prune file {$file} from sandbox: " . $e->getMessage());
+                Log::warning("Failed to prune file {$file} from sandbox: ".$e->getMessage());
             }
         }
 

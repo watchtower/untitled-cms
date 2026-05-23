@@ -25,7 +25,7 @@ export function StickyFormFooter({
 }: StickyFormFooterProps) {
     return (
         <div className={cn(
-            "fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between border-t bg-background p-4 shadow-lg md:left-[var(--sidebar-width)] transition-[left] duration-200",
+            "fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between border-t bg-background p-4 shadow-lg md:left-(--sidebar-width) transition-[left] duration-200",
             className
         )}>
             <div className="flex items-center gap-2">

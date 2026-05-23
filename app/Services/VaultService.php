@@ -286,7 +286,7 @@ class VaultService
                 }
             });
         } catch (\Throwable $e) {
-            Log::warning("Folder relocation failed. Starting rollback for " . count($moved) . " files. Error: " . $e->getMessage());
+            Log::warning('Folder relocation failed. Starting rollback for '.count($moved).' files. Error: '.$e->getMessage());
             // Rollback disk moves on failure
             foreach (array_reverse($moved) as [$from, $to, $f, $oldOptPath, $newOptPath]) {
                 try {
@@ -301,10 +301,10 @@ class VaultService
 
                     $f->update($rollbackUpdates);
                 } catch (\Throwable $rollbackError) {
-                    Log::error("Relocation rollback failed for file: " . $f->uuid . ". From: $to, To: $from. Error: " . $rollbackError->getMessage());
+                    Log::error('Relocation rollback failed for file: '.$f->uuid.". From: $to, To: $from. Error: ".$rollbackError->getMessage());
                 }
             }
-            Log::info("Folder relocation rollback complete.");
+            Log::info('Folder relocation rollback complete.');
             throw $e;
         }
     }

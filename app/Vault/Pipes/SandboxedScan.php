@@ -5,6 +5,7 @@ namespace App\Vault\Pipes;
 use App\Vault\DTOs\VaultPipelinePayload;
 use Closure;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class SandboxedScan
 {
@@ -19,6 +20,7 @@ class SandboxedScan
         $path = $payload->file->getRealPath();
         if ($path === false) {
             Log::warning('ClamAV: temp file no longer exists on disk, scan skipped.');
+
             return $next($payload);
         }
 
@@ -38,7 +40,7 @@ class SandboxedScan
             Log::error("ClamAV scan failed (daemon unreachable?): {$e->getMessage()}. Path: {$path}");
 
             if (config('vault.clamav_fail_closed', false)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'file' => 'ClamAV scanning failed (service offline or timed out).',
                 ]);
             }

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Resend\Client;
 use Resend\Contracts\Client as ResendClient;
 use Resend\Laravel\Transport\ResendTransportFactory;
 
@@ -42,10 +43,11 @@ class AppServiceProvider extends ServiceProvider
         // from auto-discovery to suppress its built-in /resend/webhook route).
         $this->app->singleton(ResendClient::class, function () {
             $apiKey = config('resend.api_key') ?? config('services.resend.key');
+
             return \Resend::client($apiKey);
         });
         $this->app->alias(ResendClient::class, 'resend');
-        $this->app->alias(ResendClient::class, \Resend\Client::class);
+        $this->app->alias(ResendClient::class, Client::class);
     }
 
     /**

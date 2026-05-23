@@ -27,7 +27,8 @@ class VaultPurge extends Command
         $count = $query->count();
 
         if ($count === 0) {
-            $this->info("No files to purge.");
+            $this->info('No files to purge.');
+
             return 0;
         }
 
@@ -45,7 +46,7 @@ class VaultPurge extends Command
 
         $bar->finish();
         $this->newLine();
-        $this->info("Done.");
+        $this->info('Done.');
 
         return 0;
     }

@@ -84,12 +84,12 @@ export default function Home({ banners, recentPages }: Props) {
                                                     </h1>
                                                 )}
                                                 {slide.subtitle && (
-                                                    <p className="text-xl md:text-2xl text-gray-200 drop-shadow mb-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150 fill-mode-backwards">
+                                                    <p className="text-xl md:text-2xl text-gray-200 drop-shadow-sm mb-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150 fill-mode-backwards">
                                                         {slide.subtitle}
                                                     </p>
                                                 )}
                                                 {slide.caption && (
-                                                    <p className="text-sm text-gray-300 drop-shadow mb-8 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-backwards">
+                                                    <p className="text-sm text-gray-300 drop-shadow-sm mb-8 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-backwards">
                                                         {slide.caption}
                                                     </p>
                                                 )}
@@ -118,7 +118,7 @@ export default function Home({ banners, recentPages }: Props) {
                 </div>
             ) : (
                 <section className="relative w-full overflow-hidden border-b">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-muted/30" />
+                    <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-background to-muted/30" />
                     <div className="relative container max-w-5xl mx-auto px-4 py-32 text-center">
                         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
                             Content that <span className="text-primary">speaks</span> for itself.
@@ -161,7 +161,7 @@ export default function Home({ banners, recentPages }: Props) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {recentPages.length > 0 ? (
                         recentPages.map((page) => (
-                            <Card key={page.id} className="overflow-hidden group hover:shadow-md transition-all duration-300 bg-card/50 backdrop-blur-sm border-muted/50 hover:border-primary/20">
+                            <Card key={page.id} className="overflow-hidden group hover:shadow-md transition-all duration-300 bg-card/50 backdrop-blur-xs border-muted/50 hover:border-primary/20">
                                 <Link href={route('public.page', page.slug)}>
                                     <div className="relative aspect-video overflow-hidden bg-muted">
                                         {page.featured_images && page.featured_images.length > 0 ? (

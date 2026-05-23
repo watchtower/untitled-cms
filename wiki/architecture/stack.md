@@ -10,8 +10,8 @@ Last updated: 2026-04-05
 |-------|-----------|
 | Backend | Laravel 13, PHP |
 | Database | MongoDB (`mongodb/laravel-mongodb`) |
-| Frontend | React 18 + TypeScript, Inertia.js |
-| Styling | Tailwind CSS, Shadcn/Radix UI |
+| Frontend | React 19 + TypeScript, Inertia.js |
+| Styling | Tailwind CSS v4, Shadcn/Radix UI |
 | Build | Vite 7 |
 | Auth | Laravel Sanctum + Sessions |
 

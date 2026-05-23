@@ -70,7 +70,7 @@ function VaultFolderInfoPopover({ folder, side = "right" }: { folder: VaultFolde
                     <Info className="h-4 w-4 text-muted-foreground" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-56 z-[100]" side={side} align={side === "right" ? "start" : "center"} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <PopoverContent className="w-56 z-100" side={side} align={side === "right" ? "start" : "center"} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                 <div className="space-y-2">
                     <h4 className="font-semibold text-sm break-all" title={folder.name}>{folder.name}</h4>
                     <div className="grid grid-cols-2 gap-1 text-sm text-muted-foreground">
@@ -416,7 +416,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
         <AuthenticatedLayout header="Media Vault">
             <Head title="Media Vault" />
 
-            <div className="flex flex-col flex-1 min-h-0 w-full max-w-full rounded-xl border bg-card shadow-sm overflow-hidden">
+            <div className="flex flex-col flex-1 min-h-0 w-full max-w-full rounded-xl border bg-card shadow-xs overflow-hidden">
                 {/* Toolbar */}
                 <div className="flex items-center justify-between p-4 border-b shrink-0">
                     <div className="flex items-center gap-2">
@@ -524,7 +524,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                         />
                                     )}
                                 </div>
-                                <div className="flex items-center gap-1 bg-background border rounded-md p-0.5 ml-4 shrink-0 shadow-sm">
+                                <div className="flex items-center gap-1 bg-background border rounded-md p-0.5 ml-4 shrink-0 shadow-xs">
                                     <Button
                                         variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                                         size="sm"
@@ -618,7 +618,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col border rounded-md divide-y bg-background shadow-sm">
+                                    <div className="flex flex-col border rounded-md divide-y bg-background shadow-xs">
                                         {/* Current Level Folders */}
                                         {!isTrashView && folders.filter(f => f.parent_id === (currentFolder?.id || null)).map(folder => (
                                             <ContextMenu key={folder.id}>
@@ -658,7 +658,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                                 <>
                                                                     <img src={file.url} alt={file.original_name} className="object-cover w-full h-full" />
                                                                     {file.is_optimized && !file.use_original && (
-                                                                        <div className="absolute top-1 right-1 bg-black/60 backdrop-blur-sm rounded p-0.5 shadow-sm">
+                                                                        <div className="absolute top-1 right-1 bg-black/60 backdrop-blur-xs rounded p-0.5 shadow-xs">
                                                                             <Zap className="h-3 w-3 text-amber-400 fill-amber-400" />
                                                                         </div>
                                                                     )}
@@ -668,7 +668,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                                             )}
                                                             {selectedFiles.some(f => f.id === file.id) && (
                                                                 <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                                                    <div className="bg-primary text-primary-foreground rounded-full p-0.5 shadow-sm">
+                                                                    <div className="bg-primary text-primary-foreground rounded-full p-0.5 shadow-xs">
                                                                         <Check className="h-4 w-4" />
                                                                     </div>
                                                                 </div>
@@ -741,7 +741,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                             </div>
 
                                             <div className="space-y-1">
-                                                <h3 className="font-semibold text-lg break-words">{selectedFiles[0].original_name}</h3>
+                                                <h3 className="font-semibold text-lg wrap-break-word">{selectedFiles[0].original_name}</h3>
                                                 <p className="text-sm text-muted-foreground uppercase">{selectedFiles[0].extension}</p>
                                             </div>
 
@@ -1020,7 +1020,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                     : 'hover:bg-muted'
                             )}
                         >
-                            <Folder className="h-4 w-4 flex-shrink-0" />
+                            <Folder className="h-4 w-4 shrink-0" />
                             <span className="font-medium">Root</span>
                         </button>
                         {/* All folders */}
@@ -1036,7 +1036,7 @@ export default function VaultIndex({ maxUploadSize = 2, phpIniPath = '' }: { max
                                         : 'hover:bg-muted'
                                 )}
                             >
-                                <Folder className="h-4 w-4 flex-shrink-0" />
+                                <Folder className="h-4 w-4 shrink-0" />
                                 {folder.name}
                             </button>
                         ))}

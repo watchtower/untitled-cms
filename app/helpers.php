@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\HtmlSanitizer;
+
 if (! function_exists('clean')) {
     /**
      * Sanitize an HTML string using HTMLPurifier.
@@ -7,6 +9,6 @@ if (! function_exists('clean')) {
      */
     function clean(string $dirty, string $config = 'default'): string
     {
-        return app(\App\Services\HtmlSanitizer::class)->clean($dirty, $config);
+        return app(HtmlSanitizer::class)->clean($dirty, $config);
     }
 }
