@@ -4,6 +4,29 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-05-23] fix | Setting::get() cache serialization
+Impact Sentinel detected `Setting::get()` caching full Eloquent model objects, which broke under
+the new `serializable_classes => false` config (incomplete object warnings on every request).
+Refactored to cache the coerced scalar value instead of the model instance. Flushed stale cache.
+Also bumped `laravel/framework` from v13.4.0 → v13.11.2 (latest). 56 tests pass, zero warnings.
+
+## [2026-05-23] update | Sync with laravel/laravel v13.7.0 Skeleton
+Applied skeleton changes from v13.0.0→v13.7.0:
+- Added `laravel/pao ^1.0.6` (PHP Agent-Optimized Output) — auto-formats PHPUnit/Artisan output as compact JSON when running inside AI agents.
+- Created `.npmrc` with `ignore-scripts=true` and `audit=true` (v13.1.2 security hardening against malicious postinstall scripts).
+- Updated `.gitignore`: removed `/.fleet`, added `/.codex`, `/.cursor/`, `/public/fonts-manifest.dev.json`, `_ide_helper.php`.
+- Updated `.editorconfig`: compose file glob now covers `docker-compose.{yml,yaml}` naming variants.
+- Deferred: `@no_additional_args` in composer test script (requires Composer ≥2.8; we're on 2.7.6).
+- Deferred: Vite font plugin migration (v13.5.0) — we use `@fontsource-variable/*` packages instead.
+
+## [2026-05-23] update | Laravel 13 Upgrade Hardening
+Verified Laravel 13.4.0 framework compatibility and applied recommended upgrade changes:
+- Bumped `phpunit/phpunit` from `^11.5.3` to `^12.0` (locked at 12.5.26). All 56 tests pass.
+- Added `serializable_classes => false` to `config/cache.php` for deserialization attack hardening.
+- Verified no `new static()` in model boot methods, no `Str::createUuidsUsing` in tests.
+- Cache prefix already uses L13 hyphenated format. `PreventRequestForgery` middleware is active via framework defaults.
+- `nunomaduro/collision ^8.6` remains compatible. `laravel/ai ^0.5` (v0.5.1) still pre-release.
+
 ## [2026-05-23] update | Shadcn Preset & React 19
 Updated UI stack documentation and dependencies:
 - Upgraded React to v19 in package.json and reflected the change in CLAUDE.md, wiki/architecture/stack.md, and wiki/frontend/ui-stack.md.

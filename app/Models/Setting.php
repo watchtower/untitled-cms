@@ -26,19 +26,19 @@ class Setting extends Model
 
     public static function get(string $key, mixed $default = null): mixed
     {
-        $setting = Cache::rememberForever("setting.{$key}", function () use ($key) {
-            return self::where('key', $key)->first();
-        });
+        return Cache::rememberForever("setting.{$key}", function () use ($key) {
+            $setting = self::where('key', $key)->first();
 
-        if (! $setting) {
-            return $default;
-        }
+            if (! $setting) {
+                return null;
+            }
 
-        return match ($setting->type) {
-            'boolean' => (bool) $setting->value,
-            'number' => (float) $setting->value,
-            default => $setting->value,
-        };
+            return match ($setting->type) {
+                'boolean' => (bool) $setting->value,
+                'number' => (float) $setting->value,
+                default => $setting->value,
+            };
+        }) ?? $default;
     }
 
     public static function set(string $key, mixed $value, string $type = 'text'): self
