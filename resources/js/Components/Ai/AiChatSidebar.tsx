@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { usePage } from '@inertiajs/react';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import AiActionCard from './AiActionCard';
 
 interface Message {
@@ -174,15 +176,17 @@ export default function AiChatSidebar() {
             const { data } = await axios.post(route('admin.ai.chat'), { messages: apiMessages, page_url: url ?? window.location.pathname });
             const rawContent: string = data.message;
 
-            // Detect [ACTION]...[/ACTION] block — use [\ s\S] for multiline JSON
-            const actionMatch = rawContent.match(/\[ACTION\]([\s\S]*?)\[\/ACTION\]/);
+            // Detect [ACTION]...[/ACTION] block (or [CREATE_PAGE], etc.)
+            // Handle cases where the AI forgets the closing tag, gets cut off, or invents a tag name
+            const actionRegex = /\[([A-Z_]+)\]\s*(\{[\s\S]*?)(?:\[\/?[A-Z_]+\]?|\/[A-Z_]+|$)/;
+            const actionMatch = rawContent.match(actionRegex);
             let proposal: ActionProposal | null = null;
-            let displayContent = rawContent.replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/, '').trim();
+            let displayContent = rawContent.replace(actionRegex, '').trim();
 
             if (actionMatch) {
                 let resolveError: string | null = null;
                 try {
-                    const actionJson = JSON.parse(actionMatch[1].trim());
+                    const actionJson = JSON.parse(actionMatch[2].trim());
                     const { data: resolveData } = await axios.post(route('admin.ai.actions.resolve'), {
                         action_json: actionJson,
                     });
@@ -299,7 +303,7 @@ export default function AiChatSidebar() {
                             <Sparkles className="h-4 w-4 text-primary" />
                             AI Assistant
                         </SheetTitle>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 pr-8">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { clearChat(); startNewSession(); }} title="New conversation">
                                 <Plus className="h-4 w-4 text-muted-foreground" />
                             </Button>
@@ -343,7 +347,7 @@ export default function AiChatSidebar() {
                 )}
 
                 {/* Messages */}
-                <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                <div className="flex-1 overflow-y-auto min-h-0 p-4" ref={scrollRef}>
                     <div className="space-y-4 pb-4">
                         {messages.map((msg, i) => (
                             <div key={i}>
@@ -368,7 +372,7 @@ export default function AiChatSidebar() {
                                                 msg.content
                                             ) : (
                                                 <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-1">
-                                                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                                    <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{msg.content}</ReactMarkdown>
                                                 </div>
                                             )}
                                         </div>
@@ -412,7 +416,7 @@ export default function AiChatSidebar() {
                             </div>
                         )}
                     </div>
-                </ScrollArea>
+                </div>
 
                 {/* Quick prompts */}
                 {messages.length === 1 && !pendingProposal && (

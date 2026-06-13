@@ -55,4 +55,22 @@ class VaultFilePolicy
 
         return $user->hasPermission('media.delete');
     }
+
+    /**
+     * Restore a soft-deleted file — requires the same permission as delete.
+     */
+    public function restore(User $user, VaultFile $file): bool
+    {
+        return $this->delete($user, $file);
+    }
+
+    /**
+     * Permanently purge a file from storage.
+     * Requires the global media.delete permission regardless of folder context
+     * because the action is irreversible — folder-level delete is insufficient.
+     */
+    public function forceDelete(User $user, VaultFile $file): bool
+    {
+        return $user->hasPermission('media.delete');
+    }
 }

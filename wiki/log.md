@@ -4,6 +4,14 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-06-13] update | Security Sweep & Vault Performance Fixes
+Completed a comprehensive security audit using Sentinel and Code Reviewer standards:
+- **SSRF / DNS Rebinding**: Hardened `SafeHttpClient` using `CURLOPT_RESOLVE` to pin IP addresses and prevent DNS rebinding attacks on outbound requests.
+- **XSS Protection**: Installed `rehype-sanitize` in `AiChatSidebar.tsx` to safely render AI-generated markdown, neutralizing Stored XSS vectors.
+- **Authorization**: Fixed a bypass in `AiActionController` by dynamically authorizing resolved models for updates. 
+- **Policy Refactor**: Resolved dummy-model anti-patterns in `UserPolicy` by introducing dedicated `batchUpdate` and `batchDelete` gate methods.
+- **Performance**: Fixed a severe O(N²) exponential recursion query bug in `VaultService::purgeFolder` by strictly looking up descendants via `parent_id` rather than wildcard `path_slug` matching.
+
 ## [2026-06-08] feat | Upgrade integrations for Laravel 13.8/13.14 features
 - Applied Laravel 13.8.0 `shouldRenderJsonWhen` exception feature in `bootstrap/app.php` with custom API route bypassing.
 - Integrated Apple `passwordrules` autocomplete hints via Inertia shared props into React Auth/User forms.

@@ -62,13 +62,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
 
     // Users
     Route::post('/users/invite', [UserController::class, 'invite'])->name('users.invite');
-    Route::post('/users/batch-activate', [UserController::class, 'batchActivate'])->name('users.batch-activate');
-    Route::post('/users/batch-deactivate', [UserController::class, 'batchDeactivate'])->name('users.batch-deactivate');
-    Route::post('/users/batch-delete', [UserController::class, 'batchDelete'])->name('users.batch-delete');
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/users/batch-activate', [UserController::class, 'batchActivate'])->name('users.batch-activate');
+        Route::post('/users/batch-deactivate', [UserController::class, 'batchDeactivate'])->name('users.batch-deactivate');
+        Route::post('/users/batch-delete', [UserController::class, 'batchDelete'])->name('users.batch-delete');
+    });
     Route::post('/users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
     Route::delete('/users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete');
     Route::post('/users/{id}/logout-all-devices', [UserController::class, 'logoutAllDevices'])->name('users.logout-all-devices');
-    Route::resource('users', UserController::class);
+    Route::get('/users/trashed', [UserController::class, 'trashed'])->name('users.trashed');
+    Route::resource('users', UserController::class)->except(['show']);
 
     // Roles
     Route::resource('roles', RoleController::class);
@@ -85,7 +88,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     // AI Hubs
     Route::resource('ai-hubs', AiHubController::class)->only(['index', 'update']);
     Route::post('/ai-hubs/{aiHub}/activate', [AiHubController::class, 'activate'])->name('ai-hubs.activate');
-    // Note: ai-hubs.reset-usage is a dead route — not wired to web.php
+    Route::post('/ai-hubs/{aiHub}/reset-usage', [AiHubController::class, 'resetUsage'])->name('ai-hubs.reset-usage');
 
     // AI Routes — rate-limited to prevent OpenAI cost abuse (A04)
     Route::middleware('throttle:30,1')->group(function () {

@@ -65,17 +65,22 @@ class AiHubController extends Controller
             'clear_key' => 'nullable|boolean',
         ]);
 
-        // Handle explicit API key revocation
-        if (! empty($validated['clear_key'])) {
-            $validated['api_key'] = null;
-        } elseif (empty($validated['api_key'])) {
-            // Never wipe an existing key with an empty submission unless requested
-            unset($validated['api_key']);
-        }
-
-        unset($validated['clear_key']); // Remove before db update
+        // Extract api_key before mass update — it's not in $fillable
+        $apiKey = $validated['api_key'] ?? null;
+        $clearKey = ! empty($validated['clear_key']);
+        unset($validated['api_key'], $validated['clear_key']);
 
         $aiHub->update($validated);
+
+        // Handle API key changes explicitly (outside of mass assignment)
+        if ($clearKey) {
+            $aiHub->api_key = null;
+            $aiHub->save();
+        } elseif (! empty($apiKey)) {
+            $aiHub->api_key = $apiKey;
+            $aiHub->save();
+        }
+        // If api_key was empty and clear_key was not set, leave the existing key untouched
 
         ActivityLogger::log('updated', "Updated AI Integration: {$aiHub->name}", $aiHub);
 

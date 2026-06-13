@@ -12,10 +12,12 @@ class AiHub extends Model
 
     protected $fillable = [
         'name',
-        'api_key',
         'default_model',
         'image_model',
         'is_active',
+        'monthly_quota',
+        'monthly_usage',
+        // 'api_key' intentionally excluded — set explicitly to prevent mass assignment
     ];
 
     protected $casts = [

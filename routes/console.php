@@ -12,3 +12,5 @@ Artisan::command('inspire', function () {
 Schedule::command('vault:purge --days=30')->daily();
 Schedule::job(new PruneVaultSandbox)->hourly();
 Schedule::command('vault:generate-alt-text')->weekly();
+Schedule::command('email:prune-logs')->daily();
+Schedule::command('audit:prune-logs')->weekly();

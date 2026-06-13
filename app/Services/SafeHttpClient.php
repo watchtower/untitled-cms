@@ -39,7 +39,8 @@ class SafeHttpClient
         $ip = gethostbyname($host);
 
         // If gethostbyname cannot resolve, it returns the original host string
-        if ($ip === $host || ! filter_var($ip, FILTER_VALIDATE_IP)) {
+        // But if the host was ALREADY an IP address, it will also return the same string.
+        if ($ip === $host && ! filter_var($host, FILTER_VALIDATE_IP)) {
             throw new Exception('Could not resolve host.');
         }
 
@@ -61,13 +62,14 @@ class SafeHttpClient
         // 4. Perform the request securely
         // ->withoutRedirecting() prevents SSRF via a malicious server responding
         // with a 302 redirect pointing to an internal IP (e.g., http://169.254.169.254)
-        $response = Http::withOptions([
-            'curl' => [CURLOPT_RESOLVE => [$pinned]],
+        return Http::withOptions([
+            'curl' => [
+                // Force curl to use our pre-validated IP to prevent DNS rebinding attacks
+                CURLOPT_RESOLVE => ["{$host}:{$port}:{$ip}"],
+            ],
         ])
             ->withoutRedirecting()
             ->timeout($timeout)
             ->get($url);
-
-        return $response;
     }
 }

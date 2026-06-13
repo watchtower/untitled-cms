@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -22,19 +25,17 @@ class UserController extends Controller
         Gate::authorize('viewAny', User::class);
 
         $users = User::with('roles')->paginate(10);
-        $trashedUsers = User::onlyTrashed()->with('roles')->paginate(50, ['*'], 'trashed_page');
         $roles = Role::all();
 
-        $stats = [
+        $stats = Cache::remember('user_stats', 60, fn () => [
             'total' => User::count(),
             'active' => User::where('is_active', true)->count(),
             'inactive' => User::where('is_active', false)->count(),
             'deleted' => User::onlyTrashed()->count(),
-        ];
+        ]);
 
         return Inertia::render('Users/Index', [
             'users' => $users,
-            'trashedUsers' => ['data' => $trashedUsers],
             'roles' => $roles,
             'stats' => $stats,
             'canCreate' => $request->user()->can('create', User::class),
@@ -42,6 +43,17 @@ class UserController extends Controller
             'canEdit' => $request->user()->can('update', new User),
             'canDelete' => $request->user()->can('delete', new User),
         ]);
+    }
+
+    /**
+     * Get soft-deleted users via AJAX.
+     */
+    public function trashed(Request $request)
+    {
+        Gate::authorize('viewAny', User::class);
+        $trashedUsers = User::onlyTrashed()->with('roles')->paginate(50);
+
+        return response()->json($trashedUsers);
     }
 
     /**
@@ -78,12 +90,14 @@ class UserController extends Controller
     public function batchActivate(Request $request)
     {
         // Treat as update
-        // We use a generic user instance to check for general update permissions via the policy
-        Gate::authorize('update', new User);
+        // We use a generic class policy check to avoid instantiating dummy models
+        Gate::authorize('batchUpdate', User::class);
 
         $request->validate(['user_ids' => 'required|array']);
 
         $count = User::whereIn('_id', $request->user_ids)->update(['is_active' => true]);
+
+        $this->bustStatsCache();
 
         return redirect()->back()->with('success', "Activated {$count} users.");
     }
@@ -93,13 +107,15 @@ class UserController extends Controller
      */
     public function batchDeactivate(Request $request)
     {
-        Gate::authorize('update', new User);
+        Gate::authorize('batchUpdate', User::class);
 
         $request->validate(['user_ids' => 'required|array']);
 
         // Prevent deactivating self
         $ids = array_filter($request->user_ids, fn ($id) => $id !== auth()->id());
         $count = User::whereIn('_id', $ids)->update(['is_active' => false]);
+
+        $this->bustStatsCache();
 
         return redirect()->back()->with('success', "Deactivated {$count} users.");
     }
@@ -109,13 +125,15 @@ class UserController extends Controller
      */
     public function batchDelete(Request $request)
     {
-        Gate::authorize('delete', new User);
+        Gate::authorize('batchDelete', User::class);
 
         $request->validate(['user_ids' => 'required|array']);
 
         // Prevent deleting self
         $ids = array_filter($request->user_ids, fn ($id) => $id !== auth()->id());
         $count = User::whereIn('_id', $ids)->delete();
+
+        $this->bustStatsCache();
 
         return redirect()->back()->with('success', "Deleted {$count} users.");
     }
@@ -135,17 +153,10 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        Gate::authorize('create', User::class);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'roles' => 'required|array|min:1',
-            'roles.*' => 'exists:roles,id', // MongoDB object ID validation might need care, but exists:roles,id usually works if model is set up right
-        ]);
+        // Validation and Authorization are handled in StoreUserRequest
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],
@@ -157,15 +168,9 @@ class UserController extends Controller
 
         $user->roles()->attach($validated['roles']);
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
-    }
+        $this->bustStatsCache();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+        return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
     }
 
     /**
@@ -185,28 +190,19 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $user = User::findOrFail($id);
-        Gate::authorize('update', $user);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'roles' => 'required|array|min:1',
-            'roles.*' => 'exists:roles,id',
-            'is_active' => 'boolean',
-        ]);
+        // Validation and Authorization are handled in UpdateUserRequest
+        $validated = $request->validated();
 
         $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'is_active' => $request->boolean('is_active'),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'is_active' => $validated['is_active'] ?? $user->is_active,
         ]);
 
-        if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
+        if (! empty($validated['password'])) {
+            $user->update(['password' => Hash::make($validated['password'])]);
         }
 
         // Assuming syncRoles is a method provided by a package like Spatie's laravel-permission
@@ -214,6 +210,8 @@ class UserController extends Controller
         $user->syncRoles($validated['roles']);
 
         ActivityLogger::log('update', "Updated user: {$user->name}", $user);
+
+        $this->bustStatsCache();
 
         if ($request->has('stay')) {
             return redirect()->back()->with('success', 'User status updated successfully.');
@@ -240,6 +238,8 @@ class UserController extends Controller
         // If not, ensure roles are detached: $user->roles()->detach();
         $user->delete();
 
+        $this->bustStatsCache();
+
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
     }
 
@@ -254,6 +254,8 @@ class UserController extends Controller
         $user->restore();
 
         ActivityLogger::log('restore', "Restored user: {$user->name}", $user);
+
+        $this->bustStatsCache();
 
         return redirect()->route('admin.users.index')->with('success', 'User restored successfully.');
     }
@@ -276,21 +278,31 @@ class UserController extends Controller
     }
 
     /**
-     * Logout user from all devices.
+     * Clear the user stats cache.
+     */
+    private function bustStatsCache()
+    {
+        Cache::forget('user_stats');
+    }
+
+    /**
+     * Logout user from all devices by incrementing session_version.
+     * The VerifySessionVersion middleware checks this value on each request
+     * and logs out any session whose version no longer matches the DB value.
+     * Works with any session driver (file, database, Redis, etc.).
      */
     public function logoutAllDevices(string $id)
     {
         $user = User::findOrFail($id);
-        // Assuming logout is an update-like action or specific permission
-        // Reusing update policy for now as it modifies user session state
         Gate::authorize('update', $user);
 
-        // Delete all sessions for this user except current one
-        // This requires session database driver
-        \DB::table('sessions')
-            ->where('user_id', $user->id)
-            ->where('id', '!=', session()->getId())
-            ->delete();
+        $user->increment('session_version');
+
+        // If the admin is invalidating their own sessions, update the current
+        // session so they are not immediately logged out themselves.
+        if ((string) $user->id === (string) auth()->id()) {
+            session()->put('session_version', $user->session_version);
+        }
 
         ActivityLogger::log('logout_all_devices', "Logged out user from all devices: {$user->name}", $user);
 

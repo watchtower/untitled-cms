@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Menu;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class MenuController extends Controller
@@ -39,6 +40,7 @@ class MenuController extends Controller
         $menu = Menu::create($validated);
 
         ActivityLogger::log('create', "Created menu: {$menu->name}", $menu);
+        Cache::forget('active_menus');
 
         return redirect()->route('admin.menus.edit', $menu->id)->with('success', 'Menu created successfully.');
     }
@@ -74,6 +76,7 @@ class MenuController extends Controller
         $menu->update($validated);
 
         ActivityLogger::log('update', "Updated menu: {$menu->name}", $menu);
+        Cache::forget('active_menus');
 
         if ($request->has('stay')) {
             return redirect()->back()->with('success', 'Menu updated successfully.');
@@ -93,6 +96,7 @@ class MenuController extends Controller
         $menu->delete();
 
         ActivityLogger::log('delete', "Deleted menu: {$name}", $menu);
+        Cache::forget('active_menus');
 
         return redirect()->route('admin.menus.index')->with('success', 'Menu deleted successfully.');
     }

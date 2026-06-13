@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SaveAiImageRequest;
+use App\Http\Requests\UploadVaultFileRequest;
 use App\Jobs\GenerateMissingAltTextJob;
 use App\Models\VaultFile;
 use App\Models\VaultFolder;
@@ -60,19 +61,15 @@ class VaultController extends Controller
         return response()->json($files);
     }
 
-    public function upload(Request $request)
+    public function upload(UploadVaultFileRequest $request)
     {
-        $this->authorizeGlobalMediaCreate();
-
-        $request->validate([
-            'files' => 'required|array',
-            'files.*' => 'file', // Max size checked in VaultService/php.ini/config
-            'folder_id' => 'nullable|string|exists:'.VaultFolder::class.',_id',
-        ]);
+        // Global media create is checked by FormRequest
+        $folderId = $request->input('folder_id');
 
         $uploadedFiles = [];
         $errors = [];
 
+        // Check if user has permission to upload to the specific folder
         $targetFolder = null;
         if ($request->folder_id) {
             $targetFolder = VaultFolder::findOrFail($request->folder_id);
@@ -231,7 +228,7 @@ class VaultController extends Controller
         $restoredCount = 0;
 
         foreach ($files as $file) {
-            if (Gate::allows('delete', $file)) {
+            if (Gate::allows('restore', $file)) {
                 $this->vaultService->restoreFile($file);
                 $restoredCount++;
             }
@@ -439,7 +436,7 @@ class VaultController extends Controller
     {
         $file = VaultFile::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
 
-        if (Gate::denies('delete', $file)) { // Or create a specific 'restore' gate if needed
+        if (Gate::denies('restore', $file)) {
             abort(403);
         }
 
@@ -452,7 +449,7 @@ class VaultController extends Controller
     {
         $file = VaultFile::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
 
-        if (Gate::denies('delete', $file)) { // Or create a specific 'forceDelete' gate
+        if (Gate::denies('forceDelete', $file)) {
             abort(403);
         }
 
@@ -487,6 +484,7 @@ class VaultController extends Controller
         }
 
         if ($search = $request->query('search')) {
+            $search = preg_quote($search, '/');
             $query->where(function ($q) use ($search) {
                 $q->where('original_name', 'like', "%{$search}%")
                     ->orWhere('alt_text', 'like', "%{$search}%");

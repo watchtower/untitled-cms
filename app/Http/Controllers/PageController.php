@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePageRequest;
+use App\Http\Requests\UpdatePageRequest;
 use App\Models\Page;
 use App\Models\Redirect as PageRedirect;
 use App\Services\ActivityLogger;
@@ -39,21 +41,9 @@ class PageController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StorePageRequest $request)
     {
-        $this->authorize('create', Page::class);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:pages,slug',
-            'content' => 'required|string',
-            'status' => 'required|in:draft,published',
-            'seo_title' => 'nullable|string|max:255',
-            'seo_description' => 'nullable|string|max:160',
-            'featured_image' => 'nullable|string',
-            'featured_images' => 'nullable|array',
-            'tags' => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         // Derive base slug from custom input or title
         $baseSlug = ! empty($validated['slug'])
@@ -136,22 +126,9 @@ class PageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdatePageRequest $request, Page $page)
     {
-        $page = Page::findOrFail($id);
-        $this->authorize('update', $page);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:pages,slug,'.$id,
-            'content' => 'required|string',
-            'status' => 'required|in:draft,published',
-            'seo_title' => 'nullable|string|max:255',
-            'seo_description' => 'nullable|string|max:160',
-            'featured_image' => 'nullable|string',
-            'featured_images' => 'nullable|array',
-            'tags' => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         $baseSlug = ! empty($validated['slug'])
             ? Str::slug($validated['slug'])

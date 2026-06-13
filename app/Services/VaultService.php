@@ -138,11 +138,17 @@ class VaultService
     public function purgeFile(VaultFile $file): void
     {
         $fileData = $file->toArray();
+        $disk = Storage::disk($this->resolveDiskPrefix($file));
 
         // Remove the physical file (it might have .trashed appended if we soft-deleted it)
         $this->deleteStorageFile($file, '.trashed');
         // Fallback for hard-deleting an active file directly
         $this->deleteStorageFile($file, '');
+
+        // Delete the optimized WebP variant if it exists
+        if ($file->optimized_path && $disk->exists($file->optimized_path)) {
+            $disk->delete($file->optimized_path);
+        }
 
         $file->forceDelete(); // Hard delete
         $this->audit('file.purge', $file, $fileData, null);
@@ -324,8 +330,8 @@ class VaultService
 
     public function purgeFolder(VaultFolder $folder): void
     {
-        // Cascade delete children records
-        VaultFolder::where('path_slug', 'like', $folder->path_slug.'/%')->chunk(50, function ($children) {
+        // Cascade delete children records using parent_id to avoid exponential loops
+        VaultFolder::where('parent_id', $folder->id)->withTrashed()->chunk(50, function ($children) {
             foreach ($children as $child) {
                 $this->purgeFolder($child);
             }

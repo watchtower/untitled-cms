@@ -125,9 +125,9 @@ class AiService
     private function generateAltTextGemini(AiHub $hub, string $dataUri, string $mimeType): string
     {
         $base64 = preg_replace('/^data:[^;]+;base64,/', '', $dataUri);
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$hub->default_model}:generateContent?key={$hub->api_key}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$hub->default_model}:generateContent";
 
-        $response = Http::post($url, [
+        $response = Http::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
             'contents' => [
                 [
                     'parts' => [
@@ -440,9 +440,9 @@ class AiService
      */
     private function generateImageGeminiContent(AiHub $hub, string $model, string $prompt): string
     {
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$hub->api_key}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
 
-        $response = Http::post($url, [
+        $response = Http::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
             'contents' => [
                 ['parts' => [['text' => $prompt]]],
             ],
@@ -476,9 +476,9 @@ class AiService
      */
     private function generateImageGeminiImagen(AiHub $hub, string $model, string $prompt): string
     {
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:predict?key={$hub->api_key}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:predict";
 
-        $response = Http::post($url, [
+        $response = Http::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
             'instances' => [['prompt' => $prompt]],
             'parameters' => [
                 'sampleCount' => 1,

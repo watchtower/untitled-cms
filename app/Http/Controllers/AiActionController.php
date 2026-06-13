@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Page;
 use App\Services\AiActionService;
 use App\Services\AiService;
@@ -92,13 +93,26 @@ PROMPT;
      */
     public function execute(Request $request)
     {
-        // Requires at minimum the ability to create pages/banners
-        Gate::authorize('create', Page::class);
-
         $request->validate([
             'proposal' => 'required|array',
             'proposal.action' => 'required|string',
         ]);
+
+        // Authorize based on the specific action type and the exact model if it's an update.
+        $action = $request->input('proposal.action', '');
+        $isBanner = str_starts_with($action, 'update_banner') || str_starts_with($action, 'create_banner');
+        $modelClass = $isBanner ? Banner::class : Page::class;
+
+        if (str_starts_with($action, 'update_')) {
+            $resolvedId = $request->input('proposal.resolved_id');
+            if (! $resolvedId) {
+                return response()->json(['error' => 'Missing resolved_id for update action.'], 422);
+            }
+            $model = $modelClass::withTrashed()->findOrFail($resolvedId);
+            Gate::authorize('update', $model);
+        } else {
+            Gate::authorize('create', $modelClass);
+        }
 
         try {
             $result = $this->actionService->execute($request->input('proposal'));

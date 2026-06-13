@@ -360,27 +360,32 @@ class AiActionService
             throw new \Exception("No {$entityName} title provided.");
         }
 
+        // 1. Exact match (fastest, most precise)
+        $model = $modelClass::where('title', $title)->first();
+        if ($model) {
+            return $model;
+        }
+
+        // 2. Case-insensitive exact match
+        $model = $modelClass::where('title', 'like', $title)->first();
+        if ($model) {
+            return $model;
+        }
+
+        // 3. Substring contains match (trimmed title appears anywhere)
         $model = $modelClass::where('title', 'like', "%{$title}%")->first();
-
-        if (! $model) {
-            $model = $modelClass::onlyTrashed()->where('title', 'like', "%{$title}%")->first();
+        if ($model) {
+            return $model;
         }
 
-        if (! $model) {
-            $words = array_filter(explode(' ', $title), fn ($w) => strlen($w) > 3);
-            if (! empty($words)) {
-                $query = $modelClass::query();
-                foreach ($words as $word) {
-                    $query->orWhere('title', 'like', "%{$word}%");
-                }
-                $model = $query->first();
-            }
+        // 4. Check soft-deleted records with exact match only
+        $model = $modelClass::onlyTrashed()->where('title', $title)->first();
+        if ($model) {
+            return $model;
         }
 
-        if (! $model) {
-            throw new \Exception("No {$entityName} found matching \"{$title}\". If this is a new {$entityName}, say 'create a {$entityName} called {$title}'.");
-        }
-
-        return $model;
+        // The original word-by-word orWhere fallback has been removed — it could
+        // accidentally match and modify entirely unrelated records.
+        throw new \Exception("No {$entityName} found matching \"{$title}\". Please use the exact title as it appears in the CMS.");
     }
 }

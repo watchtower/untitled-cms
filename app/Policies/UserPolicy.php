@@ -61,4 +61,20 @@ class UserPolicy
     {
         return $user->hasPermission('users.delete') || $user->hasPermission('users.manage');
     }
+
+    /**
+     * Determine whether the user can perform batch updates.
+     */
+    public function batchUpdate(User $user): bool
+    {
+        return $user->hasPermission('users.edit') || $user->hasPermission('users.manage');
+    }
+
+    /**
+     * Determine whether the user can perform batch deletes.
+     */
+    public function batchDelete(User $user): bool
+    {
+        return $user->hasPermission('users.delete') || $user->hasPermission('users.manage');
+    }
 }

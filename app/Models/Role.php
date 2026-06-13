@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
 use MongoDB\Laravel\Eloquent\Model;
 
 class Role extends Model
 {
+    use HasFactory;
+
     protected $connection = 'mongodb';
+
+    protected $collection = 'roles';
 
     protected $fillable = ['name', 'slug', 'description', 'permissions', 'is_active', 'backend_access'];
 

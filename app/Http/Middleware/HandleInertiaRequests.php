@@ -3,9 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Models\Menu;
-use App\Models\Setting;
 use App\Services\SettingsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Middleware;
 
@@ -37,14 +37,14 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'appName' => config('app.name', 'Laravel'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user()?->only(['id', 'name', 'email', 'is_active']),
                 'permissions' => $request->user() ? $request->user()->getCachedPermissions() : [],
                 'canAccessBackend' => $request->user()?->canAccessBackend() ?? false,
             ],
             'tinymce_api_key' => $request->user()?->canAccessBackend() ? config('services.tinymce.api_key') : null,
             'settings' => app(SettingsService::class)->getPublicSettings(),
-            'aiChatEnabled' => (bool) Setting::get('ai.chat_enabled', true),
-            'menus' => Menu::active()->get()->keyBy('slug'),
+            'aiChatEnabled' => (bool) app(SettingsService::class)->get('ai.chat_enabled', true),
+            'menus' => Cache::remember('active_menus', 300, fn () => Menu::active()->get()->keyBy('slug')),
             'passwordRulesString' => Password::defaults()->toPasswordRulesString(),
         ];
     }
