@@ -75,6 +75,12 @@ When code changes and wiki content is stale:
 1. Update affected pages.
 2. Log: `## [YYYY-MM-DD] update | <what changed>`
 
+### Release
+When a new version is released:
+1. Update `CHANGELOG.md` with the new version, date, and categorize changes (Added, Changed, Fixed).
+2. Ensure links at the bottom of `CHANGELOG.md` are updated to point to the correct diffs (e.g. `compare/v0.3.0...v0.4.0`).
+3. Log: `## [YYYY-MM-DD] release | <version>`
+
 ### Lint
 Periodically health-check the wiki:
 - Flag contradictions between pages.

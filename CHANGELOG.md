@@ -11,6 +11,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.4.0] — 2026-06-13
+
+### Added
+- **Apple Password Rules** — Added Apple `passwordrules` hint to improve the password generation experience.
+- **Documentation Updates** — Promoted Shadcn UI theming by adding a comprehensive CLI preset command guide to the README.
+
+### Changed
+- **Laravel 13 Upgrade** — Integrated support for Laravel 13.8 and 13.14 features.
+- **Security & Performance** — Conducted a comprehensive security sweep across the platform and applied significant performance optimizations within the Media Vault.
+
+---
+
+## [0.3.0] — 2026-05-23
+
+### Changed
+- **React 19 & Tailwind v4** — Upgraded frontend to React 19 and Tailwind v4, and applied the `b2fA` preset.
+- **Laravel 13 Skeleton** — Synchronized Laravel 13 skeleton and hardened backend security (including a patch for CVE-2026-44167 in phpseclib).
+- **Media Vault Optimizations** — Hardened the Media Vault and applied performance and memory optimizations.
+- **Dependencies** — Cleaned up unused dependencies to unblock Dependabot.
+
+---
+
 ## [0.2.0] — 2026-04-12
 
 ### Added
@@ -54,6 +76,8 @@ Initial public release.
 - **Dark mode** — System-preference aware, toggle in admin UI
 - **34 permissions** — Organised by resource group across all modules
 
-[Unreleased]: https://github.com/watchtower/untitled-cms/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/watchtower/untitled-cms/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/watchtower/untitled-cms/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/watchtower/untitled-cms/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/watchtower/untitled-cms/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/watchtower/untitled-cms/releases/tag/v0.1.0

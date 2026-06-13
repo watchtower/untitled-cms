@@ -4,6 +4,9 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-06-13] update | SCHEMA.md Release Operation
+Added the `Release` operation to `SCHEMA.md` to ensure `CHANGELOG.md` is updated on every new release.
+
 ## [2026-06-13] update | Security Sweep & Vault Performance Fixes
 Completed a comprehensive security audit using Sentinel and Code Reviewer standards:
 - **SSRF / DNS Rebinding**: Hardened `SafeHttpClient` using `CURLOPT_RESOLVE` to pin IP addresses and prevent DNS rebinding attacks on outbound requests.
