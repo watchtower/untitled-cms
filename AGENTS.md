@@ -16,6 +16,14 @@ To effectively reference this knowledge in future runs and avoid redundant analy
 3. **Comply**: Read `wiki/SCHEMA.md` to understand formatting rules, update conventions, and query mechanics.
 4. **Log**: Update the `wiki/log.md` with a timestamped note after making documented adjustments.
 
+### Key Wiki Files
+- `wiki/index.md` — master content catalog with links to every page (start here).
+- `wiki/SCHEMA.md` — how to ingest sources, query, update, and lint the wiki.
+- `wiki/log.md` — append-only history of wiki operations.
+- `wiki/overview.md` — project summary, capabilities, and key numbers.
+
+Pages are organized under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/`. Cross-references use `[[folder/page]]` wiki-link syntax (e.g. `[[modules/vault]]`, `[[architecture/request-flow]]`).
+
 ## Build, Test, and Development Commands
 - `composer run dev`: starts the Laravel server, queue listener, log viewer, and Vite HMR together.
 - `npm run dev`: runs the Vite dev server for frontend assets.

@@ -78,10 +78,11 @@ Modules must be placed in `resources/js/Pages/[ModuleName]/`.
   - **Sidebar Content**: Place metadata (Status, SEO, Publishing dates, Categories) in multiple shadcn/ui `<Card>` elements within the sidebar slot.
   - **Main Content**: Place core content (Title, Rich Text Editor, Core configurations) in `<Card>` elements within the main slot.
 - **Components**:
-  - Standard Inputs: Use shadcn/ui `<Input>`, `<Label>`, `<Select>`, `<Textarea>`, `<Switch>`.
-  - Slugs: Use `@/Components/SlugInput`.
-  - Rich Text: Use `@/Components/Editor`.
-  - AI-Assisted Fields: Use `<AiInput>` instead of plain `<Input>` for title/name fields. Use `<AiTextarea>` instead of plain `<Textarea>` for description fields.
+  - **Standard Inputs**: Use shadcn/ui `<Input>`, `<Label>`, `<Select>`, `<Textarea>`, `<Switch>`.
+    *(Note: If a shadcn component is missing, install it using the v4 CLI with our default preset: `npx shadcn@latest add [component-name] --preset b2fA`)*
+  - **Slugs**: Use `@/Components/SlugInput`.
+  - **Rich Text**: Use `@/Components/Editor`.
+  - **AI-Assisted Fields**: Use `<AiInput>` instead of plain `<Input>` for title/name fields. Use `<AiTextarea>` instead of plain `<Textarea>` for description fields.
 - **Footer**: Include `<StickyFormFooter isSaving={processing} isDirty={isDirty} onSave={submit} />` at the bottom of the form for the save actions.
 
 ## 3. AI Chat Integration (Required for Every New Module)
