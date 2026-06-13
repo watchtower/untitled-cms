@@ -3,10 +3,12 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { SocialLoginButtons } from '@/Components/SocialLoginButtons';
 import AuthLayout from '@/Layouts/AuthLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import { PageProps } from '@/types';
 
 export default function Register() {
+    const { passwordRulesString } = usePage<PageProps>().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
@@ -70,6 +72,7 @@ export default function Register() {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     required
+                                    passwordrules={passwordRulesString}
                                 />
                                 {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
                             </div>

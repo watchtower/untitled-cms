@@ -36,4 +36,11 @@ export type PageProps<
     canCreate?: boolean;
     canEdit?: boolean;
     canDelete?: boolean;
+    passwordRulesString?: string;
 };
+
+declare module 'react' {
+    interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
+        passwordrules?: string;
+    }
+}

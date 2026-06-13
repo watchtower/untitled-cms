@@ -6,6 +6,7 @@ use App\Models\Menu;
 use App\Models\Setting;
 use App\Services\SettingsService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -44,6 +45,7 @@ class HandleInertiaRequests extends Middleware
             'settings' => app(SettingsService::class)->getPublicSettings(),
             'aiChatEnabled' => (bool) Setting::get('ai.chat_enabled', true),
             'menus' => Menu::active()->get()->keyBy('slug'),
+            'passwordRulesString' => Password::defaults()->toPasswordRulesString(),
         ];
     }
 }

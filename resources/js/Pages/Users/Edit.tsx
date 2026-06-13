@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Checkbox } from '@/Components/ui/checkbox';
@@ -49,6 +49,8 @@ export default function Edit({ auth, user, roles }: UserEditProps) {
         roles: user.roles.map(r => r.id),
         is_active: user.is_active ?? true,
     });
+
+    const { passwordRulesString } = usePage<PageProps>().props;
 
     const submit = () => {
         put(route('admin.users.update', user.id));
@@ -357,6 +359,7 @@ export default function Edit({ auth, user, roles }: UserEditProps) {
                                         className="h-9"
                                         autoComplete="new-password"
                                         placeholder="Enter new password"
+                                        passwordrules={passwordRulesString}
                                     />
                                     {passwordStrength && (
                                         <div className="flex items-center gap-2 mt-2">

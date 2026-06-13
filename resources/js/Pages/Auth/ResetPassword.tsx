@@ -3,8 +3,9 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import { PageProps } from '@/types';
 
 export default function ResetPassword({
     token,
@@ -13,6 +14,7 @@ export default function ResetPassword({
     token: string;
     email: string;
 }) {
+    const { passwordRulesString } = usePage<PageProps>().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         token: token,
         email: email,
@@ -61,6 +63,7 @@ export default function ResetPassword({
                         autoComplete="new-password"
                         isFocused={true}
                         onChange={(e) => setData('password', e.target.value)}
+                        passwordrules={passwordRulesString}
                     />
 
                     <InputError message={errors.password} className="mt-2" />

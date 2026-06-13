@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -26,6 +26,7 @@ export default function Create({ auth, roles }: UserCreateProps) {
         password_confirmation: '',
         roles: [] as string[],
     });
+    const { passwordRulesString } = usePage<PageProps>().props;
 
     const submit = () => {
         post(route('admin.users.store'));
@@ -118,6 +119,7 @@ export default function Create({ auth, roles }: UserCreateProps) {
                                     onChange={(e) => setData('password', e.target.value)}
                                     className="mt-1 block w-full"
                                     required
+                                    passwordrules={passwordRulesString}
                                 />
                                 {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
                             </div>
