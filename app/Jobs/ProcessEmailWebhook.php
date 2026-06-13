@@ -8,14 +8,17 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\EmailWebhooks\Contracts\WebhookProvider;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\Interruptible;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class ProcessEmailWebhook implements ShouldQueue
+class ProcessEmailWebhook implements Interruptible, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected bool $stop = false;
 
     /**
      * Create a new job instance.
@@ -35,8 +38,16 @@ class ProcessEmailWebhook implements ShouldQueue
             : [$this->payload];
 
         foreach ($payloads as $raw) {
+            if ($this->stop) {
+                break;
+            }
             $this->processEvent($provider->normalizeEvent($raw));
         }
+    }
+
+    public function interrupted(int $signal): void
+    {
+        $this->stop = true;
     }
 
     private function processEvent(?array $event): void

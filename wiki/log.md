@@ -4,6 +4,10 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-06-08] feat | Upgrade integrations for Laravel 13.8/13.14 features
+- Applied Laravel 13.8.0 `shouldRenderJsonWhen` exception feature in `bootstrap/app.php` with custom API route bypassing.
+- Integrated Apple `passwordrules` autocomplete hints via Inertia shared props into React Auth/User forms.
+- Migrated `ProcessEmailWebhook` to the new `Interruptible` contract for clean daemon teardowns.
 ## [2026-05-23] fix | Setting::get() cache serialization
 Impact Sentinel detected `Setting::get()` caching full Eloquent model objects, which broke under
 the new `serializable_classes => false` config (incomplete object warnings on every request).

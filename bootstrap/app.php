@@ -40,6 +40,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+        );
+
         $exceptions->render(function (Throwable $e, Request $request) {
             $response = null;
 
@@ -47,7 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 $status = $e->getStatusCode();
                 if (in_array($status, [403, 404, 500, 503])) {
                     // Always try to render an Inertia response if it's a web request looking for HTML
-                    if ($request->header('X-Inertia') || ! $request->wantsJson()) {
+                    if ($request->header('X-Inertia') || (! $request->wantsJson() && ! $request->is('api/*'))) {
                         return Inertia::render('Error', ['status' => $status])
                             ->toResponse($request)
                             ->setStatusCode($status);
