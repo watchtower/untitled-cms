@@ -420,7 +420,7 @@ Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.3.0**.
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.4.0**.
 
 ---
 
