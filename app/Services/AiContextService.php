@@ -52,7 +52,7 @@ class AiContextService
 
     private function pagesContext(): array
     {
-        $recent = Page::latest()->limit(5)->get(['id', 'title', 'status', 'slug']);
+        $recent = Page::orderBy('created_at', 'desc')->limit(5)->get(['id', 'title', 'status', 'slug']);
 
         return [
             'module' => 'pages',
@@ -67,7 +67,7 @@ class AiContextService
 
     private function bannersContext(): array
     {
-        $recent = Banner::latest()->limit(5)->get(['id', 'title', 'status']);
+        $recent = Banner::orderBy('created_at', 'desc')->limit(5)->get(['id', 'title', 'status']);
 
         return [
             'module' => 'banners',

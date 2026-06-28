@@ -275,25 +275,43 @@ class AiService
             throw new \Exception('No active AI Integration found with a configured API key.');
         }
 
-        try {
-            $systemPrompt = $this->buildSystemPrompt($pageUrl);
-            $formattedHistory = $this->formatConversationHistory($messages);
+        $attempts = 0;
+        $maxAttempts = 2;
 
-            $agent = new AnonymousAgent($systemPrompt, [], []);
+        while ($attempts < $maxAttempts) {
+            try {
+                $systemPrompt = $this->buildSystemPrompt($pageUrl);
+                $formattedHistory = $this->formatConversationHistory($messages);
 
-            $response = $agent->prompt(
-                "Conversation History:\n{$formattedHistory}\nAssistant:",
-                [],
-                null,
-                $activeHub->default_model
-            );
+                $agent = new AnonymousAgent($systemPrompt, [], []);
 
-            $activeHub->increment('monthly_usage');
+                $response = $agent->prompt(
+                    "Conversation History:\n{$formattedHistory}\nAssistant:",
+                    [],
+                    null,
+                    $activeHub->default_model
+                );
 
-            return (string) $response;
-        } catch (\Exception $e) {
-            throw new \Exception('Chat failed: '.$e->getMessage());
+                $activeHub->increment('monthly_usage');
+
+                return (string) $response;
+            } catch (\Exception $e) {
+                $attempts++;
+                $msg = strtolower($e->getMessage());
+                
+                if (str_contains($msg, 'rate limit') || str_contains($msg, '429')) {
+                    if ($attempts < $maxAttempts) {
+                        sleep(2);
+                        continue;
+                    }
+                    throw new \Exception('The AI provider is currently experiencing high traffic. Please try again in a few moments.');
+                }
+                
+                throw new \Exception('Chat failed: '.$e->getMessage());
+            }
         }
+        
+        throw new \Exception('Chat failed due to repeated errors.');
     }
 
     /**

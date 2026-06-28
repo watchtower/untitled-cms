@@ -127,6 +127,8 @@ class AiController extends Controller
 
     public function chat(Request $request)
     {
+        set_time_limit(120); // AI responses can be slow
+
         $request->validate([
             'messages' => 'required|array',
             'messages.*.role' => 'required|string|in:user,assistant,system',
