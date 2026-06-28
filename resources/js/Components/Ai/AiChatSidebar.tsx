@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import {
@@ -8,7 +8,6 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/Components/ui/sheet';
-import { ScrollArea } from '@/Components/ui/scroll-area';
 import { Send, Sparkles, User, Bot, Loader2, Eraser, History, Plus, Trash2, CheckCircle, ExternalLink, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
@@ -19,7 +18,12 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import AiActionCard from './AiActionCard';
 
-interface Message {
+import { Message, MessageAvatar, MessageContent, MessageFooter } from '@/Components/ui/message';
+import { Bubble, BubbleContent } from '@/Components/ui/bubble';
+import { MessageScroller, MessageScrollerContent, MessageScrollerViewport, MessageScrollerItem, MessageScrollerButton, MessageScrollerProvider } from '@/Components/ui/message-scroller';
+import { Marker, MarkerIcon, MarkerContent } from '@/Components/ui/marker';
+
+interface MessageType {
     role: 'user' | 'assistant' | 'system';
     content: string;
     proposal?: ActionProposal | null;
@@ -63,21 +67,12 @@ export default function AiChatSidebar() {
     const [input, setInput] = useState('');
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [sessions, setSessions] = useState<ChatSessionMeta[]>([]);
-    const [messages, setMessages] = useState<Message[]>([
+    const [messages, setMessages] = useState<MessageType[]>([
         { role: 'assistant', content: "Hello! I'm your AI Assistant. How can I help you today?" }
     ]);
     const [isLoading, setIsLoading] = useState(false);
     const [pendingProposal, setPendingProposal] = useState<{ proposal: ActionProposal; msgIndex: number } | null>(null);
     const [isExecuting, setIsExecuting] = useState(false);
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    // Auto-scroll
-    useEffect(() => {
-        if (scrollRef.current) {
-            const c = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-            if (c) c.scrollTop = c.scrollHeight;
-        }
-    }, [messages]);
 
     // Load sessions when history panel opens or sidebar opens
     const loadSessions = useCallback(async () => {
@@ -89,17 +84,22 @@ export default function AiChatSidebar() {
 
     useEffect(() => {
         if (isOpen) loadSessions();
-    }, [isOpen]);
+    }, [isOpen, loadSessions]);
 
     useEffect(() => {
         if (showHistory) loadSessions();
-    }, [showHistory]);
+    }, [showHistory, loadSessions]);
 
     // Persist messages after each exchange
-    const persistMessages = useCallback(async (id: string, msgs: Message[]) => {
+    const persistMessages = useCallback(async (id: string, msgs: MessageType[]) => {
         const persistable = msgs
             .filter(m => m.role !== 'system')
-            .map(m => ({ role: m.role, content: m.content }));
+            .map(m => ({ 
+                role: m.role, 
+                content: m.content,
+                ...(m.proposal ? { proposal: m.proposal } : {}),
+                ...(m.actionResult ? { actionResult: m.actionResult } : {})
+            }));
         try {
             const { data } = await axios.put(route('admin.ai.sessions.update', id), { messages: persistable });
             // Update title in session list if auto-generated
@@ -158,14 +158,14 @@ export default function AiChatSidebar() {
             } catch { }
         }
 
-        const contextMessage: Message = {
+        const contextMessage: MessageType = {
             role: 'system',
             content: `The admin is currently on the CMS page: ${url ?? 'unknown'}.`,
         };
 
-        const userMessage: Message = { role: 'user', content: text };
+        const userMessage: MessageType = { role: 'user', content: text };
         const history = messages.filter(m => m.role !== 'system');
-        const apiMessages: Message[] = [contextMessage, ...history, userMessage];
+        const apiMessages: MessageType[] = [contextMessage, ...history, userMessage];
 
         const displayMessages = [...history, userMessage];
         setMessages(displayMessages);
@@ -176,8 +176,6 @@ export default function AiChatSidebar() {
             const { data } = await axios.post(route('admin.ai.chat'), { messages: apiMessages, page_url: url ?? window.location.pathname });
             const rawContent: string = data.message;
 
-            // Detect [ACTION]...[/ACTION] block (or [CREATE_PAGE], etc.)
-            // Handle cases where the AI forgets the closing tag, gets cut off, or invents a tag name
             const actionRegex = /\[([A-Z_]+)\]\s*(\{[\s\S]*?)(?:\[\/?[A-Z_]+\]?|\/[A-Z_]+|$)/;
             const actionMatch = rawContent.match(actionRegex);
             let proposal: ActionProposal | null = null;
@@ -192,11 +190,9 @@ export default function AiChatSidebar() {
                     });
                     proposal = resolveData.proposal ?? null;
                     resolveError = resolveData.error ?? null;
-                    // If AI gave no conversational text, add a generic intro
                     if (!displayContent && proposal) {
                         displayContent = `I'll ${proposal.action.replace(/_/g, ' ')} for you. Please review the details below:`;
                     }
-                    // Surface resolve error so user knows why action failed
                     if (!proposal && resolveError && !displayContent) {
                         displayContent = `⚠️ I tried to perform that action but ran into an issue: **${resolveError}**\n\nPlease check the record name and try again.`;
                     }
@@ -211,10 +207,8 @@ export default function AiChatSidebar() {
                 }
             }
 
-            const assistantMsg: Message = {
+            const assistantMsg: MessageType = {
                 role: 'assistant',
-                // NEVER use rawContent — it contains the [ACTION] block.
-                // displayContent is already stripped. Fall back to a generic msg if empty.
                 content: displayContent || (proposal ? '' : 'I wasn\'t able to process that request. Please try again.'),
                 proposal,
             };
@@ -226,7 +220,6 @@ export default function AiChatSidebar() {
                 setPendingProposal({ proposal, msgIndex: finalMessages.length - 1 });
             }
 
-            // Persist
             if (currentSessionId) {
                 await persistMessages(currentSessionId, finalMessages);
             }
@@ -251,7 +244,6 @@ export default function AiChatSidebar() {
             const { data } = await axios.post(route('admin.ai.actions.execute'), { proposal: pendingProposal.proposal });
             const result: ActionResult = data.result;
 
-            // Replace the message's proposal with the result
             setMessages(prev => prev.map((m, i) =>
                 i === pendingProposal.msgIndex
                     ? { ...m, proposal: null, actionResult: result }
@@ -295,7 +287,6 @@ export default function AiChatSidebar() {
                 </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[420px] sm:w-[520px] flex flex-col p-0 gap-0">
-
                 {/* Header */}
                 <SheetHeader className="p-4 border-b shrink-0">
                     <div className="flex items-center justify-between">
@@ -346,76 +337,95 @@ export default function AiChatSidebar() {
                     </div>
                 )}
 
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto min-h-0 p-4" ref={scrollRef}>
-                    <div className="space-y-4 pb-4">
-                        {messages.map((msg, i) => (
-                            <div key={i}>
-                                <div className={cn(
-                                    'flex gap-3 text-sm',
-                                    msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                                )}>
-                                    <div className={cn(
-                                        'h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-xs',
-                                        msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                                    )}>
-                                        {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4 text-primary" />}
-                                    </div>
-                                    {msg.content && (
-                                        <div className={cn(
-                                            'rounded-2xl px-4 py-2 max-w-[85%] leading-relaxed',
-                                            msg.role === 'user'
-                                                ? 'bg-primary text-primary-foreground rounded-tr-none'
-                                                : 'bg-muted rounded-tl-none'
-                                        )}>
-                                            {msg.role === 'user' ? (
-                                                msg.content
-                                            ) : (
-                                                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-1">
-                                                    <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{msg.content}</ReactMarkdown>
-                                                </div>
-                                            )}
-                                        </div>
+                {/* Messages Container */}
+                <div className="flex-1 overflow-hidden relative">
+                    <MessageScrollerProvider autoScroll={true} defaultScrollPosition="end">
+                        <MessageScroller className="h-full px-4">
+                            <MessageScrollerViewport>
+                                <MessageScrollerContent className="py-4 space-y-4">
+                                    {messages.map((msg, i) => (
+                                        <MessageScrollerItem key={i}>
+                                            <Message align={msg.role === 'user' ? 'end' : 'start'} className="gap-3">
+                                                <MessageAvatar className={cn(
+                                                    'h-8 w-8 shadow-xs flex items-center justify-center',
+                                                    msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                                                )}>
+                                                    {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4 text-primary" />}
+                                                </MessageAvatar>
+                                                <MessageContent>
+                                                    {msg.content && (
+                                                        <Bubble variant={msg.role === 'user' ? 'default' : 'muted'} className="leading-relaxed">
+                                                            <BubbleContent>
+                                                                {msg.role === 'user' ? (
+                                                                    msg.content
+                                                                ) : (
+                                                                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-headings:my-1">
+                                                                        <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{msg.content}</ReactMarkdown>
+                                                                    </div>
+                                                                )}
+                                                            </BubbleContent>
+                                                        </Bubble>
+                                                    )}
+
+                                                    {/* Action pending indicator */}
+                                                    {msg.proposal && pendingProposal?.msgIndex === i && (
+                                                        <MessageFooter className="mt-2">
+                                                            <Marker variant="border" className="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+                                                                <MarkerIcon>
+                                                                    <AlertTriangle className="h-3 w-3" />
+                                                                </MarkerIcon>
+                                                                <MarkerContent>Confirmation required below ↓</MarkerContent>
+                                                            </Marker>
+                                                        </MessageFooter>
+                                                    )}
+
+                                                    {/* Action result */}
+                                                    {msg.actionResult && (
+                                                        <MessageFooter className="mt-3">
+                                                            <Marker variant="default" className="text-green-600 dark:text-green-400 bg-transparent border-0 px-0">
+                                                                <MarkerIcon>
+                                                                    <CheckCircle className="h-4 w-4" />
+                                                                </MarkerIcon>
+                                                                <MarkerContent className="flex items-center gap-1 font-medium">
+                                                                    <span>{msg.actionResult.subject} "{msg.actionResult.title}" — done!</span>
+                                                                    {msg.actionResult.url && (
+                                                                        <a href={msg.actionResult.url} className="underline flex items-center gap-1 font-normal ml-1" target="_blank" rel="noreferrer">
+                                                                            View <ExternalLink className="h-3 w-3" />
+                                                                        </a>
+                                                                    )}
+                                                                </MarkerContent>
+                                                            </Marker>
+                                                        </MessageFooter>
+                                                    )}
+                                                </MessageContent>
+                                            </Message>
+                                        </MessageScrollerItem>
+                                    ))}
+
+                                    {isLoading && (
+                                        <MessageScrollerItem>
+                                            <Message align="start" className="gap-3">
+                                                <MessageAvatar className="h-8 w-8 shadow-xs flex items-center justify-center bg-muted">
+                                                    <Bot className="h-4 w-4 text-primary" />
+                                                </MessageAvatar>
+                                                <MessageContent>
+                                                    <Marker variant="default" className="bg-transparent border-0 px-0 mt-1">
+                                                        <MarkerIcon>
+                                                            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                                                        </MarkerIcon>
+                                                        <MarkerContent className="text-muted-foreground italic">
+                                                            AI is thinking...
+                                                        </MarkerContent>
+                                                    </Marker>
+                                                </MessageContent>
+                                            </Message>
+                                        </MessageScrollerItem>
                                     )}
-                                </div>
-
-                                {/* Action pending indicator (replaces inline card) */}
-                                {msg.proposal && pendingProposal?.msgIndex === i && (
-                                    <div className="mt-2 ml-11">
-                                        <span className="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-full px-2.5 py-1">
-                                            <AlertTriangle className="h-3 w-3" />
-                                            Confirmation required below ↓
-                                        </span>
-                                    </div>
-                                )}
-
-                                {/* Action result */}
-                                {msg.actionResult && (
-                                    <div className="mt-3 ml-11 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                                        <CheckCircle className="h-4 w-4 shrink-0" />
-                                        <span>{msg.actionResult.subject} "{msg.actionResult.title}" — done!</span>
-                                        {msg.actionResult.url && (
-                                            <a href={msg.actionResult.url} className="underline flex items-center gap-1" target="_blank" rel="noreferrer">
-                                                View <ExternalLink className="h-3 w-3" />
-                                            </a>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-
-                        {isLoading && (
-                            <div className="flex gap-3 text-sm animate-in fade-in slide-in-from-bottom-2">
-                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                                    <Bot className="h-4 w-4 text-primary" />
-                                </div>
-                                <div className="bg-muted rounded-2xl rounded-tl-none px-4 py-2 flex items-center gap-2 text-muted-foreground italic">
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                    AI is thinking...
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                                </MessageScrollerContent>
+                            </MessageScrollerViewport>
+                            <MessageScrollerButton />
+                        </MessageScroller>
+                    </MessageScrollerProvider>
                 </div>
 
                 {/* Quick prompts */}
@@ -433,7 +443,7 @@ export default function AiChatSidebar() {
                     </div>
                 )}
 
-                {/* Sticky confirmation card — above input, never overlaps messages */}
+                {/* Sticky confirmation card */}
                 {pendingProposal && (
                     <div className="px-4 pb-3 shrink-0 border-t bg-background animate-in slide-in-from-bottom-2">
                         <div className="pt-3">
