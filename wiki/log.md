@@ -4,6 +4,11 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-06-28] update | AI Chat Resilience & Shadcn Primitives
+- Documented adoption of shadcn/ui chat primitives in `frontend/ui-stack.md`.
+- Updated `modules/ai-hub.md` to reflect proper context usage of chat sessions.
+- Documented AI chat rate limits and HTTP 429 2-second retry logic in `modules/ai-hub.md`.
+
 ## [2026-06-13] update | SCHEMA.md Release Operation
 Added the `Release` operation to `SCHEMA.md` to ensure `CHANGELOG.md` is updated on every new release.
 

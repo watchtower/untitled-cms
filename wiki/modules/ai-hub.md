@@ -33,8 +33,13 @@ where tracking increments are written.
 ## Chat sessions
 
 Conversation history is stored in `chat_sessions`. Each session belongs to a user.
-Session data is not currently used as context in subsequent prompts — investigate
-`AiContextService` if you need to change this.
+Session data (including past messages and AI proposals) is formatted and passed as conversation history in subsequent prompts to maintain continuity.
+
+## Rate limits & Retry Logic
+
+- Text generation: **30 requests/minute**
+- Image generation: **10 requests/minute**
+- **Retry Logic:** AI chat requests have a 120-second PHP timeout and include automatic 1-time retry logic with a 2-second backoff for HTTP 429 rate limit responses.
 
 ## AiContextService
 

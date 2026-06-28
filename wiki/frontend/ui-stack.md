@@ -21,6 +21,7 @@ Last updated: 2026-05-23
 | Charts | Recharts (dashboard analytics) |
 | Form validation | Zod |
 | Toast notifications | Sonner |
+| AI Chat UI | shadcn/ui chat primitives (`message`, `bubble`, `message-scroller`) |
 
 ## Page structure
 
