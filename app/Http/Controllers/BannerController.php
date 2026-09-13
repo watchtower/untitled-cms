@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Banner;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class BannerController extends Controller
@@ -54,7 +55,7 @@ class BannerController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:banners,slug',
+            'slug' => ['nullable', 'string', 'max:255', Rule::unique(Banner::class, 'slug')],
             'slides' => 'nullable|array',
             'slides.*.image' => 'required_with:slides|string',
             'slides.*.url' => $this->slideUrlRules(),
@@ -106,7 +107,7 @@ class BannerController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:banners,slug,'.$id.',_id',
+            'slug' => ['nullable', 'string', 'max:255', Rule::unique(Banner::class, 'slug')->ignore($id)],
             'slides' => 'nullable|array',
             'slides.*.image' => 'required_with:slides|string',
             'slides.*.url' => $this->slideUrlRules(),
