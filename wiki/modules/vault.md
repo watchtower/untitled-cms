@@ -2,7 +2,7 @@
 
 > Media manager: upload pipeline, configuration, and storage.
 
-Last updated: 2026-07-12
+Last updated: 2026-09-13
 
 ## Overview
 
@@ -42,6 +42,25 @@ Inspect this class to see what data is available at each stage.
 1. Create a class in `app/Vault/Pipes/` implementing the pipe interface.
 2. Add it to the pipeline sequence in `VaultService`.
 3. It receives and must pass along `VaultPipelinePayload`.
+
+## Folder name uniqueness
+
+`vault_folders` has a unique index `vault_folders_parent_name_unique` on
+`(parent_id, name, deleted_at)`. Because `deleted_at` is part of the key, trashed folders don't block new ones.
+`VaultFolderController` checks for collisions on store, rename, move **and restore**, and returns
+a 422 before the index would reject the write. If the migration fails with a duplicate-key error,
+rename or trash the duplicate folders first. If a concurrent request passes the pre-check and then
+hits the index, the controller returns the same 422 (duplicate key, code 11000).
+
+## API contracts
+
+- `GET admin/vault/folders?all=1` returns the **whole folder tree**, which `useVaultBrowser` and `VaultPicker` use for the
+  sidebar and breadcrumbs. Without `all`, it returns one level under `parent_id` (root when omitted).
+- Batch file endpoints (`batch-move`, `batch-delete`, `batch-restore`) accept at most 500 `uuids`.
+- The frontend hook `resources/js/hooks/useVaultBrowser.ts` debounces search (300 ms) and ignores
+  stale responses. It shows the server's `error`/`message` text in toasts.
+
+See [modules/permissions](permissions.md#vault-authorization-rules) for Vault policy rules.
 
 ## Gotchas
 

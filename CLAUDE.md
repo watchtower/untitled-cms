@@ -29,7 +29,7 @@ npm run dev       # Vite dev server
 npm run build     # tsc + vite build (TypeScript errors will fail the build)
 ```
 
-**Testing notes:** PHPUnit uses SQLite in-memory for tests (overrides MongoDB). Tests in `tests/Feature/` cover Auth, Maintenance Mode, Profile, Vault upload/folder operations. The `public/hot` file is created in setUp and removed in tearDown to bypass `ViteManifestNotFoundException`.
+**Testing notes:** `phpunit.xml` sets `DB_CONNECTION=sqlite`, but that only changes the default connection. Models pin `mongodb`, so tests need a reachable MongoDB from `.env` (`DB_HOST`/`DB_PORT`; locally the Docker container on 27018). Feature tests live in `tests/Feature/`, unit tests in `tests/Unit/`. See `wiki/architecture/testing.md`. The `public/hot` file is created in setUp and removed in tearDown to bypass `ViteManifestNotFoundException`.
 
 ## Architecture
 
@@ -151,7 +151,7 @@ Pages are organized under `architecture/`, `database/`, `frontend/`, and `module
 
 ## Database
 
-MongoDB is required for production. Tests override to SQLite in-memory.
+MongoDB is required for production and for tests (only the default connection is SQLite in tests; models pin `mongodb`).
 
 ```env
 DB_CONNECTION=mongodb

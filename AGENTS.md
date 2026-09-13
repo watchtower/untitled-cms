@@ -36,7 +36,7 @@ Pages are organized under `wiki/architecture/`, `wiki/database/`, `wiki/frontend
 Follow `.editorconfig`: UTF-8, LF endings, 4-space indentation, and no trailing whitespace. Use `2` spaces in YAML files. PHP code should follow Laravel conventions and be kept Pint-clean. React/TypeScript files use PascalCase for components, camelCase for functions and variables, and descriptive names that match the feature area, such as `resources/js/Pages/Vault/Index.tsx`.
 
 ## Testing Guidelines
-PHPUnit is configured in `phpunit.xml`; tests live in `tests/Feature` and should use descriptive names like `VaultFolderTest.php` or `AuthenticationTest.php`. Prefer feature tests for controller, policy, and workflow coverage. Run the full suite with `composer run test`; use `php artisan test --filter NameOfTest` when iterating on one case.
+PHPUnit is configured in `phpunit.xml`; feature tests live in `tests/Feature` (unit tests in `tests/Unit`) and should use descriptive names like `VaultFolderTest.php` or `AuthenticationTest.php`. Prefer feature tests for controller, policy, and workflow coverage. Run the full suite with `composer run test`; use `php artisan test --filter NameOfTest` when iterating on one case.
 
 ## Commit & Pull Request Guidelines
 Recent commits use conventional-style prefixes with optional scopes, for example `fix(tests): ...`, `feat(vault): ...`, or `style: ...`. Keep commit subjects short and specific. Pull requests should describe the change, list any migration or seeding steps, and include screenshots for UI work. Link related issues when applicable and note any test commands you ran.

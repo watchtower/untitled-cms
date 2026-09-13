@@ -2,7 +2,7 @@
 
 > React 19 + TypeScript + Inertia.js admin SPA patterns and conventions.
 
-Last updated: 2026-05-23
+Last updated: 2026-09-13
 
 ## Stack
 
@@ -65,6 +65,11 @@ Injected by `HandleInertiaRequests` middleware:
 There is no separate REST/GraphQL API consumed by the frontend. If you need data
 that isn't in the initial page props, add it to the controller's props or use a
 partial Inertia reload — not a fetch call.
+
+**Exception — Media Vault.** The Vault browser and `VaultPicker` call JSON endpoints
+under `admin/vault/*` with axios. Their state and handlers live in
+`resources/js/hooks/useVaultBrowser.ts`, with dialogs in `Components/Vault/`. Read error text
+from the response's `error`/`message` fields. See [modules/vault](../modules/vault.md#api-contracts).
 
 ## See also
 

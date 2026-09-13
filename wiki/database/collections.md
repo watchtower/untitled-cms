@@ -2,13 +2,20 @@
 
 > MongoDB models, collections, and conventions.
 
-Last updated: 2026-04-05 (added email_logs, suppressed_emails)
+Last updated: 2026-09-13 (vault_folders unique index, menus item shape)
+
+## Menu item shape
+
+`MenuController` validates every persisted key in `items[]`. Laravel's `validated()` drops nested
+keys that have no rule, so a new item field (e.g. `icon`) needs a rule in `menuItemRules()`, or it is
+silently discarded on save. `Menus/Edit.tsx`, `MenuSeeder` and `PublicLayout` all use this shape.
 
 ## Overview
 
-MongoDB is required for production. Tests override to SQLite in-memory (configured
-in `phpunit.xml`). The `mongodb/laravel-mongodb` package provides Eloquent-compatible
-model syntax.
+MongoDB is required for production **and for tests**. `phpunit.xml` switches only the default
+connection to SQLite, and models pin `mongodb`, so tests use the MongoDB server from `.env`
+(see [architecture/testing](../architecture/testing.md)). The `mongodb/laravel-mongodb` package provides
+Eloquent-compatible model syntax.
 
 ## Model conventions
 
@@ -31,11 +38,11 @@ the implementation differs. Check the package docs when setting up new relations
 | `pages` | CMS content pages |
 | `banners` | Banner/announcement records |
 | `vault_files` | Uploaded file metadata |
-| `vault_folders` | Vault directory structure |
+| `vault_folders` | Vault directory structure. Unique index `vault_folders_parent_name_unique` on `(parent_id, name, deleted_at)` |
 | `activity_logs` | Audit trail of user actions |
 | `ai_hubs` | AI provider configurations |
 | `chat_sessions` | AI chat history |
-| `menus` | Navigation menu definitions |
+| `menus` | Navigation menu definitions; `items[]` = `{id, title, url, target, order, subItems[]}` |
 | `settings` | Key/value site settings |
 | `redirects` | URL redirect rules |
 | `email_logs` | Outbound email delivery records (status, timestamps, resend_id) |

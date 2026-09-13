@@ -2,7 +2,7 @@
 
 > Role-based access control with policy classes and per-user caching.
 
-Last updated: 2026-07-12
+Last updated: 2026-09-13
 
 ## Format
 
@@ -37,6 +37,20 @@ Prefer this order when adding or refactoring endpoints:
 
 Avoid scattering `auth()->user()->hasPermission('…')` in controllers when a policy already
 covers the same check. Folder-scoped Vault rules stay on `VaultFolderPolicy` / `VaultFilePolicy`.
+
+## Vault authorization rules
+
+| Ability | Rule |
+|---------|------|
+| `VaultFolderPolicy::create($parent)` | global `media.create` **and** (no parent, or `update` on parent) |
+| `VaultFilePolicy::create($folder)` | delegates to `VaultFolderPolicy::create` for the folder |
+| `VaultFilePolicy::updateAny` | class-level `media.edit` (e.g. generate missing alt text) |
+| `VaultFilePolicy::forceDelete` | global `media.delete` (irreversible) |
+| `VaultFolderPolicy::forceDelete` | global `media.delete` **and** folder `delete` — purges the whole subtree |
+
+Batch file endpoints require `viewAny` (`media.view`), then check each file individually.
+`emptyTrash` purges only files the actor may `forceDelete`. Any endpoint that accepts
+`folder_id` (upload, save-ai-image, move) must authorize against the target folder.
 
 ## Caching
 

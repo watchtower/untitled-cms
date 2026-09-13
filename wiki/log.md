@@ -4,6 +4,20 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-09-13] update | Impact review fixes: menus, vault policies, folder index
+- `MenuController` item rules now match the real `{id, title, url, target, order, subItems}` shape.
+  Rules for `label`/`children` rejected every save and, with `excludeUnvalidatedArrayKeys`, stripped item data.
+- `VaultFolderPolicy::create` requires `media.create` even with a parent. New `forceDelete` requires `media.delete`.
+- `saveAiImage` authorizes the target folder. Folder restore checks for name collisions.
+- Unique folder index migration guards against "already exists" and duplicate-key errors. Folder writes map a lost race (11000) to a 422.
+- `folders.list?all=1` returns the full tree (nested folders were invisible). `useVaultBrowser` debounces search,
+  drops stale responses, resets alt text on selection, and batch-restores via one request.
+- Batch `uuids` are capped at 500. `saveAiImage` always removes its temp file.
+- Corrected the long-standing "tests use SQLite in-memory" claim. Only the default connection is SQLite; models pin `mongodb`,
+  so tests need the MongoDB server from `.env` (the local Docker container on 27018).
+- Updated [modules/permissions](modules/permissions.md), [modules/vault](modules/vault.md),
+  [database/collections](database/collections.md), [architecture/testing](architecture/testing.md), and [frontend/ui-stack](frontend/ui-stack.md).
+
 ## [2026-09-05] ingest | Search discoverability baseline (Day 0)
 Digested `docs/seo-discoverability-plan.md` and executed Step 1. Created
 [discoverability](discoverability.md) with the Day-0 baseline: 0 stars, no topics, empty homepageUrl,
