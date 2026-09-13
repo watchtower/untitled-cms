@@ -25,13 +25,16 @@ class VaultFolderPolicy
         return $this->userMatchesPermission($user, $permissions, ['read', 'write', 'delete']);
     }
 
+    /**
+     * Creating inside a parent requires global media.create AND write access on the parent.
+     */
     public function create(User $user, ?VaultFolder $parent = null): bool
     {
-        if ($parent) {
-            return $this->update($user, $parent);
+        if (! $user->hasPermission('media.create')) {
+            return false;
         }
 
-        return $user->hasPermission('media.create');
+        return $parent === null || $this->update($user, $parent);
     }
 
     public function update(User $user, VaultFolder $folder): bool
@@ -54,6 +57,16 @@ class VaultFolderPolicy
         }
 
         return $this->userMatchesPermission($user, $permissions, ['delete']);
+    }
+
+    /**
+     * Permanently purge a folder and its entire subtree.
+     * Requires folder delete access AND global media.delete, mirroring
+     * VaultFilePolicy::forceDelete — folder-level delete alone is insufficient.
+     */
+    public function forceDelete(User $user, VaultFolder $folder): bool
+    {
+        return $user->hasPermission('media.delete') && $this->delete($user, $folder);
     }
 
     /**

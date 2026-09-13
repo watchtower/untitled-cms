@@ -73,4 +73,13 @@ class VaultFilePolicy
     {
         return $user->hasPermission('media.delete');
     }
+
+    /**
+     * Global metadata batch ops (e.g. generate missing alt text for all images).
+     * Class-level: authorize with VaultFile::class.
+     */
+    public function updateAny(User $user): bool
+    {
+        return $user->hasPermission('media.edit');
+    }
 }

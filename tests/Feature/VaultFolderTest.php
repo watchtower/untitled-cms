@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\VaultFolder;
+use App\Models\VaultFolderPermission;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -27,6 +28,60 @@ class VaultFolderTest extends TestCase
         $user->roles()->attach($role->id);
 
         return $user;
+    }
+
+    public function test_cannot_restore_folder_when_active_sibling_has_same_name(): void
+    {
+        $user = $this->createAdminUser();
+
+        $trashed = VaultFolder::create(['uuid' => Str::uuid()->toString(), 'name' => 'Reports', 'owner_id' => $user->id]);
+        $trashed->delete();
+        VaultFolder::create(['uuid' => Str::uuid()->toString(), 'name' => 'Reports', 'owner_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->postJson(route('admin.vault.folders.restore', $trashed->id))
+            ->assertStatus(422);
+
+        $this->assertTrue(VaultFolder::onlyTrashed()->where('_id', $trashed->id)->exists());
+    }
+
+    public function test_folder_force_destroy_requires_global_media_delete(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::updateOrCreate(
+            ['slug' => 'folder-deleter'],
+            ['name' => 'Folder Deleter', 'backend_access' => true, 'is_active' => true,
+                'permissions' => ['media.view', 'media.edit']]
+        );
+        $user->roles()->attach($role->id);
+
+        $folder = VaultFolder::create(['uuid' => Str::uuid()->toString(), 'name' => 'Restricted', 'owner_id' => $user->id]);
+        VaultFolderPermission::create(['folder_id' => $folder->id, 'user_id' => $user->id, 'permission' => 'delete']);
+
+        $this->actingAs($user)
+            ->deleteJson(route('admin.vault.folders.force_destroy', $folder->id))
+            ->assertForbidden();
+
+        $this->assertTrue(VaultFolder::withTrashed()->where('_id', $folder->id)->exists());
+    }
+
+    public function test_folder_list_all_includes_nested_folders(): void
+    {
+        $user = $this->createAdminUser();
+
+        $parent = VaultFolder::create(['uuid' => Str::uuid()->toString(), 'name' => 'Parent', 'owner_id' => $user->id]);
+        VaultFolder::create(['uuid' => Str::uuid()->toString(), 'name' => 'Nested', 'parent_id' => $parent->id, 'owner_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->getJson(route('admin.vault.folders.list'))
+            ->assertOk()
+            ->assertJsonCount(1);
+
+        $this->actingAs($user)
+            ->getJson(route('admin.vault.folders.list', ['all' => 1]))
+            ->assertOk()
+            ->assertJsonCount(2)
+            ->assertJsonFragment(['name' => 'Nested']);
     }
 
     public function test_can_create_folder(): void

@@ -45,4 +45,20 @@ class PolicyTest extends TestCase
         $this->assertTrue($admin->can('restore', $file));
         $this->assertFalse($normalUser->can('restore', $file));
     }
+
+    public function test_vault_file_policy_update_any_requires_media_edit(): void
+    {
+        $normalUser = User::factory()->create();
+        $this->assertFalse($normalUser->can('updateAny', VaultFile::class));
+
+        $role = Role::factory()->create([
+            'permissions' => ['media.edit'],
+            'backend_access' => true,
+            'is_active' => true,
+        ]);
+        $editor = User::factory()->create();
+        $editor->roles()->attach($role);
+
+        $this->assertTrue($editor->can('updateAny', VaultFile::class));
+    }
 }

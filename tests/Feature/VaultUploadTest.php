@@ -101,4 +101,50 @@ class VaultUploadTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_empty_trash_requires_force_delete_permission(): void
+    {
+        $viewer = User::factory()->create();
+        $viewerRole = Role::updateOrCreate(
+            ['slug' => 'media-viewer'],
+            [
+                'name' => 'Media Viewer',
+                'backend_access' => true,
+                'is_active' => true,
+                'permissions' => ['media.view'],
+            ]
+        );
+        $viewer->roles()->attach($viewerRole->id);
+
+        $file = VaultFile::factory()->create([
+            'uploaded_by' => $viewer->id,
+            'original_name' => 'trashed.jpg',
+        ]);
+        $file->delete();
+
+        $response = $this->actingAs($viewer)->deleteJson(route('admin.vault.trash.empty'));
+
+        $response->assertOk()
+            ->assertJsonPath('deleted_count', 0);
+
+        $this->assertTrue(VaultFile::onlyTrashed()->where('uuid', $file->uuid)->exists());
+    }
+
+    public function test_empty_trash_purges_when_user_has_media_delete(): void
+    {
+        $admin = $this->createAdminUser();
+
+        $file = VaultFile::factory()->create([
+            'uploaded_by' => $admin->id,
+            'original_name' => 'gone.jpg',
+        ]);
+        $file->delete();
+
+        $response = $this->actingAs($admin)->deleteJson(route('admin.vault.trash.empty'));
+
+        $response->assertOk()
+            ->assertJsonPath('deleted_count', 1);
+
+        $this->assertFalse(VaultFile::withTrashed()->where('uuid', $file->uuid)->exists());
+    }
 }

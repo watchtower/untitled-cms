@@ -77,7 +77,7 @@ export default function VaultPicker({
                 axios.get(route('admin.vault.files.list'), {
                     params: { folder_id: folderId, search, type: actualType === 'all' ? undefined : actualType }
                 }),
-                axios.get(route('admin.vault.folders.list'))
+                axios.get(route('admin.vault.folders.list'), { params: { all: 1 } })
             ]);
 
             setFiles(filesRes.data.data); // Paginated response

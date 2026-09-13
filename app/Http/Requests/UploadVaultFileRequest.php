@@ -2,14 +2,16 @@
 
 namespace App\Http\Requests;
 
+use App\Models\VaultFile;
 use App\Models\VaultFolder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class UploadVaultFileRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->hasPermission('media.create');
+        return Gate::forUser($this->user())->allows('create', VaultFile::class);
     }
 
     public function rules(): array
@@ -18,6 +20,7 @@ class UploadVaultFileRequest extends FormRequest
             'files' => 'required|array|max:20',
             'files.*' => 'file|max:'.config('vault.max_upload_kb', 51200),
             'folder_id' => 'nullable|string|exists:'.VaultFolder::class.',_id',
+            'is_public' => 'sometimes|boolean',
         ];
     }
 }

@@ -2,15 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\VaultFile;
 use App\Services\SafeHttpClient;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Gate;
 
 class SaveAiImageRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->hasPermission('media.create');
+        return Gate::forUser($this->user())->allows('create', VaultFile::class);
     }
 
     public function rules(): array

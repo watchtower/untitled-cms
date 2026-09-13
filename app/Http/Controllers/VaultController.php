@@ -2,7 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BatchMoveVaultFilesRequest;
+use App\Http\Requests\BatchVaultUuidsRequest;
+use App\Http\Requests\MoveVaultFileRequest;
+use App\Http\Requests\RenameVaultFileRequest;
 use App\Http\Requests\SaveAiImageRequest;
+use App\Http\Requests\ToggleVaultOptimizationRequest;
+use App\Http\Requests\UpdateVaultAltTextRequest;
 use App\Http\Requests\UploadVaultFileRequest;
 use App\Jobs\GenerateMissingAltTextJob;
 use App\Models\VaultFile;
@@ -25,7 +31,7 @@ class VaultController extends Controller
 
     public function adminPage()
     {
-        $this->authorizeGlobalMediaView();
+        $this->authorize('viewAny', VaultFile::class);
 
         return Inertia::render('Vault/Index', [
             'maxUploadSize' => min(
@@ -54,7 +60,7 @@ class VaultController extends Controller
 
     public function list(Request $request)
     {
-        $this->authorizeGlobalMediaView();
+        $this->authorize('viewAny', VaultFile::class);
 
         $files = $this->buildListQuery($request)->paginate(50);
 
@@ -64,18 +70,15 @@ class VaultController extends Controller
     public function upload(UploadVaultFileRequest $request)
     {
         // Global media create is checked by FormRequest
-        $folderId = $request->input('folder_id');
 
         $uploadedFiles = [];
         $errors = [];
 
-        // Check if user has permission to upload to the specific folder
+        // Folder-scoped create: VaultFilePolicy::create delegates to folder write rules
         $targetFolder = null;
         if ($request->folder_id) {
             $targetFolder = VaultFolder::findOrFail($request->folder_id);
-            if (Gate::denies('update', $targetFolder)) {
-                abort(403, 'Permission denied for folder');
-            }
+            $this->authorize('create', [VaultFile::class, $targetFolder]);
         }
 
         $isPublic = $request->boolean('is_public', true);
@@ -99,16 +102,27 @@ class VaultController extends Controller
 
     public function saveAiImage(SaveAiImageRequest $request)
     {
+        $targetFolder = null;
+        if ($request->input('folder_id')) {
+            $targetFolder = VaultFolder::findOrFail($request->input('folder_id'));
+            $this->authorize('create', [VaultFile::class, $targetFolder]);
+        }
+
+        $uploadedFile = null;
+
         try {
             $uploadedFile = $request->getPreparedUploadedFile();
 
-            $vaultFile = $this->vaultService->upload($uploadedFile, $request->input('folder_id'));
-
-            @unlink($uploadedFile->getPathname());
+            $vaultFile = $this->vaultService->upload($uploadedFile, $request->input('folder_id'), $targetFolder);
 
             return response()->json(['file' => $vaultFile], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
+        } finally {
+            // Remove the temp file even when the upload pipeline rejects it
+            if ($uploadedFile && is_file($uploadedFile->getPathname())) {
+                @unlink($uploadedFile->getPathname());
+            }
         }
     }
 
@@ -116,10 +130,7 @@ class VaultController extends Controller
     {
         $file = VaultFile::withTrashed()->where('uuid', $uuid)->firstOrFail();
 
-        // Check permission
-        if (Gate::denies('view', $file)) {
-            abort(403);
-        }
+        $this->authorize('view', $file);
 
         $diskName = $file->is_public ? 'public' : 'vault';
         $storagePath = $file->storage_path;
@@ -202,7 +213,7 @@ class VaultController extends Controller
 
     public function checkDuplicate(Request $request)
     {
-        $this->authorizeGlobalMediaView();
+        $this->authorize('viewAny', VaultFile::class);
 
         $request->validate(['hash' => 'required|string']);
 
@@ -217,14 +228,11 @@ class VaultController extends Controller
         ]);
     }
 
-    public function batchRestore(Request $request)
+    public function batchRestore(BatchVaultUuidsRequest $request)
     {
-        $request->validate([
-            'uuids' => 'required|array',
-            'uuids.*' => 'string|exists:vault_files,uuid',
-        ]);
+        $this->authorize('viewAny', VaultFile::class);
 
-        $files = VaultFile::onlyTrashed()->whereIn('uuid', $request->uuids)->get();
+        $files = VaultFile::onlyTrashed()->with('folder')->whereIn('uuid', $request->uuids)->get();
         $restoredCount = 0;
 
         foreach ($files as $file) {
@@ -240,25 +248,21 @@ class VaultController extends Controller
         ]);
     }
 
-    public function emptyTrash(Request $request)
+    public function emptyTrash()
     {
-        $user = auth()->user();
-
-        $query = VaultFile::onlyTrashed();
-
-        // Unless they have global delete permission, only empty THEIR trash
-        if (! $user->hasPermission('media.delete')) {
-            $query->where('uploaded_by', $user->id);
-        }
+        $this->authorize('viewAny', VaultFile::class);
 
         $deletedCount = 0;
 
-        $query->chunk(100, function ($files) use (&$deletedCount) {
-            foreach ($files as $file) {
+        // Do not use Eloquent chunk() here — mongodb/laravel-mongodb can fail serializing
+        // SortDirection for the internal _id cursor. Trash volume is admin-scoped and modest.
+        // Only permanently purge files the actor may forceDelete (media.delete).
+        foreach (VaultFile::onlyTrashed()->cursor() as $file) {
+            if (Gate::allows('forceDelete', $file)) {
                 $this->vaultService->purgeFile($file);
                 $deletedCount++;
             }
-        });
+        }
 
         return response()->json([
             'message' => "Trash emptied. {$deletedCount} items permanently deleted.",
@@ -266,75 +270,53 @@ class VaultController extends Controller
         ]);
     }
 
-    public function rename(Request $request, string $uuid)
+    public function rename(RenameVaultFileRequest $request, string $uuid)
     {
         $file = VaultFile::where('uuid', $uuid)->firstOrFail();
-
-        if (Gate::denies('update', $file)) {
-            abort(403);
-        }
-
-        $request->validate(['name' => 'required|string|max:255']);
+        $this->authorize('update', $file);
 
         $this->vaultService->renameFile($file, $request->name);
 
         return response()->json(['message' => 'Renamed successfully', 'file' => $file]);
     }
 
-    public function updateAltText(Request $request, string $uuid)
+    public function updateAltText(UpdateVaultAltTextRequest $request, string $uuid)
     {
         $file = VaultFile::where('uuid', $uuid)->firstOrFail();
-
-        if (Gate::denies('update', $file)) {
-            abort(403);
-        }
-
-        $request->validate(['alt_text' => 'nullable|string|max:500']);
+        $this->authorize('update', $file);
 
         $file->update(['alt_text' => $request->input('alt_text')]);
 
         return response()->json(['message' => 'Alt text updated', 'alt_text' => $file->alt_text]);
     }
 
-    public function toggleOptimization(Request $request, string $uuid)
+    public function toggleOptimization(ToggleVaultOptimizationRequest $request, string $uuid)
     {
         $file = VaultFile::where('uuid', $uuid)->firstOrFail();
-
-        if (Gate::denies('update', $file)) {
-            abort(403);
-        }
-
-        $request->validate(['use_original' => 'required|boolean']);
+        $this->authorize('update', $file);
 
         $file->update(['use_original' => $request->boolean('use_original')]);
 
         return response()->json([
             'message' => 'Optimization preference updated',
             'use_original' => $file->use_original,
-            'url' => $file->url, // Return the new URL so the frontend can update instantly
+            'url' => $file->url,
         ]);
     }
 
-    public function batchMove(Request $request)
+    public function batchMove(BatchMoveVaultFilesRequest $request)
     {
-        $request->validate([
-            'uuids' => 'required|array',
-            'uuids.*' => 'string|exists:vault_files,uuid',
-            'folder_id' => 'nullable|string|exists:vault_folders,_id',
-        ]);
+        $this->authorize('viewAny', VaultFile::class);
 
         $uuids = $request->input('uuids');
         $folderId = $request->input('folder_id');
 
-        // Check target folder permission
         if ($folderId) {
             $targetFolder = VaultFolder::findOrFail($folderId);
-            if (Gate::denies('update', $targetFolder)) {
-                abort(403, 'Permission denied for target folder.');
-            }
+            $this->authorize('update', $targetFolder);
         }
 
-        $files = VaultFile::whereIn('uuid', $uuids)->get();
+        $files = VaultFile::with('folder')->whereIn('uuid', $uuids)->get();
         $movedCount = 0;
 
         foreach ($files as $file) {
@@ -351,15 +333,12 @@ class VaultController extends Controller
         ]);
     }
 
-    public function batchDelete(Request $request)
+    public function batchDelete(BatchVaultUuidsRequest $request)
     {
-        $request->validate([
-            'uuids' => 'required|array',
-            'uuids.*' => 'string|exists:vault_files,uuid',
-        ]);
+        $this->authorize('viewAny', VaultFile::class);
 
         $uuids = $request->input('uuids');
-        $files = VaultFile::whereIn('uuid', $uuids)->get();
+        $files = VaultFile::with('folder')->whereIn('uuid', $uuids)->get();
         $deletedCount = 0;
 
         foreach ($files as $file) {
@@ -376,9 +355,9 @@ class VaultController extends Controller
         ]);
     }
 
-    public function generateMissingAltText(Request $request)
+    public function generateMissingAltText()
     {
-        $this->authorize('update', VaultFile::class);
+        $this->authorize('updateAny', VaultFile::class);
 
         GenerateMissingAltTextJob::dispatch();
 
@@ -387,22 +366,14 @@ class VaultController extends Controller
         ]);
     }
 
-    public function move(Request $request, string $uuid)
+    public function move(MoveVaultFileRequest $request, string $uuid)
     {
         $file = VaultFile::where('uuid', $uuid)->firstOrFail();
+        $this->authorize('update', $file);
 
-        if (Gate::denies('update', $file)) {
-            abort(403);
-        }
-
-        $request->validate(['folder_id' => 'nullable|string|exists:'.VaultFolder::class.',_id']);
-
-        // Check write permission on target folder
         if ($request->folder_id) {
             $targetFolder = VaultFolder::findOrFail($request->folder_id);
-            if (Gate::denies('update', $targetFolder)) {
-                abort(403, 'Cannot move to target folder');
-            }
+            $this->authorize('update', $targetFolder);
         }
 
         $this->vaultService->moveFile($file, $request->folder_id);
@@ -413,10 +384,7 @@ class VaultController extends Controller
     public function destroy(string $uuid)
     {
         $file = VaultFile::where('uuid', $uuid)->firstOrFail();
-
-        if (Gate::denies('delete', $file)) {
-            abort(403);
-        }
+        $this->authorize('delete', $file);
 
         $this->vaultService->deleteFile($file);
 
@@ -425,7 +393,7 @@ class VaultController extends Controller
 
     public function trash(Request $request)
     {
-        $this->authorizeGlobalMediaView();
+        $this->authorize('viewAny', VaultFile::class);
 
         $files = VaultFile::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(50);
 
@@ -435,10 +403,7 @@ class VaultController extends Controller
     public function restore(string $uuid)
     {
         $file = VaultFile::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-
-        if (Gate::denies('restore', $file)) {
-            abort(403);
-        }
+        $this->authorize('restore', $file);
 
         $this->vaultService->restoreFile($file);
 
@@ -448,28 +413,11 @@ class VaultController extends Controller
     public function forceDestroy(string $uuid)
     {
         $file = VaultFile::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-
-        if (Gate::denies('forceDelete', $file)) {
-            abort(403);
-        }
+        $this->authorize('forceDelete', $file);
 
         $this->vaultService->purgeFile($file);
 
         return response()->json(['message' => 'Permanently deleted successfully']);
-    }
-
-    private function authorizeGlobalMediaView(): void
-    {
-        if (! auth()->user()->hasPermission('media.view')) {
-            abort(403, 'Unauthorized');
-        }
-    }
-
-    private function authorizeGlobalMediaCreate(): void
-    {
-        if (! auth()->user()->hasPermission('media.create')) {
-            abort(403, 'Unauthorized');
-        }
     }
 
     private function buildListQuery(Request $request): Builder
