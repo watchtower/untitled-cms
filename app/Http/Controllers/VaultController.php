@@ -33,11 +33,16 @@ class VaultController extends Controller
     {
         $this->authorize('viewAny', VaultFile::class);
 
+        // The upload dialog shows this value in MB. Use the smallest of PHP's upload/post limits and
+        // the Vault validation rule, ignoring "unlimited" (0 or -1) ini values.
+        $limits = array_filter([
+            $this->parsePhpIniSize(ini_get('upload_max_filesize')),
+            $this->parsePhpIniSize(ini_get('post_max_size')),
+            (int) config('vault.max_upload_kb', 51200) * 1024,
+        ], fn (int $bytes) => $bytes > 0);
+
         return Inertia::render('Vault/Index', [
-            'maxUploadSize' => min(
-                $this->parsePhpIniSize(ini_get('upload_max_filesize')),
-                $this->parsePhpIniSize(ini_get('post_max_size'))
-            ),
+            'maxUploadSize' => max(1, intdiv(min($limits), 1024 * 1024)),
         ]);
     }
 

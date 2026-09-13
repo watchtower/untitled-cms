@@ -21,7 +21,9 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
     const { tinymce_api_key } = usePage<PageProps>().props;
     const editorRef = useRef<any>(null);
     const [isLoaded, setIsLoaded] = useState(false);
-    const id = 'tinymce-editor-' + Math.random().toString(36).substr(2, 9);
+    // Keep the id stable for the component's lifetime. A new id on every render re-initialised
+    // TinyMCE each time and leaked the previous editors.
+    const id = useRef('tinymce-editor-' + Math.random().toString(36).slice(2, 11)).current;
 
     // Check for dark mode
     const isDarkMode = typeof window !== 'undefined' && window.document.documentElement.classList.contains('dark');
@@ -107,7 +109,9 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
                         }
                     });
 
-                    editor.on('Change', () => {
+                    // Sync on every edit, not just on blur, so an immediate Save sends the latest content.
+                    // SetContent is left out: TinyMCE normalises HTML on load, which would mark forms dirty.
+                    editor.on('input change undo redo', () => {
                         const content = editor.getContent();
                         onChangeRef.current(content);
                     });
@@ -238,9 +242,7 @@ export default function Editor({ value, onChange, height = 500 }: EditorProps) {
         }
 
         return () => {
-            if (window.tinymce) {
-                window.tinymce.remove(`#${id}`);
-            }
+            window.tinymce?.get(id)?.remove();
         };
     }, [isLoaded, id]);
 

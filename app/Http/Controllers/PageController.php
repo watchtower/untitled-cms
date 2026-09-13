@@ -52,8 +52,8 @@ class PageController extends Controller
 
         $slug = Page::uniqueSlug($baseSlug);
 
-        // Sanitize content
-        $validated['content'] = clean($validated['content']);
+        // Sanitize content. An empty editor arrives as null (ConvertEmptyStringsToNull).
+        $validated['content'] = clean($validated['content'] ?? '');
 
         $page = Page::create([
             ...$validated,
@@ -157,7 +157,10 @@ class PageController extends Controller
             ]);
         }
 
-        $validated['content'] = clean($validated['content']);
+        // Only touch content when it was submitted, so a partial update can't blank the page.
+        if (array_key_exists('content', $validated)) {
+            $validated['content'] = clean($validated['content'] ?? '');
+        }
 
         $page->update($validated);
 

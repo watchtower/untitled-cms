@@ -8,6 +8,7 @@ use App\Models\VaultFile;
 use App\Models\VaultFolder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 class VaultUploadTest extends TestCase
@@ -146,5 +147,17 @@ class VaultUploadTest extends TestCase
             ->assertJsonPath('deleted_count', 1);
 
         $this->assertFalse(VaultFile::withTrashed()->where('uuid', $file->uuid)->exists());
+    }
+
+    public function test_vault_page_reports_max_upload_size_in_megabytes(): void
+    {
+        $user = $this->createAdminUser();
+        $vaultLimitMb = intdiv((int) config('vault.max_upload_kb', 51200), 1024);
+
+        $this->actingAs($user)->get(route('admin.vault.index'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Vault/Index')
+                ->where('maxUploadSize', fn ($size) => is_int($size) && $size >= 1 && $size <= $vaultLimitMb));
     }
 }
