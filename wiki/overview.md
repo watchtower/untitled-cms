@@ -33,7 +33,7 @@ consume the markdown-flavoured endpoints.
 
 Source of truth is always the code; these numbers are snapshots:
 
-- **32** permissions in `resource.action` format (`Role::availablePermissions()`)
+- **31** permissions in `resource.action` format (`Role::availablePermissions()`)
 - **10** Policy classes under `app/Policies/`
 - **6** Vault upload pipeline stages (+ optional ClamAV `SandboxedScan`)
 - Multi-provider AI Hub (OpenAI, Gemini, OpenRouter, Stability, plus others configured in AI Hub UI / `config/ai.php`)

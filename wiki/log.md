@@ -4,13 +4,22 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-09-13] update | README and CHANGELOG synced with changes since 0.4.0
+- README gained a "What's New Since 0.4.0" section; CHANGELOG `[Unreleased]` populated from the 14 commits since the tag.
+- README claims corrected against code: pipeline is 6 stages + optional `SandboxedScan` (inserted after `ValidateMimeType`);
+  no scheduled publishing (moved to Planned); Menus use nested items with up/down ordering and Banners use an `order`
+  field (the data-table drag handle does not persist); Node >= 20 / npm >= 10; `mongodb/laravel-mongodb ^5.7`;
+  `ezyang/htmlpurifier` replaces `mews/purifier`; Recharts `^3`; added Resend, AI Assistant, Email, TinyMCE, Windows installer.
+- `overview.md` permission count corrected to 31. `AGENTS.md` social login corrected to Google + GitHub only.
+- Open issue: `install.sh` / `install.ps1` still accept PHP >= 8.2 while `composer.json` requires `^8.4`.
+
 ## [2026-09-13] refactor | Consolidated agent config into AGENTS.md
 - `AGENTS.md` is now the single source of truth for all agents; it absorbed CLAUDE.md's architecture,
   services, permissions, middleware, Inertia props, frontend, routes, and database sections.
 - `CLAUDE.md` and `GEMINI.md` are stubs that import `@AGENTS.md`; the three duplicated wiki-protocol blocks were merged.
 - Conflicts resolved: wiki-update triggers unioned; log step now points to the SCHEMA.md entry format;
   tests live in both `tests/Feature` and `tests/Unit`.
-- Drift fixed against code: policy count (was "8", now 10 — count removed), permission count (was "~32", 29 — count removed),
+- Drift fixed against code: policy count (was "8", now 10 — count removed), permission count (was "~32", 31 — count removed),
   unverifiable local Mongo port 27018 dropped (CI and `.env.example` use 27017), added `admin` middleware alias,
   conditional `SandboxedScan` pipe, `HtmlSanitizer` + `EmailWebhooks/` services, `/media` and user-batch throttles,
   `auth.user` field subset, and the 300s `active_menus` cache.

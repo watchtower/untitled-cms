@@ -28,14 +28,28 @@ Laravel 13, MongoDB and a React + Inertia.js admin SPA, with a secure **Media Va
 
 ### Why Untitled CMS?
 
-| You want…                        | Untitled CMS gives you…                                                                                      |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| A CMS that works _with_ AI tools | `/llms.txt`, `/llms-full.txt`, `Accept: text/markdown` on every page, and YAML frontmatter for agents        |
-| Secure media management          | 7-stage upload pipeline: double-extension detection → MIME check → image sanitization → optional ClamAV scan |
-| Flexible AI integration          | Swap providers at runtime — OpenRouter, OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama           |
-| Granular access control          | 32 permissions across policy classes, cached RBAC, invite-only user flow                                     |
-| A developer-friendly stack       | Laravel 13 + React 19 + TypeScript + Tailwind CSS v4 + Shadcn UI, all in one repo                            |
-| Easy self-hosting                | Interactive installer, Docker Compose, systemd + Nginx templates                                             |
+| You want…                        | Untitled CMS gives you…                                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| A CMS that works _with_ AI tools | `/llms.txt`, `/llms-full.txt`, `Accept: text/markdown` on every page, and YAML frontmatter for agents                    |
+| Secure media management          | Ordered upload pipeline: double-extension detection → MIME check → optional ClamAV scan → image sanitization → moderation |
+| Flexible AI integration          | Swap providers at runtime — OpenRouter, OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama                       |
+| Granular access control          | Fine-grained `resource.action` permissions, per-resource policies, cached RBAC, invite-only user flow                    |
+| A developer-friendly stack       | Laravel 13 + React 19 + TypeScript + Tailwind CSS v4 + Shadcn UI, all in one repo                                        |
+| Easy self-hosting                | Interactive installers (bash + PowerShell), Docker Compose, systemd + Nginx templates                                    |
+
+---
+
+## What's New Since 0.4.0
+
+Unreleased changes on `main` since the [0.4.0 release](CHANGELOG.md#040--2026-06-13). Full details in [CHANGELOG.md](CHANGELOG.md#unreleased).
+
+- **Windows installer** — native `install.ps1`; `install.sh` now fails fast with clear errors and warns when run on Windows.
+- **AI assistant** — chat sidebar rebuilt on shadcn chat primitives; chat retries once on provider rate limits; all provider calls go through `AiHttpClient` (timeouts + logging).
+- **Media Vault** — browser refactored into a `useVaultBrowser` hook with debounced search; hardened folder/file policies; dedicated form requests for move, rename, alt text and batch actions (capped at 500 files); unique folder-name index; nested folders now appear in the full folder tree.
+- **Fixes** — menu items validate against their real shape (saves no longer drop data); banner slugs no longer collide with themselves on edit; draft preview is authorized through `PagePolicy`; AI context lists recent content in the correct order.
+- **Security** — vulnerable Composer dependencies updated.
+- **Tests** — new feature coverage for menus, the Vault, policies, AI chat, banners and Markdown pages, plus a unit test for `AiHttpClient`.
+- **For contributors** — [`AGENTS.md`](AGENTS.md) is now the single configuration file for AI coding agents; `CLAUDE.md` and `GEMINI.md` forward to it.
 
 ---
 
@@ -44,17 +58,19 @@ Laravel 13, MongoDB and a React + Inertia.js admin SPA, with a secure **Media Va
 | Module                  | Highlights                                                                                                                                                                                              |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Auth & RBAC**         | Login · Registration · Email verification · Token-based invitations · Granular role/permission system with Laravel Gate policies                                                                        |
-| **Pages**               | TinyMCE rich text · Draft/Published workflow · SEO meta fields · AI-generated meta · Dynamic public routing · Scheduled publishing                                                                      |
-| **Banners**             | Drag-and-drop reordering (`@dnd-kit`) · Active/inactive scheduling with `start_at / end_at`                                                                                                             |
-| **The Vault**           | Hierarchical media manager · 3-panel resizable layout · Secure 7-stage upload pipeline · Folder-level permissions · Full audit log · AI-generated alt text                                              |
-| **AI Hub**              | Multi-provider manager (OpenRouter, OpenAI, Gemini, Anthropic, Groq, Mistral, Deepseek, Ollama) · Per-hub monthly usage tracking · Text generation · SEO meta generation · Vision-based alt text · Image generation |
+| **Pages**               | TinyMCE rich text · Draft/Published workflow with draft preview · SEO meta fields · AI-generated meta · Dynamic public routing                                                                          |
+| **Banners**             | Manual display order · Active/inactive scheduling with `start_at / end_at`                                                                                                                                   |
+| **The Vault**           | Hierarchical media manager · 3-panel resizable layout · Secure upload pipeline (6 stages + optional ClamAV) · Folder-level permissions · Trash & batch restore · Full audit log · AI-generated alt text |
+| **AI Hub**              | Multi-provider manager (OpenRouter, OpenAI, Gemini, Anthropic, Groq, Mistral, Deepseek, Ollama) · Per-hub monthly usage tracking · Text generation · SEO meta generation · Vision-based alt text · Image generation (OpenAI, Gemini, Stability AI, OpenRouter) |
+| **AI Assistant**        | In-admin chat sidebar with saved sessions · AI actions that create/update pages and banners, validated server-side and revertible from the activity log                                                |
 | **Markdown for Agents** | Every public page responds with clean Markdown + YAML frontmatter when `Accept: text/markdown` is sent — ready for AI crawlers and coding assistants                                                    |
 | **`/llms.txt`**         | AI-discoverability standard (llmstxt.org) — index of all published pages for LLM ingestion. `/llms-full.txt` delivers full page content as plain Markdown                                               |
 | **Dashboard**           | Analytics cards + Recharts charts · Recent activity feed                                                                                                                                                |
 | **Activity Log**        | Comprehensive audit trail for all admin actions, filterable in the admin panel                                                                                                                          |
 | **Settings**            | Site-wide key/value settings store · Custom maintenance mode & error pages                                                                                                                              |
-| **Menus**               | Drag-and-drop navigation builder                                                                                                                                                                        |
-| **Social Login**        | OAuth via Google and GitHub                                                                                                                                                                            |
+| **Menus**               | Navigation builder with nested sub-items and up/down ordering                                                                                                                                           |
+| **Email**               | Resend, SMTP, SES and Postmark mailers · Email logs · Suppression list with unsubscribe links · Delivery webhooks (Resend, Mailgun, SendGrid) at `/webhooks/email`                                    |
+| **Social Login**        | OAuth via Google and GitHub                                                                                                                                                                             |
 | **LLM Wiki**            | Persistent, agent-maintained knowledge base (`wiki/`) with automated retrieval protocols for AI development                                                                                             |
 
 ---
@@ -65,8 +81,8 @@ Laravel 13, MongoDB and a React + Inertia.js admin SPA, with a secure **Media Va
 | ------------ | ------- | ------------------------------------------------------------------------- |
 | **PHP**      | >= 8.4  | Extensions: `mongodb`, `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo` |
 | **Composer** | >= 2.0  | [getcomposer.org](https://getcomposer.org)                                |
-| **Node.js**  | >= 18   | [nodejs.org](https://nodejs.org)                                          |
-| **npm**      | >= 9    | Bundled with Node.js                                                      |
+| **Node.js**  | >= 20   | [nodejs.org](https://nodejs.org) — CI builds on Node 24                   |
+| **npm**      | >= 10   | Bundled with Node.js                                                      |
 | **MongoDB**  | >= 6.0  | Local install or [Atlas free tier](https://www.mongodb.com/atlas)         |
 
 > **MongoDB PHP extension:** `pecl install mongodb` — see the [official guide](https://www.php.net/manual/en/mongodb.installation.php).
@@ -182,6 +198,10 @@ composer run dev
 | `composer run test`        | Run PHPUnit test suite          |
 | `./vendor/bin/pint`        | PHP code formatter              |
 
+> Tests run against MongoDB — make sure the database configured in `.env` is reachable before running the suite.
+
+Working with an AI coding agent? Project conventions for all agents live in [`AGENTS.md`](AGENTS.md).
+
 ---
 
 ## AI for Agents & LLMs
@@ -198,7 +218,7 @@ curl https://yoursite.com/llms.txt
 
 ### `/llms-full.txt` — Full Content for Ingestion
 
-All published pages as plain Markdown — ideal for RAG pipelines:
+All published pages as plain Markdown — ideal for RAG pipelines. Responses include an `x-llms-tokens` header:
 
 ```bash
 curl https://yoursite.com/llms-full.txt
@@ -227,30 +247,32 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 | Package                                                                     | Version  | Purpose                            |
 | --------------------------------------------------------------------------- | -------- | ---------------------------------- |
 | [Laravel](https://laravel.com/)                                             | `^13.0`  | Core framework                     |
-| [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb)       | `^5.5`   | MongoDB ODM                        |
+| [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb)       | `^5.7`   | MongoDB ODM                        |
 | [laravel/sanctum](https://laravel.com/docs/sanctum)                         | `^4.0`   | Session & token authentication     |
 | [laravel/socialite](https://laravel.com/docs/socialite)                     | `^5.24`  | OAuth (Google, GitHub)             |
 | [laravel/ai](https://github.com/laravel/ai)                                 | `^0.5`   | LLM provider abstraction           |
 | [inertiajs/inertia-laravel](https://inertiajs.com/)                         | `^2.0`   | Server-side SPA bridge             |
 | [intervention/image](https://image.intervention.io/v3)                      | `^3.11`  | Image processing & sanitization    |
 | [league/html-to-markdown](https://github.com/thephpleague/html-to-markdown) | `^5.1`   | HTML → Markdown for AI delivery    |
-| [mews/purifier](https://github.com/mewebstudio/Purifier)                    | `^3.4`   | HTML sanitization                  |
+| [ezyang/htmlpurifier](https://github.com/ezyang/htmlpurifier)               | `^4.19`  | HTML sanitization (`HtmlSanitizer`) |
+| [resend/resend-laravel](https://github.com/resend/resend-laravel)           | `^1.0`   | Resend mail transport              |
 | [tightenco/ziggy](https://github.com/tighten/ziggy)                         | `^2.0`   | Named Laravel routes in JavaScript |
 
 ### Frontend
 
-| Package                                             | Version | Purpose                      |
-| --------------------------------------------------- | ------- | ---------------------------- |
-| [React](https://reactjs.org/)                       | `^19.0` | UI framework                 |
-| TypeScript                                          | `^5.0`  | Type safety                  |
-| [Tailwind CSS](https://tailwindcss.com/)            | v4      | Utility-first styling        |
-| [Shadcn UI](https://ui.shadcn.com/)                 | latest  | Accessible component library |
-| [TinyMCE](https://www.tiny.cloud/)                  | `7`     | Rich text editor             |
-| [@dnd-kit](https://dndkit.com/)                     | `^6`    | Drag-and-drop                |
-| [@tanstack/react-table](https://tanstack.com/table) | `^8`    | Headless data tables         |
-| [Recharts](https://recharts.org/)                   | `^2`    | Dashboard charts             |
-| [Sonner](https://sonner.emilkowal.ski/)             | `^2`    | Toast notifications          |
-| [Zod](https://zod.dev/)                             | `^4`    | Frontend schema validation   |
+| Package                                             | Version | Purpose                          |
+| --------------------------------------------------- | ------- | -------------------------------- |
+| [React](https://reactjs.org/)                       | `^19.2` | UI framework                     |
+| TypeScript                                          | `^5.0`  | Type safety                      |
+| [Tailwind CSS](https://tailwindcss.com/)            | v4      | Utility-first styling            |
+| [Shadcn UI](https://ui.shadcn.com/)                 | latest  | Accessible component library     |
+| [TinyMCE](https://www.tiny.cloud/)                  | `7`     | Rich text editor (loaded via CDN) |
+| [@dnd-kit](https://dndkit.com/)                     | `^6`    | Drag-and-drop                    |
+| [@tanstack/react-table](https://tanstack.com/table) | `^8`    | Headless data tables             |
+| [Recharts](https://recharts.org/)                   | `^3`    | Dashboard charts                 |
+| [Sonner](https://sonner.emilkowal.ski/)             | `^2`    | Toast notifications              |
+| [Zod](https://zod.dev/)                             | `^4`    | Frontend schema validation       |
+| [react-dropzone](https://react-dropzone.js.org/)    | `^15`   | Vault uploads                    |
 
 ---
 
@@ -296,9 +318,9 @@ npx shadcn@latest init --preset b2fA --template next
 │                                                      │
 │  Routes → Controllers → MongoDB Models               │
 │                     ↓                                │
-│  AI Hub → AiService → OpenAI / Gemini / Anthropic    │
+│  AI Hub → AiService → AiHttpClient → Providers       │
 │                     ↓                                │
-│  Vault Upload → Pipeline (7 pipes) → Storage         │
+│  Vault Upload → Pipeline (6 pipes + ClamAV) → Storage│
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -306,8 +328,9 @@ npx shadcn@latest init --preset b2fA --template next
 
 - **MongoDB throughout** — Flexible document model for pages, vault metadata, activity logs, and AI usage tracking.
 - **Monolithic SPA** — Laravel renders the initial Inertia page; React handles all subsequent navigation. No separate API server.
-- **Upload Pipeline** — Vault uploads pass through an ordered `Pipe` chain: `DetectDoubleExtension → ValidateMimeType → SanitizeImage → ModerationCheck → SandboxedScan → GenerateUuid → StoreMetadata`.
+- **Upload Pipeline** — Vault uploads pass through an ordered `Pipe` chain: `DetectDoubleExtension → ValidateMimeType → [SandboxedScan] → SanitizeImage → ModerationCheck → GenerateUuid → StoreMetadata`. `SandboxedScan` (ClamAV) is inserted only when `CLAMAV_ENABLED=true`.
 - **Single Active AI Hub** — One hub is "active" at a time; `AiService` dynamically patches Laravel AI's config at runtime so no restart is required when switching providers.
+- **Two HTTP clients** — Hub-configured provider endpoints use `AiHttpClient`; untrusted user- or AI-supplied URLs go through the SSRF-protected `SafeHttpClient`.
 - **AI-readable by default** — `Accept: text/markdown`, `/llms.txt`, and `/llms-full.txt` are built in, not bolted on.
 
 ---
@@ -339,15 +362,30 @@ GITHUB_CLIENT_ID=your-client-id
 GITHUB_CLIENT_SECRET=your-client-secret
 ```
 
+### TinyMCE
+
+The page editor loads TinyMCE 7 from Tiny Cloud when an API key is set:
+
+```env
+TINYMCE_API_KEY=your-tiny-cloud-key
+```
+
+### Email
+
+Set `MAIL_MAILER` (defaults to `log`). For Resend, add `RESEND_API_KEY`. Delivery webhooks from Resend, Mailgun or SendGrid are verified with `RESEND_WEBHOOK_SECRET`, `MAILGUN_WEBHOOK_SIGNING_KEY` or `SENDGRID_WEBHOOK_PUBLIC_KEY` — see `.env.example`.
+
 ### ClamAV (Virus Scanning)
 
 Optional antivirus scanning for vault uploads. Disabled by default:
 
 ```env
 CLAMAV_ENABLED=true
+# CLAMAV_HOST=127.0.0.1
+# CLAMAV_PORT=3310
+# CLAMAV_FAIL_CLOSED=false   # true = reject uploads when the scanner is unreachable
 ```
 
-Requires ClamAV installed and running locally.
+Requires a reachable ClamAV daemon.
 
 ---
 
@@ -355,13 +393,14 @@ Requires ClamAV installed and running locally.
 
 | Command                            | Description                                        |
 | ---------------------------------- | -------------------------------------------------- |
-| `bash install.sh`                  | Interactive first-time installer                   |
+| `bash install.sh`                  | Interactive first-time installer (macOS / Linux)   |
+| `.\install.ps1`                    | Interactive first-time installer (Windows)         |
 | `composer run setup`               | Non-interactive full setup                         |
 | `composer run dev`                 | Start all dev services (server, queue, logs, Vite) |
 | `composer run test`                | Run PHPUnit test suite                             |
 | `./vendor/bin/pint`                | PHP code formatter (Laravel Pint)                  |
 | `npm run dev`                      | Vite dev server with HMR only                      |
-| `npm run build`                    | Production frontend build                          |
+| `npm run build`                    | Type-check and production frontend build           |
 | `php artisan db:seed --force`      | Re-seed the database                               |
 | `php artisan migrate:fresh --seed` | Wipe and re-seed (dev only)                        |
 
@@ -388,11 +427,12 @@ Scripts at the project root:
 - Social login (Google, GitHub)
 - Users module (CRUD, soft-delete, avatar, batch actions, logout all devices)
 - Pages module (TinyMCE, SEO fields, Draft/Published, dynamic routing)
-- Banners module (drag-and-drop reorder, scheduling)
-- The Vault — hierarchical media manager with secure 7-stage upload pipeline
+- Banners module (manual display order, scheduling)
+- The Vault — hierarchical media manager with secure upload pipeline, trash and batch restore
 - VaultPicker — reusable media selection component
-- AI Hub — multi-provider manager (OpenAI, Anthropic, Gemini, Deepseek, Groq, Mistral, Ollama)
+- AI Hub — multi-provider manager (OpenRouter, OpenAI, Anthropic, Gemini, Deepseek, Groq, Mistral, Ollama)
 - AI text generation, SEO meta generation, vision alt-text, image generation
+- AI assistant — chat sessions and revertible AI actions on pages and banners
 - Dashboard with Recharts analytics
 - Activity log — filterable audit trail
 - **`/llms.txt` + `/llms-full.txt`** — AI-discoverability standard
@@ -400,15 +440,18 @@ Scripts at the project root:
 - Sitemap for agents (`/sitemap.md`)
 - RSS feed
 - Settings — admin-configurable key/value store
+- Email — logs, suppression and unsubscribe, multi-provider delivery webhooks
 - Dark mode, responsive layouts, Shadcn UI
 - Maintenance mode with admin bypass and custom error pages
 - Enhanced security (OWASP Top 10 mitigation, SSRF protection)
 - Strict typing via DTOs and Form Requests
-- Navigation / menus system
+- Navigation / menus system with nested items
+- Interactive installers for macOS/Linux and Windows
 - GitHub Actions CI (tests, linting, security audit, frontend build)
 
 ### Planned
 
+- [ ] **Scheduled publishing** — publish pages automatically at `published_at`
 - [ ] **Page versioning** — revision history with diff viewer and restore
 - [ ] **Full-text search** — `Cmd+K` command palette across Pages, Users, Vault
 - [ ] **Webhook system** — Trigger HTTP webhooks on `page.published`, `vault.uploaded`, etc.
@@ -421,7 +464,7 @@ Scripts at the project root:
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, coding standards, and the module creation walkthrough.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, coding standards, and the module creation walkthrough. AI coding agents should follow [AGENTS.md](AGENTS.md).
 
 ---
 
@@ -433,7 +476,7 @@ Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.4.0**.
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.4.0** (unreleased changes are summarized in [What's New Since 0.4.0](#whats-new-since-040)).
 
 ---
 

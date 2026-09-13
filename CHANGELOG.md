@@ -9,6 +9,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+- **Windows Installer** — Native PowerShell installer (`install.ps1`) with prerequisite checks, mirroring `install.sh`.
+- **AI Chat UI Primitives** — Chat sidebar rebuilt on shadcn chat components (`bubble`, `message`, `message-scroller`, `marker`).
+- **Vault Form Requests** — Dedicated request classes for move, batch move, batch restore/delete, rename, alt text, and optimization toggles; batch `uuids` capped at 500.
+- **Vault Folder Unique Index** — Migration adding a unique index on `vault_folders` (idempotent; a lost write race returns 422).
+- **Test Coverage** — Feature tests for menus, vault folders/uploads, policies, AI chat, banners, and public Markdown pages; unit test for `AiHttpClient`.
+- **`AGENTS.md`** — Canonical configuration for all AI coding agents; `CLAUDE.md` and `GEMINI.md` now forward to it.
+
+### Changed
+- **AI Provider HTTP** — Provider calls now go through `AiHttpClient` (timeouts + logging); `SafeHttpClient` remains for untrusted URLs.
+- **AI Chat Resilience** — `AiService` chat retries once on provider rate limits.
+- **Vault Browser** — `Vault/Index.tsx` split into `useVaultBrowser` hook, `VaultDialogs`, and `VaultFolderInfoPopover`; search is debounced and stale responses are dropped.
+- **Installer Hardening** — `install.sh` fails fast with an error trap, warns on Windows, and stops if `composer install` fails.
+- **Documentation** — README facts corrected against the code; wiki cross-references converted to standard Markdown links; legacy `RELEASE_NOTES_*` files removed.
+
+### Fixed
+- **Menus** — Item validation matches the real `{id, title, url, target, order, subItems}` shape; saves no longer strip item data.
+- **Vault Policies** — Folder creation requires `media.create` even with a parent; new `forceDelete` requires `media.delete`; AI image saves authorize the target folder; folder restore checks for name collisions.
+- **Vault Folder Listing** — `folders.list?all=1` returns the full tree, so nested folders are visible.
+- **Draft Preview** — Public draft preview is authorized through `PagePolicy::viewAny`.
+- **Banners** — Slug uniqueness uses `Rule::unique(...)->ignore($id)` so edits don't collide with themselves.
+- **AI Context** — Recent pages/banners sorted by `created_at` explicitly, fixing context ordering on MongoDB.
+
+### Security
+- **Dependencies** — Updated vulnerable Composer dependencies.
+
 ---
 
 ## [0.4.0] — 2026-06-13
