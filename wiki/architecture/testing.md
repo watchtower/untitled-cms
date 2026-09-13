@@ -61,5 +61,5 @@ The GitHub Actions PHPUnit job runs with:
 
 ## See also
 
-- [[database/collections]] — SQLite override details
-- [[modules/vault]] — what VaultUploadTest is testing
+- [database/collections](../database/collections.md) — SQLite override details
+- [modules/vault](../modules/vault.md) — what VaultUploadTest is testing

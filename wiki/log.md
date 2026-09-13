@@ -4,6 +4,47 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-09-05] ingest | Search discoverability baseline (Day 0)
+Digested `docs/seo-discoverability-plan.md` and executed Step 1. Created
+[discoverability](discoverability.md) with the Day-0 baseline: 0 stars, no topics, empty homepageUrl,
+no Packagist package, Pages not enabled, and **0 Google-indexed pages** for the repo
+(verified in a real browser, not a search API).
+Key correction to the plan: the repo page is unindexed but the project *is* surfacing
+through proxies — trendshift.io, the `watchtower` org page and the `NavanithanS` user
+page all rank for `"Untitled CMS"` carrying the repo description.
+Plan §3 superseded: competing `Untitled CMS` projects now exist (`tar6/Untitled-CMS`,
+hirammendiola.com). New finding: the `watchtower` org name collides with
+`containrrr/watchtower`.
+Plan §7 both flagship keywords dropped after validation (`laravel mongodb cms` is a
+driver-docs query; `ai native cms` is now vendor-owned). Surviving surface is the
+llms.txt / Markdown-for-agents angle.
+Staged: README lead paragraph moved above the badge block; `composer.json` gained
+`homepage`/`support`, lost its hardcoded `version` (repo has git tags).
+
+## [2026-07-15] update | Impact sentinel + code review hardening follow-ups
+- emptyTrash: per-file `forceDelete` only; avoid Mongo `chunk()` SortDirection bug.
+- Batch vault FormRequests use `Rule::exists(Model::class)`; batch actions require `viewAny`.
+- save AI image uses named route `admin.vault.save-ai-image`; SaveAiImage policy create.
+- VaultFolderController uses `$this->authorize`; upload uses folder-scoped create.
+- useVaultBrowser: no double-fetch on trash/root; shift-select sets lastSelectedFile.
+- 87 PHPUnit tests green; npm build green.
+
+## [2026-07-14] update | Hardening epic complete
+- Implemented `AiHttpClient`; `AiService` no longer uses raw `Http::`.
+- Policy-first Vault + public draft preview (`viewAny` on Page).
+- Vault FormRequests; Banner/Menu unique rules use `Rule::unique(Model::class)`.
+- Vault FE: `useVaultBrowser`, `VaultDialogs`, `VaultFolderInfoPopover`.
+- Tests: PublicPageMarkdown, Menu, Banner, AiChat, AiHttpClient unit; suite green.
+- Plan marked complete: `docs/hardening-entropy-implementation-plan.md`.
+
+## [2026-07-12] update | Hardening epic: docs truth, Mongo ADR, HTTP tiers, policy-first
+- Aligned README/wiki with code: PHP 8.4+, TinyMCE, 32 permissions, multi-provider AI, Vault pipeline wording.
+- Added [architecture/mongodb](architecture/mongodb.md) decision page; linked from index + stack.
+- Documented two-tier outbound HTTP (`SafeHttpClient` vs `AiHttpClient`) in services + ai-hub.
+- Documented policy-first controller convention in permissions.
+- Added SCHEMA “Source of truth” anti-drift table.
+- Implementation plan: `docs/hardening-entropy-implementation-plan.md`.
+
 ## [2026-06-28] update | AI Chat Resilience & Shadcn Primitives
 - Documented adoption of shadcn/ui chat primitives in `frontend/ui-stack.md`.
 - Updated `modules/ai-hub.md` to reflect proper context usage of chat sessions.
@@ -59,7 +100,7 @@ Migrated the front-end style stack from Tailwind CSS v3 to v4 and updated the sh
 - Unified 20 individual `@radix-ui/react-*` dependencies under a single `radix-ui` library.
 - Updated `components.json` and regenerated/overwrote all 36 components under `resources/js/Components/ui/` with modern v4 registry code.
 - Fixed TypeScript errors in `resizable.tsx` and `UploadPipelineTracker.tsx`.
-- Updated [[frontend/ui-stack]] with the new stack information.
+- Updated [frontend/ui-stack](frontend/ui-stack.md) with the new stack information.
 
 ## [2026-05-23] update | Media Vault Security Gates & Scaling
 Improved security, query performance, and scaling across the Media Vault:
@@ -69,10 +110,10 @@ Improved security, query performance, and scaling across the Media Vault:
 - Eager-loaded the folder relationship in file listings to resolve N+1 database queries.
 - Optimised the Artisan purge command via chunking to maintain a low and constant memory footprint.
 - Added client memory protection in upload dialog, bypassing pre-upload hashing on files larger than 10MB.
-- Updated [[modules/vault]] to document the dynamic scanning stages and fail-closed options.
+- Updated [modules/vault](modules/vault.md) to document the dynamic scanning stages and fail-closed options.
 
 ## [2026-04-13] feat | Media Vault Hardening & Optimizations
-Implemented [[docs/vault-improvements-plan.md]].
+Implemented [docs/vault-improvements-plan.md](../docs/vault-improvements-plan.md).
 - Phase 1: Cascade slugs and physical relocation for folder rename/move in `VaultService`.
 - Phase 2: Added `PruneVaultSandbox` job and `vault:purge` Artisan command.
 - Phase 3: Added CDN-friendly `/media/{uuid}` route and RFC 7232 headers for caching.
@@ -87,7 +128,7 @@ Implemented `clear_key` explicit API key revocation UI within the AI Hub dashboa
 Optimized `AiContextService` to prevent unconditional database context loading out of scope.
 
 ## [2026-04-06] refactor | Multi-provider Email Abstraction
-Abstracted all email provider logic into [[Services/EmailWebhooks/Contracts/WebhookProvider]].
+Abstracted all email provider logic into [Services/EmailWebhooks/Contracts/WebhookProvider](Services/EmailWebhooks/Contracts/WebhookProvider.md).
 Created Support for Resend (Svix), Mailgun (HMAC), and SendGrid (ECDSA).
 Renamed `resend_id` → `provider_message_id` across `email_logs` and updated indexes.
 Unified webhook endpoint to `/webhooks/email` with generic middleware/job.
@@ -99,11 +140,11 @@ derived from CLAUDE.md: overview, architecture, services, vault-pipeline, permis
 frontend, database, middleware, ai-hub, testing.
 
 ## [2026-04-05] update | Resend email integration implemented
-Created [[modules/email]]: full documentation of the listener pipeline
+Created [modules/email](modules/email.md): full documentation of the listener pipeline
 (StopSuppressedEmail → InjectUnsubscribeHeaders → LogSentEmail), webhook
 verification, suppression model, unsubscribe flow, stats caching, and
-EmailLogPolicy registration. Updated [[database/collections]] with email_logs
-and suppressed_emails. Updated [[architecture/middleware]] with resend.webhook
+EmailLogPolicy registration. Updated [database/collections](database/collections.md) with email_logs
+and suppressed_emails. Updated [architecture/middleware](architecture/middleware.md) with resend.webhook
 alias and event auto-discovery note (withEvents discover:false).
 
 ## [2026-04-05] ingest | Resend.com mail integration brainstorm
@@ -111,4 +152,4 @@ Digested `docs/brainstorm-resend-integration.md`. Key decisions captured: creden
 in `.env` only (RESEND_KEY, RESEND_WEBHOOK_SECRET), MongoDB TTL 90d (EMAIL_LOG_TTL_DAYS),
 webhook handler queued as ProcessResendWebhook job (updateOrCreate race-safety), CTR as
 primary AI signal, HMAC-signed unsubscribe tokens, List-Unsubscribe header required.
-New wiki page to create: [[modules/email]] once implementation begins.
+New wiki page to create: [modules/email](modules/email.md) once implementation begins.

@@ -50,13 +50,14 @@ Browser → Laravel Route → Middleware Stack → Controller → Service/Model 
 
 Business logic lives here, not in controllers.
 
-- **`AiService`** — Multi-provider AI orchestration (OpenAI, Gemini, Stability AI). Providers are configured at runtime via the AI Hub UI, not hardcoded.
+- **`AiService`** — Multi-provider AI orchestration (OpenAI, Gemini, OpenRouter, Stability, etc.). Providers are configured at runtime via the AI Hub UI, not hardcoded. Provider HTTP uses `AiHttpClient`; untrusted URLs use `SafeHttpClient`.
 - **`AiActionService`** — Structured AI-driven CMS mutations (create/update pages and banners). Actions are validated against a whitelist, resolved server-side, and are revertible via `ActivityLog` before-state snapshots.
 - **`AiContextService`** — Aggregates project context (pages, settings) for AI prompts; caches to avoid redundant DB queries.
 - **`VaultService`** — Media management. Entry point for all vault operations; delegates uploads to the pipe pipeline.
 - **`SettingsService`** — Key/value settings with cache. Always use this instead of querying `settings` directly.
 - **`ActivityLogger`** — Static `log()` call used throughout controllers to write to `activity_logs`. Fails silently to avoid disrupting user flow.
-- **`SafeHttpClient`** — SSRF-protected HTTP client. Use this for all outbound requests, never the `Http` facade directly.
+- **`SafeHttpClient`** — SSRF-protected HTTP client for untrusted (user/AI-supplied) URLs. Provider APIs use `AiHttpClient` instead. Never call the `Http` facade directly from app code for these paths.
+- **`AiHttpClient`** — Thin client for hub-configured AI vendor endpoints (timeouts + logging).
 
 ### Pipeline Pattern (Vault Upload)
 
@@ -146,7 +147,7 @@ To effectively reference this knowledge in future runs and avoid redundant analy
 - `wiki/index.md` — master content catalog with links to all pages
 - `wiki/log.md` — append-only history of wiki operations
 
-Pages are organized under `architecture/`, `database/`, `frontend/`, and `modules/`. Use `[[folder/page]]` wiki-link syntax for cross-references.
+Pages are organized under `architecture/`, `database/`, `frontend/`, and `modules/`. Use standard Markdown links for cross-references (e.g. `[Page Title](folder/page.md)`).
 
 ## Database
 

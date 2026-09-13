@@ -103,7 +103,7 @@ registered in `AppServiceProvider`.
 
 ## See also
 
-- [[database/collections]] — full collection list
-- [[architecture/middleware]] — VerifyEmailWebhook middleware alias
-- [[modules/permissions]] — email_logs.view permission
-- [[modules/services]] — ActivityLogger usage pattern
+- [database/collections](../database/collections.md) — full collection list
+- [architecture/middleware](../architecture/middleware.md) — VerifyEmailWebhook middleware alias
+- [modules/permissions](permissions.md) — email_logs.view permission
+- [modules/services](services.md) — ActivityLogger usage pattern

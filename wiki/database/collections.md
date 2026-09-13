@@ -53,10 +53,10 @@ DB_DATABASE=untitled_cms
 ## Settings access
 
 Don't query the `settings` collection directly. Use `SettingsService` which
-adds a caching layer. See [[modules/services]].
+adds a caching layer. See [modules/services](../modules/services.md).
 
 ## See also
 
-- [[modules/services]] — SettingsService caching layer
-- [[modules/vault]] — how vault_files records are created
-- [[architecture/testing]] — SQLite override in tests
+- [modules/services](../modules/services.md) — SettingsService caching layer
+- [modules/vault](../modules/vault.md) — how vault_files records are created
+- [architecture/testing](../architecture/testing.md) — SQLite override in tests

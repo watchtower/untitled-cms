@@ -2,52 +2,52 @@
 
 > Role-based access control with policy classes and per-user caching.
 
-Last updated: 2026-04-05
+Last updated: 2026-07-12
 
 ## Format
 
-Permissions are strings in `resource.action` format:
+Permissions are strings in `resource.action` format (e.g. `pages.edit`, `media.create`).
 
-```
-pages.edit
-media.upload
-users.delete
-```
-
-The full set of ~20 permissions is defined in `app/Traits/HasRoles.php`.
+The canonical list is **`Role::availablePermissions()`** in `app/Models/Role.php`
+(**32** strings as of 2026-07-12). Keep Policy classes, seeders, and UI in sync with that list.
 
 ## Components
 
-### HasRoles trait
-Applied to the `User` model. Defines the canonical permission list, provides
-`hasPermission()` / `can()` helpers, and handles permission caching with a
-configurable TTL.
+### User model helpers
+`User::hasPermission(string)`, `getCachedPermissions()`, `canAccessBackend()`, plus
+`HasRoles` for `hasRole(string $slug)`. Permission cache is busted on role save and
+`User::syncRoles()`.
 
-### 8 Policy classes (`app/Policies/`)
-One per resource type. Policies use `hasPermission()` under the hood.
-Laravel's policy system routes `$user->can('edit', $page)` to the right
-policy method automatically.
+### Policy classes (`app/Policies/`)
+One per resource type. Policies call `hasPermission()` (and sometimes `hasRole('admin')`).
+Laravel routes `$user->can('edit', $page)` / `$this->authorize(...)` to the right method.
 
 ### CheckPermission middleware
-The `can` middleware alias points to this custom class, **not** Laravel's
-built-in `can` middleware. Behaviour is similar but enforces the project's
-permission string format. Be aware of this if debugging auth issues — the
-standard Laravel docs may not apply exactly.
+The `can` middleware alias points to this custom class, **not** Laravel's built-in
+`can` middleware. Behaviour is similar but enforces project permission strings.
+
+## Policy-first convention (controllers)
+
+Prefer this order when adding or refactoring endpoints:
+
+1. **Resource actions** → `$this->authorize(...)` / `Gate::authorize(...)` against a Policy
+2. **Input validation** → FormRequest; `authorize()` may call Gate
+3. **Cross-cutting flags** (e.g. draft preview) → policy ability (`viewAny` / dedicated method), not raw `hasPermission` in the controller
+4. **Permission string catalog** → only defined in `Role::availablePermissions()`
+
+Avoid scattering `auth()->user()->hasPermission('…')` in controllers when a policy already
+covers the same check. Folder-scoped Vault rules stay on `VaultFolderPolicy` / `VaultFilePolicy`.
 
 ## Caching
 
-Permissions are cached per user in the `HasRoles` trait. If you change a user's
-role in the database directly (bypassing the app), their cached permissions will
-be stale until the TTL expires. Use the app's role management UI to avoid this.
+Permissions are cached per user (~60s). Role `saved` events bust member caches.
+Bypassing the app to edit roles in the DB can leave stale cache until TTL expires.
 
 ## Gotcha: custom middleware alias
 
-If you add a new route and use `->middleware('can:resource.action')`, make sure
-you understand it hits `CheckPermission`, not Laravel's default. If something
-isn't working as expected, check where middleware aliases are registered to
-confirm the mapping.
+`->middleware('can:resource.action')` hits `CheckPermission`, not Laravel's default.
 
 ## See also
 
-- [[architecture/middleware]] — full middleware stack
-- [[architecture/request-flow]] — where auth fits in the request lifecycle
+- [architecture/middleware](../architecture/middleware.md) — full middleware stack
+- [architecture/request-flow](../architecture/request-flow.md) — where auth fits in the request lifecycle

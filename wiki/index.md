@@ -6,39 +6,41 @@ Content catalog for the untitled-cms wiki. Updated on every ingest.
 
 | Page | Summary |
 |------|---------|
-| [[overview]] | Project summary, capabilities, and key numbers |
+| [overview](overview.md) | Project summary, capabilities, and key numbers |
+| [discoverability](discoverability.md) | Day-0 search baseline, verified keyword surface, naming risks |
 
 ## Architecture
 
 | Page | Summary |
 |------|---------|
-| [[architecture/stack]] | Technology choices and key design decisions |
-| [[architecture/request-flow]] | How a request moves from browser to response |
-| [[architecture/middleware]] | Web middleware stack and what each layer does |
-| [[architecture/testing]] | Test setup, SQLite override, known gotchas |
+| [architecture/stack](architecture/stack.md) | Technology choices and key design decisions |
+| [architecture/request-flow](architecture/request-flow.md) | How a request moves from browser to response |
+| [architecture/middleware](architecture/middleware.md) | Web middleware stack and what each layer does |
+| [architecture/testing](architecture/testing.md) | Test setup, SQLite override, known gotchas |
+| [architecture/mongodb](architecture/mongodb.md) | Why MongoDB, test dual-path, re-evaluate criteria |
 
 ## Database
 
 | Page | Summary |
 |------|---------|
-| [[database/collections]] | MongoDB models, collections, and conventions |
+| [database/collections](database/collections.md) | MongoDB models, collections, and conventions |
 
 ## Frontend
 
 | Page | Summary |
 |------|---------|
-| [[frontend/ui-stack]] | React/Inertia patterns, libraries, shared props |
+| [frontend/ui-stack](frontend/ui-stack.md) | React/Inertia patterns, libraries, shared props |
 
 ## Modules
 
 | Page | Summary |
 |------|---------|
-| [[modules/services]] | app/Services/* overview and when to use each |
-| [[modules/vault]] | Media manager: upload pipeline, config, storage |
-| [[modules/permissions]] | Role-based access control, policy classes, caching |
-| [[modules/ai-hub]] | AI provider config, usage tracking, integration patterns |
-| [[modules/email]] | Resend email pipeline, suppression, webhooks, unsubscribe flow |
+| [modules/services](modules/services.md) | app/Services/* overview and when to use each |
+| [modules/vault](modules/vault.md) | Media manager: upload pipeline, config, storage |
+| [modules/permissions](modules/permissions.md) | Role-based access control, policy classes, caching |
+| [modules/ai-hub](modules/ai-hub.md) | AI provider config, usage tracking, integration patterns |
+| [modules/email](modules/email.md) | Resend email pipeline, suppression, webhooks, unsubscribe flow |
 
 ---
 
-*To add a page: create the file in the right subfolder, add a row here, append an entry to [[log]].*
+*To add a page: create the file in the right subfolder, add a row here, append an entry to [log](log.md).*

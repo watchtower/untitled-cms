@@ -21,4 +21,4 @@ To reference this knowledge efficiently in future runs and avoid redundant analy
 - `wiki/log.md` — append-only history of wiki operations.
 - `wiki/overview.md` — project summary, capabilities, and key numbers.
 
-Pages are organized under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/`. Cross-references use `[[folder/page]]` wiki-link syntax (e.g. `[[modules/vault]]`, `[[architecture/request-flow]]`).
+Pages are organized under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/`. Cross-references use standard Markdown links (e.g. `[Vault](modules/vault.md)`, `[Request Flow](architecture/request-flow.md)`).

@@ -68,5 +68,5 @@ partial Inertia reload — not a fetch call.
 
 ## See also
 
-- [[architecture/request-flow]] — how Inertia fits in the request flow
-- [[architecture/middleware]] — HandleInertiaRequests and shared props
+- [architecture/request-flow](../architecture/request-flow.md) — how Inertia fits in the request flow
+- [architecture/middleware](../architecture/middleware.md) — HandleInertiaRequests and shared props

@@ -31,14 +31,14 @@ Routes requiring authentication use:
 ## Permission middleware
 
 The `can` middleware alias maps to `CheckPermission` (custom), not Laravel's built-in.
-Usage: `->middleware('can:resource.action')`. See [[modules/permissions]].
+Usage: `->middleware('can:resource.action')`. See [modules/permissions](../modules/permissions.md).
 
 ## Webhook middleware
 
 `resend.webhook` alias → `VerifyResendWebhook`. Applied only to `POST /webhooks/resend`.
 Verifies Svix/Standard Webhooks v1 HMAC-SHA256 signatures and rejects requests whose
 timestamp deviates more than 5 minutes in either direction. CSRF is exempted for this
-route in `bootstrap/app.php`. See [[modules/email]] for full detail.
+route in `bootstrap/app.php`. See [modules/email](../modules/email.md) for full detail.
 
 ## Event discovery
 
@@ -63,6 +63,6 @@ AI endpoints are rate-limited at the route level, not via middleware:
 
 ## See also
 
-- [[modules/permissions]] — CheckPermission middleware detail
-- [[architecture/request-flow]] — where middleware fits in the full request flow
-- [[frontend/ui-stack]] — HandleInertiaRequests and shared props
+- [modules/permissions](../modules/permissions.md) — CheckPermission middleware detail
+- [architecture/request-flow](request-flow.md) — where middleware fits in the full request flow
+- [frontend/ui-stack](../frontend/ui-stack.md) — HandleInertiaRequests and shared props

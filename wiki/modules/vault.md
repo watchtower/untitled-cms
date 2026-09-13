@@ -2,7 +2,7 @@
 
 > Media manager: upload pipeline, configuration, and storage.
 
-Last updated: 2026-04-05
+Last updated: 2026-07-12
 
 ## Overview
 
@@ -53,5 +53,5 @@ Inspect this class to see what data is available at each stage.
 
 ## See also
 
-- [[modules/services]] — VaultService overview
-- [[database/collections]] — vault_files and vault_folders collections
+- [modules/services](services.md) — VaultService overview
+- [database/collections](../database/collections.md) — vault_files and vault_folders collections

@@ -49,8 +49,7 @@ Every wiki page starts with:
 Last updated: YYYY-MM-DD
 ```
 
-Then free-form markdown. Use `[[folder/page]]` wiki-link syntax for cross-references
-(Obsidian-compatible). Always link to related pages at the bottom under `## See also`.
+Then free-form markdown. Use standard Markdown links for cross-references (e.g. `[Page Title](folder/page.md)`). Always link to related pages at the bottom under `## See also`.
 
 ## Operations
 
@@ -97,3 +96,22 @@ Periodically health-check the wiki:
 - When something is surprising or non-obvious, call it out explicitly.
 - Mark uncertainty: use "unclear", "TBD", or "investigate" rather than stating guesses as facts.
 - Do not duplicate what is already in CLAUDE.md — link to it instead or build on it.
+
+## Source of truth (anti-drift)
+
+When documenting stack facts, **prefer code over README/wiki memory**:
+
+| Fact | Source of truth |
+|------|-----------------|
+| PHP version | `composer.json` → `require.php` |
+| Laravel / packages | `composer.json` / `composer.lock` |
+| Frontend packages | `package.json` |
+| Permission strings | `Role::availablePermissions()` in `app/Models/Role.php` |
+| Policy abilities | `app/Policies/*` |
+| Vault pipeline order | `VaultService::upload()` pipe list |
+| AI providers (SDK) | `config/ai.php` + active `AiHub` records |
+| Outbound HTTP rules | [modules/services](modules/services.md) two-tier policy; code in `SafeHttpClient` / `AiHttpClient` |
+| Rich text editor | `resources/js/Components/Editor.tsx` |
+| Public AI endpoints | `routes/web.php` (`llms.txt`, markdown Accept) |
+
+If wiki and code disagree, **update the wiki** (or fix the code if the wiki was intentional).

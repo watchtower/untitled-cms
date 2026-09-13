@@ -38,6 +38,6 @@ This is the "AI-native" aspect of the CMS — no HTML parsing required for agent
 
 ## See also
 
-- [[architecture/middleware]] — middleware stack that wraps every request
-- [[architecture/stack]] — technology choices
-- [[frontend/ui-stack]] — what happens on the React side
+- [architecture/middleware](middleware.md) — middleware stack that wraps every request
+- [architecture/stack](stack.md) — technology choices
+- [frontend/ui-stack](../frontend/ui-stack.md) — what happens on the React side

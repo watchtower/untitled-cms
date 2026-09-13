@@ -2,7 +2,7 @@
 
 > Multi-provider AI configuration, usage tracking, and integration patterns.
 
-Last updated: 2026-04-05
+Last updated: 2026-07-12
 
 ## Overview
 
@@ -12,50 +12,56 @@ config files or .env**. The config is patched dynamically by `AiService`.
 
 ## Supported providers
 
-| Provider | Capabilities |
-|---------|-------------|
-| OpenAI | Text generation, Vision, Image generation |
-| Gemini | Text generation, Vision, Image generation |
-| Stability AI | Image generation |
-| OpenRouter | Text generation, Vision |
+Capabilities depend on hub configuration and model choice. Typical matrix:
+
+| Provider | Text (laravel/ai) | Vision alt-text | Image generation |
+|----------|-------------------|-----------------|------------------|
+| OpenAI | Yes | Yes | Yes (e.g. DALL·E) |
+| Gemini | Yes | Yes | Yes (generateContent / Imagen) |
+| OpenRouter | Yes | Yes | Yes (image-capable models) |
+| Stability AI | Via hub if configured | No | Yes (SDXL) |
+| Others in AI Hub UI | Via `config/ai.providers` | Varies | Varies |
+
+Canonical provider keys for the SDK are `array_keys(config('ai.providers'))`.
+Hub `name` must match a supported key (case-insensitive).
 
 ## Rate limits (enforced at route level)
 
-- Text generation: **30 requests/minute**
+- Text generation (SEO, tags, generate): **30 requests/minute**
 - Image generation: **10 requests/minute**
+- Chat + actions + context: **60 requests/minute**
+- Chat resilience: 120s-oriented timeout path; **1 retry** with **2s backoff** on HTTP 429 / rate-limit errors
 
 ## Usage tracking
 
-Monthly usage is tracked per provider in the `ai_hubs` collection. This feeds
-the dashboard analytics. If usage numbers look wrong, check `AiService` for
-where tracking increments are written.
+Monthly usage is tracked per hub in `ai_hubs.monthly_usage` (increments inside `AiService`).
 
 ## Chat sessions
 
 Conversation history is stored in `chat_sessions`. Each session belongs to a user.
-Session data (including past messages and AI proposals) is formatted and passed as conversation history in subsequent prompts to maintain continuity.
+Session data (including past messages and AI proposals) is formatted and passed as
+conversation history in subsequent prompts.
 
-## Rate limits & Retry Logic
+## Outbound HTTP
 
-- Text generation: **30 requests/minute**
-- Image generation: **10 requests/minute**
-- **Retry Logic:** AI chat requests have a 120-second PHP timeout and include automatic 1-time retry logic with a 2-second backoff for HTTP 429 rate limit responses.
+- **Untrusted URLs** (e.g. download image from AI-returned URL): `SafeHttpClient`
+- **Provider API calls** in `AiService` vision/image methods: `AiHttpClient`
+
+See [modules/services#Outbound HTTP policy (two tiers)](services.md#outbound-http-policy-two-tiers).
 
 ## AiContextService
 
 Aggregates project context (pages, settings, etc.) for use in AI prompts.
-Results are cached to avoid redundant DB queries within a session. See [[modules/services]].
+Results are cached to avoid redundant DB queries within a session.
 
 ## Gotchas
 
-- If AI calls are failing, the first thing to check is whether provider credentials
-  are set in the AI Hub admin UI, not in `.env`.
-- `SafeHttpClient` must be used for all outbound requests to AI APIs —
-  direct use of `Http` facade bypasses SSRF protection. See [[modules/services]].
-- Image generation uses Stability AI specifically. If it's misconfigured,
-  text generation (OpenAI/Gemini) will still work.
+- If AI calls fail, first check credentials in the AI Hub admin UI, not `.env`.
+- Encrypted API keys fail to decrypt after `APP_KEY` rotation — re-enter the key in UI.
+- Image generation requires an active hub whose provider supports images (OpenAI, Gemini, Stability, OpenRouter); text can still work on other hubs.
+- Do not route user-supplied URLs through `AiHttpClient` — use `SafeHttpClient`.
 
 ## See also
 
-- [[modules/services]] — AiService, AiContextService, SafeHttpClient
-- [[architecture/request-flow]] — rate limiting configuration
+- [modules/services](services.md) — AiService, AiHttpClient, SafeHttpClient
+- [architecture/request-flow](../architecture/request-flow.md) — rate limiting configuration

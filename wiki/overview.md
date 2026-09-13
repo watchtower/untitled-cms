@@ -2,7 +2,7 @@
 
 > AI-native CMS built on Laravel 13 + MongoDB with a React/Inertia admin SPA.
 
-Last updated: 2026-04-05
+Last updated: 2026-07-12
 
 ## What it is
 
@@ -18,27 +18,31 @@ consume the markdown-flavoured endpoints.
 
 ## Core capabilities
 
-- Page management with rich content editing
+- Page management with rich content editing (TinyMCE)
 - Media management (Vault) with security pipeline
-- AI content generation and chat (multi-provider)
+- AI content generation and chat (multi-provider, runtime AI Hub)
 - Role-based permissions with fine-grained policies
 - Banners and menus with drag-and-drop ordering
 - Database-driven redirects
 - Custom maintenance mode with admin bypass
 - Activity logging
 - Analytics dashboard (Recharts)
+- Email logs, suppression, and multi-provider webhooks
 
 ## Key numbers
 
-- ~20 permissions in `resource.action` format
-- 8 Policy classes
-- 6 Vault upload pipeline stages
-- 3 AI providers (OpenAI, Gemini, Stability AI)
-- Rate limits: 30/min text generation, 10/min image generation
+Source of truth is always the code; these numbers are snapshots:
+
+- **32** permissions in `resource.action` format (`Role::availablePermissions()`)
+- **10** Policy classes under `app/Policies/`
+- **6** Vault upload pipeline stages (+ optional ClamAV `SandboxedScan`)
+- Multi-provider AI Hub (OpenAI, Gemini, OpenRouter, Stability, plus others configured in AI Hub UI / `config/ai.php`)
+- Rate limits: 30/min text generation, 10/min image generation, 60/min chat/actions
 
 ## See also
 
-- [[architecture]] — stack and request flow
-- [[services]] — service layer overview
-- [[permissions]] — how access control works
-- [[ai-hub]] — AI provider configuration
+- [architecture/stack](architecture/stack.md) — stack and request flow
+- [modules/services](modules/services.md) — service layer overview
+- [modules/permissions](modules/permissions.md) — how access control works
+- [modules/ai-hub](modules/ai-hub.md) — AI provider configuration
+- [architecture/mongodb](architecture/mongodb.md) — why MongoDB, test gap, re-evaluate criteria
