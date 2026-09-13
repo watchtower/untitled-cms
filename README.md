@@ -39,9 +39,9 @@ Laravel 13, MongoDB and a React + Inertia.js admin SPA, with a secure **Media Va
 
 ---
 
-## What's New Since 0.4.0
+## What's New in 0.5.0
 
-Unreleased changes on `main` since the [0.4.0 release](CHANGELOG.md#040--2026-06-13). Full details in [CHANGELOG.md](CHANGELOG.md#unreleased).
+Highlights of the [0.5.0 release](CHANGELOG.md#050--2026-09-13). Full details in [CHANGELOG.md](CHANGELOG.md#050--2026-09-13).
 
 - **Windows installer** — native `install.ps1`; `install.sh` now fails fast with clear errors and warns when run on Windows.
 - **AI assistant** — chat sidebar rebuilt on shadcn chat primitives; chat retries once on provider rate limits; all provider calls go through `AiHttpClient` (timeouts + logging).
@@ -476,7 +476,7 @@ Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.4.0** (unreleased changes are summarized in [What's New Since 0.4.0](#whats-new-since-040)).
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.5.0** (highlights in [What's New in 0.5.0](#whats-new-in-050)).
 
 ---
 

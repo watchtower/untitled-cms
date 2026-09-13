@@ -4,6 +4,12 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-09-13] release | 0.5.0
+- `package.json` / `package-lock.json` bumped to 0.5.0. `composer.json` intentionally carries no `version` (Packagist reads tags).
+- CHANGELOG `[Unreleased]` promoted to `[0.5.0] — 2026-09-13`; README "What's New" section and current version updated.
+- CHANGELOG compare links fixed: tags are un-prefixed (`0.4.0`), so the old `v0.x.0` links returned 404.
+- Release ships migration `2026_09_13_093743_add_unique_index_to_vault_folders` — upgraders must run `php artisan migrate`.
+
 ## [2026-09-13] update | README and CHANGELOG synced with changes since 0.4.0
 - README gained a "What's New Since 0.4.0" section; CHANGELOG `[Unreleased]` populated from the 14 commits since the tag.
 - README claims corrected against code: pipeline is 6 stages + optional `SandboxedScan` (inserted after `ValidateMimeType`);

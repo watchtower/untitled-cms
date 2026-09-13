@@ -113,7 +113,7 @@ For a repo at 0 stars these are a higher-yield channel than any on-page change.
   explicit per-action approval — hand over the exact command instead.
 - Packagist reads `composer.json` from the **default branch**, which is `master` here (not
   `main`). Metadata must be pushed to `master` *before* submitting to Packagist.
-- Do not hardcode `version` in `composer.json` — the repo carries git tags (`0.1.0`–`0.4.0`)
+- Do not hardcode `version` in `composer.json` — the repo carries git tags (`0.1.0`–`0.5.0`)
   and Packagist derives versions from them. A stale pin makes a fresh listing wrong on day one.
 - **This package is `"type": "project"`, and that is correct.** It is an application skeleton
   (the README documents `git clone`), not a library. So the Packagist win is

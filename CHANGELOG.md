@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+---
+
+## [0.5.0] — 2026-09-13
+
 ### Added
 - **Windows Installer** — Native PowerShell installer (`install.ps1`) with prerequisite checks, mirroring `install.sh`.
 - **AI Chat UI Primitives** — Chat sidebar rebuilt on shadcn chat components (`bubble`, `message`, `message-scroller`, `marker`).
@@ -23,6 +27,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **Vault Browser** — `Vault/Index.tsx` split into `useVaultBrowser` hook, `VaultDialogs`, and `VaultFolderInfoPopover`; search is debounced and stale responses are dropped.
 - **Installer Hardening** — `install.sh` fails fast with an error trap, warns on Windows, and stops if `composer install` fails.
 - **Documentation** — README facts corrected against the code; wiki cross-references converted to standard Markdown links; legacy `RELEASE_NOTES_*` files removed.
+- **Package Metadata** — `composer.json` gains Packagist keywords, homepage, and support links; the pinned `version` field was removed so Packagist derives versions from git tags.
 
 ### Fixed
 - **Menus** — Item validation matches the real `{id, title, url, target, order, subItems}` shape; saves no longer strip item data.
@@ -102,8 +107,9 @@ Initial public release.
 - **Dark mode** — System-preference aware, toggle in admin UI
 - **34 permissions** — Organised by resource group across all modules
 
-[Unreleased]: https://github.com/watchtower/untitled-cms/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/watchtower/untitled-cms/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/watchtower/untitled-cms/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/watchtower/untitled-cms/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/watchtower/untitled-cms/releases/tag/v0.1.0
+[Unreleased]: https://github.com/watchtower/untitled-cms/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/watchtower/untitled-cms/compare/0.4.0...0.5.0
+[0.4.0]: https://github.com/watchtower/untitled-cms/compare/0.3.0...0.4.0
+[0.3.0]: https://github.com/watchtower/untitled-cms/compare/0.2.0...0.3.0
+[0.2.0]: https://github.com/watchtower/untitled-cms/compare/0.1.0...0.2.0
+[0.1.0]: https://github.com/watchtower/untitled-cms/releases/tag/0.1.0
