@@ -65,7 +65,7 @@ class SafeHttpClient
         return Http::withOptions([
             'curl' => [
                 // Force curl to use our pre-validated IP to prevent DNS rebinding attacks
-                CURLOPT_RESOLVE => ["{$host}:{$port}:{$ip}"],
+                CURLOPT_RESOLVE => [$pinned],
             ],
         ])
             ->withoutRedirecting()

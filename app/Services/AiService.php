@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\AiHub;
 use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Ai\AnonymousAgent;
 use Laravel\Ai\Files\Base64Image;
@@ -127,7 +126,7 @@ class AiService
         $base64 = preg_replace('/^data:[^;]+;base64,/', '', $dataUri);
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$hub->default_model}:generateContent";
 
-        $response = Http::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
+        $response = AiHttpClient::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
             'contents' => [
                 [
                     'parts' => [
@@ -137,6 +136,8 @@ class AiService
                 ],
             ],
         ]);
+
+        AiHttpClient::logResponse('gemini', 'alt_text', $response);
 
         if ($response->failed()) {
             throw new \Exception('Gemini alt text generation failed: '.$response->json('error.message', 'Unknown'));
@@ -151,7 +152,7 @@ class AiService
     {
         $model = $hub->default_model ?: 'gpt-4o';
 
-        $response = Http::withToken($hub->api_key)
+        $response = AiHttpClient::withToken($hub->api_key)
             ->post('https://api.openai.com/v1/chat/completions', [
                 'model' => $model,
                 'messages' => [
@@ -166,6 +167,8 @@ class AiService
                 'max_tokens' => 60,
             ]);
 
+        AiHttpClient::logResponse('openai', 'alt_text', $response);
+
         if ($response->failed()) {
             throw new \Exception('OpenAI vision failed: '.$response->json('error.message', 'Unknown'));
         }
@@ -179,7 +182,7 @@ class AiService
     {
         $model = $hub->default_model ?: 'openai/gpt-4o';
 
-        $response = Http::withToken($hub->api_key)
+        $response = AiHttpClient::withToken($hub->api_key)
             ->post('https://openrouter.ai/api/v1/chat/completions', [
                 'model' => $model,
                 'messages' => [
@@ -193,6 +196,8 @@ class AiService
                 ],
                 'max_tokens' => 60,
             ]);
+
+        AiHttpClient::logResponse('openrouter', 'alt_text', $response);
 
         if ($response->failed()) {
             throw new \Exception('OpenRouter vision failed: '.$response->json('error.message', 'Unknown'));
@@ -298,19 +303,20 @@ class AiService
             } catch (\Exception $e) {
                 $attempts++;
                 $msg = strtolower($e->getMessage());
-                
+
                 if (str_contains($msg, 'rate limit') || str_contains($msg, '429')) {
                     if ($attempts < $maxAttempts) {
                         sleep(2);
+
                         continue;
                     }
                     throw new \Exception('The AI provider is currently experiencing high traffic. Please try again in a few moments.');
                 }
-                
+
                 throw new \Exception('Chat failed: '.$e->getMessage());
             }
         }
-        
+
         throw new \Exception('Chat failed due to repeated errors.');
     }
 
@@ -395,13 +401,15 @@ class AiService
     {
         $model = $hub->image_model ?: 'dall-e-3';
 
-        $response = Http::withToken($hub->api_key)
+        $response = AiHttpClient::withToken($hub->api_key)
             ->post('https://api.openai.com/v1/images/generations', [
                 'model' => $model,
                 'prompt' => $prompt,
                 'n' => 1,
                 'size' => $size,
             ]);
+
+        AiHttpClient::logResponse('openai', 'image_generation', $response);
 
         if ($response->failed()) {
             throw new \Exception("OpenAI image generation ({$model}) failed: ".$response->json('error.message', 'Unknown error'));
@@ -414,8 +422,7 @@ class AiService
 
     private function generateImageStability(AiHub $hub, string $prompt): string
     {
-        $response = Http::withToken($hub->api_key)
-            ->withHeaders(['Accept' => 'application/json'])
+        $response = AiHttpClient::withToken($hub->api_key, ['Accept' => 'application/json'])
             ->post('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image', [
                 'text_prompts' => [['text' => $prompt, 'weight' => 1]],
                 'cfg_scale' => 7,
@@ -424,6 +431,8 @@ class AiService
                 'steps' => 30,
                 'samples' => 1,
             ]);
+
+        AiHttpClient::logResponse('stability', 'image_generation', $response);
 
         if ($response->failed()) {
             throw new \Exception('Stability AI image generation failed: '.$response->json('message', 'Unknown error'));
@@ -460,13 +469,15 @@ class AiService
     {
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
 
-        $response = Http::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
+        $response = AiHttpClient::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
             'contents' => [
                 ['parts' => [['text' => $prompt]]],
             ],
             // Note: responseModalities is NOT needed in the body for gemini-2.5-flash-image.
             // The model handles image output natively.
         ]);
+
+        AiHttpClient::logResponse('gemini', 'image_generation_content', $response);
 
         if ($response->failed()) {
             $errorMsg = $response->json('error.message', 'Unknown error');
@@ -496,7 +507,7 @@ class AiService
     {
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:predict";
 
-        $response = Http::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
+        $response = AiHttpClient::withHeaders(['x-goog-api-key' => $hub->api_key])->post($url, [
             'instances' => [['prompt' => $prompt]],
             'parameters' => [
                 'sampleCount' => 1,
@@ -504,6 +515,8 @@ class AiService
                 'safetyFilterLevel' => 'block_some',
             ],
         ]);
+
+        AiHttpClient::logResponse('gemini', 'image_generation_imagen', $response);
 
         if ($response->failed()) {
             $errorMsg = $response->json('error.message', 'Unknown error');
@@ -529,8 +542,7 @@ class AiService
     {
         $model = $hub->image_model ?: 'google/gemini-2.5-flash-image';
 
-        $response = Http::withToken($hub->api_key)
-            ->withHeaders(['HTTP-Referer' => config('app.url')])
+        $response = AiHttpClient::withToken($hub->api_key, ['HTTP-Referer' => config('app.url')])
             ->post('https://openrouter.ai/api/v1/chat/completions', [
                 'model' => $model,
                 'modalities' => ['image', 'text'],
@@ -538,6 +550,8 @@ class AiService
                     ['role' => 'user', 'content' => $prompt],
                 ],
             ]);
+
+        AiHttpClient::logResponse('openrouter', 'image_generation', $response);
 
         if ($response->failed()) {
             throw new \Exception('OpenRouter image generation failed: '.$response->json('error.message', 'Unknown error'));
