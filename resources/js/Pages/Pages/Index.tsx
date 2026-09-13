@@ -4,8 +4,7 @@ import { PageProps } from '@/types';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Edit, Trash2, Plus, FileText, Globe, Calendar, MoreHorizontal } from 'lucide-react';
-import { DataTable } from '@/Components/Common/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, type DataTableColumnDef } from '@/Components/Common/DataTable';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import {
     DropdownMenu,
@@ -38,7 +37,7 @@ export default function Index({ auth, pages }: PagesIndexProps) {
     const canEdit = permissions.includes('pages.edit');
     const canDelete = permissions.includes('pages.delete');
 
-    const columns: ColumnDef<PageModel>[] = [
+    const columns: DataTableColumnDef<PageModel>[] = [
         {
             accessorKey: 'title',
             header: ({ column }) => (

@@ -100,15 +100,16 @@ if (Get-Command composer -ErrorAction SilentlyContinue) {
 # Node.js
 if (Get-Command node -ErrorAction SilentlyContinue) {
     $NODE_VER = (node --version) -replace 'v', ''
-    $NODE_MAJOR = $NODE_VER.Split('.')[0]
-    if ([int]$NODE_MAJOR -ge 18) {
+    $NODE_MAJOR = [int]$NODE_VER.Split('.')[0]
+    $NODE_MINOR = [int]$NODE_VER.Split('.')[1]
+    if ($NODE_MAJOR -gt 22 -or ($NODE_MAJOR -eq 22 -and $NODE_MINOR -ge 12)) {
         Write-Host " ✔ Node.js v$NODE_VER" -ForegroundColor Green
     } else {
-        Write-Host " ✖ Node.js v$NODE_VER — requires Node.js v18+ https://nodejs.org" -ForegroundColor Red
+        Write-Host " ✖ Node.js v$NODE_VER — requires Node.js v22.12+ https://nodejs.org" -ForegroundColor Red
         $Errors++
     }
 } else {
-    Write-Host " ✖ Node.js not found — install v18+ from https://nodejs.org" -ForegroundColor Red
+    Write-Host " ✖ Node.js not found — install v22.12+ from https://nodejs.org" -ForegroundColor Red
     $Errors++
 }
 

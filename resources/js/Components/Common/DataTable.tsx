@@ -1,17 +1,28 @@
 import {
-    ColumnDef,
+    columnFacetingFeature,
+    columnFilteringFeature,
+    columnVisibilityFeature,
+    createFacetedRowModel,
+    createFacetedUniqueValues,
+    createFilteredRowModel,
+    createPaginatedRowModel,
+    createSortedRowModel,
+    filterFns,
     flexRender,
-    getCoreRowModel,
-    SortingState,
-    getSortedRowModel,
-    useReactTable,
-    getPaginationRowModel,
-    VisibilityState,
-    ColumnFiltersState,
-    getFilteredRowModel,
-    getFacetedRowModel,
-    getFacetedUniqueValues,
-    Table as TanstackTable,
+    rowPaginationFeature,
+    rowSelectionFeature,
+    rowSortingFeature,
+    sortFns,
+    tableFeatures,
+    useTable,
+    type CellData,
+    type ColumnDef,
+    type ColumnFiltersState,
+    type ColumnVisibilityState,
+    type ReactTable,
+    type RowData,
+    type RowSelectionState,
+    type SortingState,
 } from "@tanstack/react-table";
 import {
     Table,
@@ -26,27 +37,52 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { DataTablePagination } from "./DataTablePagination";
 
-interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
+// Features shared by every admin data table. The full filter/sort registries are
+// registered so "auto" filter and sort resolution matches TanStack Table v8.
+export const dataTableFeatures = tableFeatures({
+    columnFilteringFeature,
+    columnFacetingFeature,
+    columnVisibilityFeature,
+    rowPaginationFeature,
+    rowSelectionFeature,
+    rowSortingFeature,
+    filteredRowModel: createFilteredRowModel(),
+    facetedRowModel: createFacetedRowModel(),
+    facetedUniqueValues: createFacetedUniqueValues(),
+    paginatedRowModel: createPaginatedRowModel(),
+    sortedRowModel: createSortedRowModel(),
+    filterFns,
+    sortFns,
+});
+
+export type DataTableFeatures = typeof dataTableFeatures;
+
+export type DataTableColumnDef<TData extends RowData, TValue extends CellData = CellData> =
+    ColumnDef<DataTableFeatures, TData, TValue>;
+
+export type DataTableInstance<TData extends RowData> = ReactTable<DataTableFeatures, TData>;
+
+interface DataTableProps<TData extends RowData> {
+    columns: DataTableColumnDef<TData>[];
     data: TData[];
     mobileCardRenderer?: (row: TData) => React.ReactNode;
     onRowSelectionChange?: (selectedRows: TData[]) => void;
-    children?: (props: { table: TanstackTable<TData> }) => React.ReactNode;
+    children?: (props: { table: DataTableInstance<TData> }) => React.ReactNode;
     initialColumnFilters?: ColumnFiltersState;
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends RowData>({
     columns,
     data,
     mobileCardRenderer,
     onRowSelectionChange,
     children,
     initialColumnFilters,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(initialColumnFilters || []);
-    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-    const [rowSelection, setRowSelection] = useState({});
+    const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({});
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
     // Sync external filters
     useEffect(() => {
@@ -55,7 +91,8 @@ export function DataTable<TData, TValue>({
         }
     }, [initialColumnFilters]);
 
-    const table = useReactTable({
+    const table = useTable({
+        features: dataTableFeatures,
         data,
         columns,
         state: {
@@ -69,12 +106,6 @@ export function DataTable<TData, TValue>({
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         onColumnVisibilityChange: setColumnVisibility,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFacetedRowModel: getFacetedRowModel(),
-        getFacetedUniqueValues: getFacetedUniqueValues(),
     });
 
     return (

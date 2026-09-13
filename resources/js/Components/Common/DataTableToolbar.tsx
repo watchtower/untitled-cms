@@ -1,14 +1,15 @@
-import { Table } from "@tanstack/react-table"
+import type { RowData } from "@tanstack/react-table"
 import { X } from "lucide-react"
 
 import { Button } from "@/Components/ui/button"
 import { Input } from "@/Components/ui/input"
+import type { DataTableInstance } from "./DataTable"
 import { DataTableViewOptions } from "./DataTableViewOptions"
 
 import { DataTableFacetedFilter } from "./DataTableFacetedFilter"
 
-interface DataTableToolbarProps<TData> {
-    table: Table<TData>
+interface DataTableToolbarProps<TData extends RowData> {
+    table: DataTableInstance<TData>
     searchKey: string
     filters?: {
         column: string
@@ -22,13 +23,13 @@ interface DataTableToolbarProps<TData> {
     children?: React.ReactNode
 }
 
-export function DataTableToolbar<TData>({
+export function DataTableToolbar<TData extends RowData>({
     table,
     searchKey,
     filters,
     children,
 }: DataTableToolbarProps<TData>) {
-    const isFiltered = table.getState().columnFilters.length > 0
+    const isFiltered = table.state.columnFilters.length > 0
 
     return (
         <div className="flex items-center justify-between">

@@ -101,14 +101,15 @@ fi
 if command -v node &>/dev/null; then
     NODE_VER=$(node --version | sed 's/v//')
     NODE_MAJOR=$(echo "$NODE_VER" | cut -d. -f1)
-    if [ "$NODE_MAJOR" -ge 18 ]; then
+    NODE_MINOR=$(echo "$NODE_VER" | cut -d. -f2)
+    if [ "$NODE_MAJOR" -gt 22 ] || { [ "$NODE_MAJOR" -eq 22 ] && [ "$NODE_MINOR" -ge 12 ]; }; then
         echo -e " $PASS Node.js v$NODE_VER"
     else
-        echo -e " $FAIL Node.js v$NODE_VER — ${RED}requires Node.js v18+${NC}  https://nodejs.org"
+        echo -e " $FAIL Node.js v$NODE_VER — ${RED}requires Node.js v22.12+${NC}  https://nodejs.org"
         ERRORS=$((ERRORS+1))
     fi
 else
-    echo -e " $FAIL Node.js not found — ${RED}install v18+ from https://nodejs.org${NC}"
+    echo -e " $FAIL Node.js not found — ${RED}install v22.12+ from https://nodejs.org${NC}"
     ERRORS=$((ERRORS+1))
 fi
 

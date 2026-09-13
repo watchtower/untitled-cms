@@ -1,4 +1,4 @@
-import { Table } from "@tanstack/react-table"
+import type { RowData } from "@tanstack/react-table"
 import { Settings2 } from "lucide-react"
 
 import { Button } from "@/Components/ui/button"
@@ -10,12 +10,13 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "@/Components/ui/dropdown-menu"
+import type { DataTableInstance } from "./DataTable"
 
-interface DataTableViewOptionsProps<TData> {
-    table: Table<TData>
+interface DataTableViewOptionsProps<TData extends RowData> {
+    table: DataTableInstance<TData>
 }
 
-export function DataTableViewOptions<TData>({
+export function DataTableViewOptions<TData extends RowData>({
     table,
 }: DataTableViewOptionsProps<TData>) {
     return (

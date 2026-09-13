@@ -9,6 +9,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+Dependency upgrade. Requires Node.js 22.12+. See `docs/dependency-upgrade-plan.md`.
+
+### Changed
+- **Requirements** — Node.js `>=22.12.0` (needed by Vite 8, react-dropzone 20 and concurrently 10).
+- **Backend dependencies** — `laravel/ai` 0.11 (drops `prism-php/prism`), `inertiajs/inertia-laravel` 3, `intervention/image` 4, PHPUnit 13, plus in-range Composer updates (Socialite 5.31 pulls in `phpseclib/phpseclib` 4).
+- **Frontend dependencies** — Vite 8 with `@vitejs/plugin-react` 6 and `laravel-vite-plugin` 3, `@inertiajs/react` 3, `@tanstack/react-table` 9, `lucide-react` 1, `react-dropzone` 20, `@shadcn/react` 0.3, `concurrently` 10, `@types/node` 26, plus in-range npm updates. `npm audit` is clean.
+- **Vault** — `OptimizeVaultImageJob` converts to WebP with Laravel's `Image` facade (`IMAGE_DRIVER`, default `gd`) instead of calling Intervention directly. New `OptimizeVaultImageJobTest`.
+- **Data tables** — migrated to the TanStack Table v9 API: `useTable` with a shared `dataTableFeatures` set and `DataTableColumnDef<T>`.
+- **Inertia v3** — the root template uses `<title data-inertia>`, shared props are typed through `InertiaConfig.sharedPageProps`, and pages resolve with a typed default-export glob.
+- **npm** — `package.json` overrides `@babel/plugin-transform-runtime` to `^7.29.0`. Without it, npm can't resolve `@vitejs/plugin-react` 6's optional Babel peers next to the shadcn CLI's Babel 7.
+
+### Removed
+- `@tailwindcss/vite` (unused; Tailwind loads through `@tailwindcss/postcss`).
+
+### Fixed
+- Dashboard chart tooltip `labelFormatter` now handles non-date labels (type error surfaced by the recharts update).
+
+### Not upgraded
+- Guzzle 8: `league/oauth1-client` 1.x (required by Socialite) only allows Guzzle 7.
+- TypeScript 7: ships without a compiler API. Upgrade path is 5.9 → 6.0 → 7.0.
+
 ---
 
 ## [0.5.1] — 2026-09-13

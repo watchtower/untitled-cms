@@ -10,13 +10,13 @@ Last updated: 2026-09-13
 - **Inertia.js** — props-based routing (no client-side router, no API layer)
 - **Tailwind CSS v4** — utility-first styling with native CSS `@theme` and OKLCH variables
 - **Shadcn/Radix UI** — accessible component primitives using unified `radix-ui` dependency
-- **Vite 7** — build tool with HMR
+- **Vite 8** — build tool with HMR (Rolldown + Oxc)
 
 ## Key libraries by concern
 
 | Concern | Library |
 |---------|---------|
-| Data grids | TanStack Table |
+| Data grids | TanStack Table v9 — `useTable` with the shared `dataTableFeatures` and `DataTableColumnDef<T>` from `Components/Common/DataTable.tsx` |
 | Drag and drop | @dnd-kit (banners, vault) |
 | Charts | Recharts (dashboard analytics) |
 | Form validation | Zod |
