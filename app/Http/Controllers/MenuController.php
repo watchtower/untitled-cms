@@ -6,10 +6,46 @@ use App\Models\Menu;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class MenuController extends Controller
 {
+    /**
+     * Validates that a menu item URL does not use a dangerous URI scheme.
+     */
+    private function menuItemUrlRules(): array
+    {
+        return ['nullable', 'string', 'max:2048', function ($attribute, $value, $fail) {
+            if ($value && preg_match('/^\s*(javascript|data|vbscript):/i', $value)) {
+                $fail('The menu item URL must not use a dangerous URI scheme.');
+            }
+        }];
+    }
+
+    /**
+     * Rules for the item tree built by Menus/Edit.tsx and MenuSeeder
+     * ({id, title, url, target, order, subItems}).
+     * Every persisted key must be listed: validated() strips unlisted nested array keys.
+     */
+    private function menuItemRules(): array
+    {
+        return [
+            'items' => 'nullable|array',
+            'items.*.id' => 'nullable|string|max:64',
+            'items.*.title' => 'nullable|string|max:255',
+            'items.*.url' => $this->menuItemUrlRules(),
+            'items.*.target' => 'nullable|string|in:_self,_blank',
+            'items.*.order' => 'nullable|integer',
+            'items.*.subItems' => 'nullable|array',
+            'items.*.subItems.*.id' => 'nullable|string|max:64',
+            'items.*.subItems.*.title' => 'nullable|string|max:255',
+            'items.*.subItems.*.url' => $this->menuItemUrlRules(),
+            'items.*.subItems.*.target' => 'nullable|string|in:_self,_blank',
+            'items.*.subItems.*.order' => 'nullable|integer',
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -33,8 +69,9 @@ class MenuController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:menus,slug',
+            'slug' => ['required', 'string', 'max:255', Rule::unique(Menu::class, 'slug')],
             'is_active' => 'boolean',
+            ...$this->menuItemRules(),
         ]);
 
         $menu = Menu::create($validated);
@@ -68,8 +105,8 @@ class MenuController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:menus,slug,'.$id.',_id',
-            'items' => 'nullable|array',
+            'slug' => ['required', 'string', 'max:255', Rule::unique(Menu::class, 'slug')->ignore($id)],
+            ...$this->menuItemRules(),
             'is_active' => 'boolean',
         ]);
 
