@@ -5,8 +5,7 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Edit, Trash2, Plus, ImageIcon, MoreHorizontal } from 'lucide-react';
 import { DataTableColumnHeader } from '@/Components/Common/DataTableColumnHeader';
-import { DataTable } from '@/Components/Common/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, type DataTableColumnDef } from '@/Components/Common/DataTable';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -36,7 +35,7 @@ export default function Index({ auth, banners }: BannersIndexProps) {
     const canEdit = permissions.includes('banners.manage');
     const canDelete = permissions.includes('banners.manage');
 
-    const columns: ColumnDef<BannerModel>[] = [
+    const columns: DataTableColumnDef<BannerModel>[] = [
         {
             accessorKey: "order",
             header: ({ column }) => (

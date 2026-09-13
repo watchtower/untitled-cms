@@ -5,10 +5,9 @@ namespace App\Jobs;
 use App\Models\VaultFile;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Image;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 
 class OptimizeVaultImageJob implements ShouldQueue
 {
@@ -42,30 +41,26 @@ class OptimizeVaultImageJob implements ShouldQueue
         }
 
         $diskName = $this->vaultFile->is_public ? 'public' : 'vault';
-        $fullPath = Storage::disk($diskName)->path($this->vaultFile->storage_path);
 
-        if (! file_exists($fullPath)) {
-            Log::warning("OptimizeVaultImageJob: File not found at {$fullPath} for UUID {$this->vaultFile->uuid}");
+        if (! Storage::disk($diskName)->exists($this->vaultFile->storage_path)) {
+            Log::warning("OptimizeVaultImageJob: File not found at {$diskName}:{$this->vaultFile->storage_path} for UUID {$this->vaultFile->uuid}");
 
             return;
         }
 
         try {
-            // we will use the GD driver
-            $manager = new ImageManager(new Driver);
-
-            // read image from file system
-            $image = $manager->read($fullPath);
-
             // Create a path for the optimized file
             $pathInfo = pathinfo($this->vaultFile->storage_path);
             $optimizedPath = $pathInfo['dirname'].'/optimized_'.$pathInfo['filename'].'.webp';
 
-            // Encode to webp format with 85% quality
-            $encoded = $image->toWebp(85);
+            // Encode to webp format with 85% quality (driver from config('images.default'))
+            $encoded = Image::fromStorage($this->vaultFile->storage_path, $diskName)
+                ->toWebp()
+                ->quality(85)
+                ->toBytes();
 
             // Save the optimized file
-            Storage::disk($diskName)->put($optimizedPath, (string) $encoded);
+            Storage::disk($diskName)->put($optimizedPath, $encoded);
 
             // Update the VaultFile record
             $this->vaultFile->update([

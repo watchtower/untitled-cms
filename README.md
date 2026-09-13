@@ -81,7 +81,7 @@ Highlights of the [0.5.0 release](CHANGELOG.md#050--2026-09-13). Full details in
 | ------------ | ------- | ------------------------------------------------------------------------- |
 | **PHP**      | >= 8.4  | Extensions: `mongodb` (>= 2.4), `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo` |
 | **Composer** | >= 2.0  | [getcomposer.org](https://getcomposer.org)                                |
-| **Node.js**  | >= 20   | [nodejs.org](https://nodejs.org) — CI builds on Node 24                   |
+| **Node.js**  | >= 22.12 | [nodejs.org](https://nodejs.org) — CI builds on Node 24                   |
 | **npm**      | >= 10   | Bundled with Node.js                                                      |
 | **MongoDB**  | >= 6.0  | Local install or [Atlas free tier](https://www.mongodb.com/atlas)         |
 
@@ -250,9 +250,9 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 | [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb)       | `^5.7`   | MongoDB ODM                        |
 | [laravel/sanctum](https://laravel.com/docs/sanctum)                         | `^4.0`   | Session & token authentication     |
 | [laravel/socialite](https://laravel.com/docs/socialite)                     | `^5.24`  | OAuth (Google, GitHub)             |
-| [laravel/ai](https://github.com/laravel/ai)                                 | `^0.5`   | LLM provider abstraction           |
-| [inertiajs/inertia-laravel](https://inertiajs.com/)                         | `^2.0`   | Server-side SPA bridge             |
-| [intervention/image](https://image.intervention.io/v3)                      | `^3.11`  | Image processing & sanitization    |
+| [laravel/ai](https://github.com/laravel/ai)                                 | `^0.11`  | LLM provider abstraction           |
+| [inertiajs/inertia-laravel](https://inertiajs.com/)                         | `^3.0`   | Server-side SPA bridge             |
+| [intervention/image](https://image.intervention.io/v4)                      | `^4.0`   | Driver for Laravel's `Image` (WebP optimization) |
 | [league/html-to-markdown](https://github.com/thephpleague/html-to-markdown) | `^5.1`   | HTML → Markdown for AI delivery    |
 | [ezyang/htmlpurifier](https://github.com/ezyang/htmlpurifier)               | `^4.19`  | HTML sanitization (`HtmlSanitizer`) |
 | [resend/resend-laravel](https://github.com/resend/resend-laravel)           | `^1.0`   | Resend mail transport              |
@@ -268,11 +268,11 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 | [Shadcn UI](https://ui.shadcn.com/)                 | latest  | Accessible component library     |
 | [TinyMCE](https://www.tiny.cloud/)                  | `7`     | Rich text editor (loaded via CDN) |
 | [@dnd-kit](https://dndkit.com/)                     | `^6`    | Drag-and-drop                    |
-| [@tanstack/react-table](https://tanstack.com/table) | `^8`    | Headless data tables             |
+| [@tanstack/react-table](https://tanstack.com/table) | `^9`    | Headless data tables             |
 | [Recharts](https://recharts.org/)                   | `^3`    | Dashboard charts                 |
 | [Sonner](https://sonner.emilkowal.ski/)             | `^2`    | Toast notifications              |
 | [Zod](https://zod.dev/)                             | `^4`    | Frontend schema validation       |
-| [react-dropzone](https://react-dropzone.js.org/)    | `^15`   | Vault uploads                    |
+| [react-dropzone](https://react-dropzone.js.org/)    | `^20`   | Vault uploads                    |
 
 ---
 

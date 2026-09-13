@@ -2,7 +2,7 @@
 
 > Technology choices and key design decisions.
 
-Last updated: 2026-07-12
+Last updated: 2026-09-13
 
 ## Stack
 
@@ -13,7 +13,7 @@ Last updated: 2026-07-12
 | Frontend | React 19 + TypeScript, Inertia.js |
 | Rich text | TinyMCE 7 (admin pages/banners) |
 | Styling | Tailwind CSS v4, Shadcn/Radix UI |
-| Build | Vite 7 |
+| Build | Vite 8 (Node 22.12+) |
 | Auth | Laravel Sanctum + Sessions |
 
 ## Key design decisions

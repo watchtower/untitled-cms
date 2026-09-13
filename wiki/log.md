@@ -4,6 +4,25 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-09-13] update | Dependency upgrades completed
+- Executed all 7 phases of `docs/dependency-upgrade-plan.md` (see its Outcome section). Final gate is green:
+  93 tests on PHPUnit 13, `tsc` and Vite 8 build clean, both audits clean.
+- New conventions: admin tables use TanStack v9 `useTable` with the shared `dataTableFeatures` and `DataTableColumnDef<T>`
+  from `Components/Common/DataTable.tsx`. Inertia shared props are typed via `InertiaConfig.sharedPageProps` in `types/global.d.ts`.
+  `OptimizeVaultImageJob` uses Laravel's `Image` facade.
+- `package.json` carries an `overrides` pin for `@babel/plugin-transform-runtime` (`^7.29.0`) so Vite 8's React plugin
+  installs next to the shadcn CLI. Node requirement is now 22.12+.
+- Updated [architecture/stack](architecture/stack.md), [frontend/ui-stack](frontend/ui-stack.md) and
+  [modules/vault](modules/vault.md). The Vault page's "Intervention Image" claim for `SanitizeImage` was wrong (it uses GD) and is corrected.
+
+## [2026-09-13] ingest | Dependency upgrade plan
+- Added `docs/dependency-upgrade-plan.md`: 7 staged phases. (1) npm audit + in-range updates, (2) `laravel/ai` 0.11,
+  (3) Intervention 4 via `Illuminate\Image`, (4) Vite 8 toolchain, (5) Inertia v3, (6) PHPUnit 13, (7) TanStack Table 9, lucide 1.x, react-dropzone 20, and other npm majors.
+- Framework already at latest (v13.31.0). Baseline: 91 tests green, zero PHPUnit 12.5 deprecations, `tsc` clean.
+- Blocked: Guzzle 8 (`league/oauth1-client` 1.11 caps at `^7`). Deferred: TypeScript 7 (no compiler API; `types: []` default).
+- Found: Laravel 13's `Illuminate\Image` drivers require Intervention `^4`. `OptimizeVaultImageJob` will move onto the `Image` facade.
+- Wiki pages to update as phases land: architecture/stack, frontend/ui-stack (Vite 7 mentions), modules/vault, modules/ai-hub, architecture/testing.
+
 ## [2026-09-13] release | 0.5.1
 - Security patch after 0.5.0's CI Security Audit failed (`composer audit --no-dev` exits 1 on any advisory).
 - Updated `laravel/framework`, `league/commonmark`, `guzzlehttp/guzzle`, `guzzlehttp/psr7`, `phpseclib/phpseclib`,

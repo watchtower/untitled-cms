@@ -4,8 +4,7 @@ import { PageProps } from '@/types';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Edit, Trash2, Plus } from 'lucide-react';
-import { DataTable } from '@/Components/Common/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, type DataTableColumnDef } from '@/Components/Common/DataTable';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -33,7 +32,7 @@ export default function Index({ auth, roles }: RolesIndexProps) {
     const canEdit = permissions.includes('roles.manage');
     const canDelete = permissions.includes('roles.manage');
 
-    const columns: ColumnDef<Role>[] = [
+    const columns: DataTableColumnDef<Role>[] = [
         {
             accessorKey: 'name',
             header: ({ column }) => (

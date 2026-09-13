@@ -4,8 +4,7 @@ import { PageProps, User, Role } from '@/types';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Edit, Trash2, Plus, RotateCcw, Trash, Shield, User as UserIcon, ShieldCheck } from 'lucide-react';
-import { DataTable } from '@/Components/Common/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, type DataTableColumnDef } from '@/Components/Common/DataTable';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,7 +21,6 @@ import { UserStatsCards } from '@/Components/Users/UserStatsCards';
 import { DataTableToolbar } from '@/Components/Common/DataTableToolbar';
 import { DataTableBatchActions } from '@/Components/Common/DataTableBatchActions';
 import { InviteUserDialog } from '@/Components/Users/InviteUserDialog';
-import { Table } from '@tanstack/react-table';
 
 interface UsersIndexProps extends PageProps {
     users: {
@@ -79,7 +77,7 @@ export default function Index({ auth, users, trashedUsers, roles, stats }: Users
         }
     }, [showTrashed, statusFilter]);
 
-    const columns = useMemo<ColumnDef<User>[]>(() => [
+    const columns = useMemo<DataTableColumnDef<User>[]>(() => [
         {
             id: "select",
             header: ({ table }) => (

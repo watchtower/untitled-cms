@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Check, PlusCircle } from "lucide-react"
-import { Column } from "@tanstack/react-table"
+import type { CellData, Column, RowData } from "@tanstack/react-table"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/Components/ui/badge"
@@ -20,9 +20,10 @@ import {
     PopoverTrigger,
 } from "@/Components/ui/popover"
 import { Separator } from "@/Components/ui/separator"
+import type { DataTableFeatures } from "./DataTable"
 
-interface DataTableFacetedFilterProps<TData, TValue> {
-    column?: Column<TData, TValue>
+interface DataTableFacetedFilterProps<TData extends RowData, TValue extends CellData> {
+    column?: Column<DataTableFeatures, TData, TValue>
     title?: string
     options: {
         label: string
@@ -31,7 +32,7 @@ interface DataTableFacetedFilterProps<TData, TValue> {
     }[]
 }
 
-export function DataTableFacetedFilter<TData, TValue>({
+export function DataTableFacetedFilter<TData extends RowData, TValue extends CellData>({
     column,
     title,
     options,

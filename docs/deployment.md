@@ -8,7 +8,7 @@ This guide covers deploying Untitled CMS on a Linux server (Ubuntu/Debian). Adju
 - [MongoDB PHP extension](https://www.php.net/manual/en/mongodb.installation.php) (`pecl install mongodb`; upgrade an existing install with `pecl upgrade mongodb`)
 - MongoDB 6.0+ (self-hosted or [MongoDB Atlas](https://www.mongodb.com/atlas))
 - Composer 2.x
-- Node.js 20+ and npm 10+
+- Node.js 22.12+ and npm 10+
 - A web server: Nginx or Apache
 
 ## 1. Clone and Install

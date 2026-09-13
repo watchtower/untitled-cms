@@ -1,8 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { ColumnDef } from '@tanstack/react-table';
-import { DataTable } from '@/Components/Common/DataTable';
+import { DataTable, type DataTableColumnDef } from '@/Components/Common/DataTable';
 import { DataTableColumnHeader } from '@/Components/Common/DataTableColumnHeader';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
@@ -85,7 +84,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
         }
     };
 
-    const columns: ColumnDef<AiHub>[] = [
+    const columns: DataTableColumnDef<AiHub>[] = [
         {
             accessorKey: 'name',
             header: ({ column }) => <DataTableColumnHeader column={column} title="Provider Name" />,

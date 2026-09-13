@@ -18,7 +18,7 @@ the upload fails with an appropriate error.
 | 1 | `DetectDoubleExtension` | Rejects files like `image.php.jpg` — disguised executables |
 | 2 | `ValidateMimeType` | Checks MIME type against allowlist in `config/vault.php` |
 | * | `SandboxedScan` | Optional ClamAV antivirus daemon scanning (TCP stream INSTREAM mode; dynamically injected at pos 2 when enabled) |
-| 3 | `SanitizeImage` | Strips EXIF/metadata from images via Intervention Image |
+| 3 | `SanitizeImage` | Strips EXIF/metadata by re-encoding images with native GD (`imagecreatefrom*`) |
 | 4 | `ModerationCheck` | Optional AI content moderation check |
 | 5 | `GenerateUuid` | Assigns a UUID filename to prevent path traversal / collisions |
 | 6 | `StoreMetadata` | Persists file record to MongoDB `vault_files` collection |
@@ -30,7 +30,16 @@ the upload fails with an appropriate error.
 - **Allowed MIME types** — explicit allowlist
 - **Max size** — 50 MB
 - **ClamAV** — optional antivirus scan (`CLAMAV_ENABLED=false` by default)
-- **Image washing** — `image_washing = true` by default (Intervention Image sanitization)
+- **Image washing** — `image_washing = true` by default (GD re-encode in `SanitizeImage`)
+
+## Image optimization
+
+After upload, `VaultService` dispatches `OptimizeVaultImageJob` for JPG/PNG files. The job converts the file to WebP
+(quality 85) with Laravel's `Image` facade (`Image::fromStorage()->toWebp()->quality(85)->toBytes()`). It writes
+`optimized_<name>.webp` next to the original and sets `optimized_path`, `optimized_size` and `is_optimized`.
+The driver comes from `config('images.default')` (`IMAGE_DRIVER`, default `gd`). Laravel's GD/Imagick image drivers
+are built on `intervention/image` `^4`, so that package stays a direct dependency even though app code doesn't import it.
+Covered by `tests/Feature/OptimizeVaultImageJobTest.php`.
 
 ## DTO
 
@@ -64,8 +73,8 @@ See [modules/permissions](permissions.md#vault-authorization-rules) for Vault po
 
 ## Gotchas
 
-- `SanitizeImage` uses Intervention Image — if the image library is not installed,
-  this stage will fail. Check `image_washing` config if you're seeing unexpected errors.
+- `SanitizeImage` needs the PHP `gd` extension (with WebP support). Without it this stage fails.
+  Check `image_washing` config if you're seeing unexpected errors.
 - `ModerationCheck` is an AI call — it adds latency and can fail if AI is
   misconfigured. Investigate whether it short-circuits gracefully on failure.
 - ClamAV is off by default. Do not assume it runs in production unless explicitly enabled.

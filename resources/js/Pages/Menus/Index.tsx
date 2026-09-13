@@ -5,8 +5,7 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Edit, Trash2, Plus, MoreHorizontal } from 'lucide-react';
 import { DataTableColumnHeader } from '@/Components/Common/DataTableColumnHeader';
-import { DataTable } from '@/Components/Common/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, type DataTableColumnDef } from '@/Components/Common/DataTable';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -60,7 +59,7 @@ export default function Index({ menus }: MenusIndexProps) {
         });
     };
 
-    const columns: ColumnDef<MenuModel>[] = [
+    const columns: DataTableColumnDef<MenuModel>[] = [
         {
             accessorKey: "name",
             header: ({ column }) => (
