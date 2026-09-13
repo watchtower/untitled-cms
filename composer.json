@@ -25,6 +25,7 @@
     },
     "require": {
         "php": "^8.4",
+        "ext-mongodb": "^2.4",
         "ezyang/htmlpurifier": "^4.19",
         "guzzlehttp/guzzle": "^7.10",
         "inertiajs/inertia-laravel": "^2.0",

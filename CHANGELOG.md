@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.5.1] — 2026-09-13
+
+Security patch. Upgraders must update the MongoDB PHP extension to 2.4+ (`pecl upgrade mongodb`, or `pecl install -f mongodb`) before running `composer install`.
+
+### Changed
+- **Requirements** — `ext-mongodb` `^2.4` is now declared in `composer.json` (required by `mongodb/mongodb` 2.4).
+
+### Security
+- **Dependencies** — Resolved all `composer audit --no-dev` advisories: `laravel/framework` 13.31.0, `league/commonmark` 2.10.1, `guzzlehttp/guzzle` 7.15.5, `guzzlehttp/psr7` 2.13.1, `phpseclib/phpseclib` 3.0.57, `mongodb/mongodb` 2.4.2, and `mongodb/laravel-mongodb` 5.11.0. Dev dependency `symfony/yaml` updated to 8.1.6, so the full `composer audit` is clean too.
+
+---
+
 ## [0.5.0] — 2026-09-13
 
 ### Added
@@ -107,7 +119,8 @@ Initial public release.
 - **Dark mode** — System-preference aware, toggle in admin UI
 - **34 permissions** — Organised by resource group across all modules
 
-[Unreleased]: https://github.com/watchtower/untitled-cms/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/watchtower/untitled-cms/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/watchtower/untitled-cms/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/watchtower/untitled-cms/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/watchtower/untitled-cms/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/watchtower/untitled-cms/compare/0.2.0...0.3.0

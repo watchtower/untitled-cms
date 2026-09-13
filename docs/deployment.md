@@ -4,8 +4,8 @@ This guide covers deploying Untitled CMS on a Linux server (Ubuntu/Debian). Adju
 
 ## Prerequisites
 
-- PHP 8.4+ with extensions: `mongodb`, `gd`, `exif`, `fileinfo`, `mbstring`, `xml`, `curl`, `zip`
-- [MongoDB PHP extension](https://www.php.net/manual/en/mongodb.installation.php) (`pecl install mongodb`)
+- PHP 8.4+ with extensions: `mongodb` (2.4+), `gd`, `exif`, `fileinfo`, `mbstring`, `xml`, `curl`, `zip`
+- [MongoDB PHP extension](https://www.php.net/manual/en/mongodb.installation.php) (`pecl install mongodb`; upgrade an existing install with `pecl upgrade mongodb`)
 - MongoDB 6.0+ (self-hosted or [MongoDB Atlas](https://www.mongodb.com/atlas))
 - Composer 2.x
 - Node.js 20+ and npm 10+

@@ -4,6 +4,16 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-09-13] release | 0.5.1
+- Security patch after 0.5.0's CI Security Audit failed (`composer audit --no-dev` exits 1 on any advisory).
+- Updated `laravel/framework`, `league/commonmark`, `guzzlehttp/guzzle`, `guzzlehttp/psr7`, `phpseclib/phpseclib`,
+  `mongodb/mongodb` (2.4.2), `mongodb/laravel-mongodb` (5.11.0).
+- **New platform requirement:** `mongodb/mongodb` 2.4 needs `ext-mongodb ^2.4`, now declared in `composer.json`.
+  CI (`setup-php`) and the Dockerfiles install the latest extension unpinned, so they're unaffected; local and
+  self-hosted installs must upgrade the extension. On Homebrew PHP, `pecl upgrade` fails if `php.ini` already
+  loads `mongodb.so` — comment the line out, `pecl install -f mongodb`, and pecl re-adds it.
+- README/`docs/deployment.md` requirement rows now say `mongodb` (2.4+).
+
 ## [2026-09-13] release | 0.5.0
 - `package.json` / `package-lock.json` bumped to 0.5.0. `composer.json` intentionally carries no `version` (Packagist reads tags).
 - CHANGELOG `[Unreleased]` promoted to `[0.5.0] — 2026-09-13`; README "What's New" section and current version updated.

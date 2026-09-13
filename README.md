@@ -79,7 +79,7 @@ Highlights of the [0.5.0 release](CHANGELOG.md#050--2026-09-13). Full details in
 
 | Requirement  | Version | Notes                                                                     |
 | ------------ | ------- | ------------------------------------------------------------------------- |
-| **PHP**      | >= 8.4  | Extensions: `mongodb`, `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo` |
+| **PHP**      | >= 8.4  | Extensions: `mongodb` (>= 2.4), `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo` |
 | **Composer** | >= 2.0  | [getcomposer.org](https://getcomposer.org)                                |
 | **Node.js**  | >= 20   | [nodejs.org](https://nodejs.org) — CI builds on Node 24                   |
 | **npm**      | >= 10   | Bundled with Node.js                                                      |
@@ -476,7 +476,7 @@ Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.5.0** (highlights in [What's New in 0.5.0](#whats-new-in-050)).
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.5.1** — a security patch on top of 0.5.0 (highlights in [What's New in 0.5.0](#whats-new-in-050)).
 
 ---
 
