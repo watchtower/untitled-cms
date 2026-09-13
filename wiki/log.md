@@ -4,6 +4,18 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-09-13] refactor | Consolidated agent config into AGENTS.md
+- `AGENTS.md` is now the single source of truth for all agents; it absorbed CLAUDE.md's architecture,
+  services, permissions, middleware, Inertia props, frontend, routes, and database sections.
+- `CLAUDE.md` and `GEMINI.md` are stubs that import `@AGENTS.md`; the three duplicated wiki-protocol blocks were merged.
+- Conflicts resolved: wiki-update triggers unioned; log step now points to the SCHEMA.md entry format;
+  tests live in both `tests/Feature` and `tests/Unit`.
+- Drift fixed against code: policy count (was "8", now 10 — count removed), permission count (was "~32", 29 — count removed),
+  unverifiable local Mongo port 27018 dropped (CI and `.env.example` use 27017), added `admin` middleware alias,
+  conditional `SandboxedScan` pipe, `HtmlSanitizer` + `EmailWebhooks/` services, `/media` and user-batch throttles,
+  `auth.user` field subset, and the 300s `active_menus` cache.
+- `SCHEMA.md` convention now says "don't duplicate AGENTS.md" instead of CLAUDE.md.
+
 ## [2026-09-13] update | Impact review fixes: menus, vault policies, folder index
 - `MenuController` item rules now match the real `{id, title, url, target, order, subItems}` shape.
   Rules for `label`/`children` rejected every save and, with `excludeUnvalidatedArrayKeys`, stripped item data.

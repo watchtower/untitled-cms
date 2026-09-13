@@ -1,20 +1,171 @@
-# Repository Guidelines
+# AGENTS.md
+
+Single source of truth for all AI coding agents (Codex, Claude Code, Gemini CLI, and others) working in this repository. `CLAUDE.md` and `GEMINI.md` only forward here — add or change shared instructions in this file, never in the stubs.
+
+## Project Overview
+
+**Untitled CMS** is an AI-native Content Management System built on Laravel 13 with MongoDB and a React + Inertia.js admin SPA. Public pages are served as HTML by default and as Markdown+YAML frontmatter when requested with `Accept: text/markdown` (for AI crawlers/agents).
 
 ## Project Structure & Module Organization
-This repository is a Laravel 13 CMS with a React + Inertia admin UI. Backend code lives in `app/`, routes in `routes/`, database migrations and seeders in `database/`, and tests in `tests/Feature`. Frontend code is under `resources/js/` and `resources/css/`, with pages in `resources/js/Pages`, shared UI in `resources/js/Components`, and layouts in `resources/js/Layouts`. Project notes and architecture docs live in `wiki/` and `docs/`, with module-specific pages such as `wiki/modules/vault.md` and `wiki/architecture/request-flow.md`.
+
+Backend code lives in `app/`, routes in `routes/`, database migrations and seeders in `database/`, and tests in `tests/Feature` and `tests/Unit`. Frontend code is under `resources/js/` and `resources/css/`, with pages in `resources/js/Pages`, shared UI in `resources/js/Components`, and layouts in `resources/js/Layouts`. Project notes and architecture docs live in `wiki/` and `docs/`, with module-specific pages such as `wiki/modules/vault.md` and `wiki/architecture/request-flow.md`.
+
+## Build, Test, and Development Commands
+
+- `composer run setup`: installs dependencies, prepares `.env`, generates the app key, runs migrations and seeders, and builds assets.
+- `composer run dev`: starts the Laravel server, queue listener, log viewer (Pail), and Vite HMR together.
+- `composer run test`: clears config and runs the PHPUnit suite.
+- `php artisan test tests/Feature/VaultUploadTest.php`: runs a single test file.
+- `php artisan test --filter NameOfTest`: runs a single test case while iterating.
+- `./vendor/bin/pint`: formats PHP code using Laravel Pint.
+- `npm run dev`: runs the Vite dev server for frontend assets.
+- `npm run build`: runs `tsc && vite build` — TypeScript errors fail the build.
+
+## Architecture
+
+### Stack
+- **Backend:** Laravel 13, PHP 8.4, MongoDB (`mongodb/laravel-mongodb`)
+- **Frontend:** React 19 + TypeScript, Inertia.js (props-based routing, no client-side router), Tailwind CSS v4, Shadcn/Radix UI
+- **Build:** Vite 7 (frontend build runs `tsc && vite build`)
+- **Auth:** Laravel Sanctum + Sessions, Laravel Socialite (Google, GitHub, Apple, Twitter — toggled via Settings UI)
+
+### Request Flow
+```
+Browser → Laravel Route → Middleware Stack → Controller → Service/Model → MongoDB
+                                                       ↓
+                                              Inertia::render($page, $props) → React Page Component
+```
+
+### Service Layer (`app/Services/`)
+
+Business logic lives here, not in controllers.
+
+- **`AiService`** — Multi-provider AI orchestration (OpenAI, Gemini, OpenRouter, Stability, etc.). Providers are configured at runtime via the AI Hub UI, not hardcoded. Provider HTTP uses `AiHttpClient`; untrusted URLs use `SafeHttpClient`.
+- **`AiActionService`** — Structured AI-driven CMS mutations (create/update pages and banners). Actions are validated against a whitelist, resolved server-side, and are revertible via `ActivityLog` before-state snapshots.
+- **`AiContextService`** — Aggregates project context (pages, settings) for AI prompts; caches to avoid redundant DB queries.
+- **`VaultService`** — Media management. Entry point for all vault operations; delegates uploads to the pipe pipeline.
+- **`SettingsService`** — Key/value settings with cache. Always use this instead of querying `settings` directly.
+- **`ActivityLogger`** — Static `log()` call used throughout controllers to write to `activity_logs`. Fails silently to avoid disrupting user flow.
+- **`SafeHttpClient`** — SSRF-protected HTTP client for untrusted (user/AI-supplied) URLs. Provider APIs use `AiHttpClient` instead. Never call the `Http` facade directly from app code for these paths.
+- **`AiHttpClient`** — Thin client for hub-configured AI vendor endpoints (timeouts + logging).
+- **`HtmlSanitizer`** — HTMLPurifier wrapper; `clean($html, $profile)` uses named profiles from `config/purifier.php`.
+- **`EmailWebhooks/`** — Per-provider inbound webhook handlers (Mailgun, Resend, SendGrid) behind a shared contract in `Contracts/`.
+
+### Pipeline Pattern (Vault Upload)
+
+`VaultService` runs uploads through `app/Vault/Pipes/` in order:
+1. `DetectDoubleExtension` → 2. `ValidateMimeType` → 3. `SanitizeImage` → 4. `ModerationCheck` → 5. `GenerateUuid` → 6. `StoreMetadata`
+
+When `vault.clamav_enabled` is true, `SandboxedScan` (ClamAV) is spliced in after `ValidateMimeType`; `vault.clamav_fail_closed` controls whether a scanner outage rejects the upload.
+
+State is carried via `app/Vault/DTOs/VaultPipelinePayload.php`. Upload config is in `config/vault.php` (allowed extensions, 50MB max, ClamAV toggle, `image_washing`).
+
+### Permissions System
+
+Permissions are strings in `resource.action` format (e.g. `pages.edit`, `media.upload`). The canonical list is defined in `Role::availablePermissions()` in `app/Models/Role.php` — this is the single source of truth; do not hardcode counts or copies elsewhere.
+
+- **`User::hasPermission(string)`** / **`User::getCachedPermissions()`** — cached in Redis/cache for 60s per user
+- **`User::canAccessBackend()`** — separate cache key; gates the entire admin area (checks `backend_access` flag on roles)
+- **`HasRoles` trait** — only adds `hasRole(string $slug)` helper; everything else is on the `User` model
+- **Policy classes** in `app/Policies/` — one per resource type
+- **`CheckPermission` middleware** — the `can` alias points here (not Laravel's default). Usage: `->middleware('can:pages.edit')`
+- **`RequireAdminAccess` middleware** — aliased as `admin`; applied to all admin routes; checks `canAccessBackend()` and redirects to `/` on failure
+- Cache is busted automatically: `Role::saved` event busts all member caches; `User::syncRoles()` busts the affected user's cache
+
+### Middleware Stack (web, in order)
+
+Registered in `bootstrap/app.php`:
+
+1. `HandleInertiaRequests` — shares props to all pages (see below)
+2. `AddLinkHeadersForPreloadedAssets` — preload `Link` headers for performance
+3. `CheckRedirects` — database-driven URL redirects (hits MongoDB on every request — keep `redirects` collection indexed)
+4. `CheckMaintenanceMode` — custom maintenance mode; reads from `SettingsService` (cache lag possible)
+
+Admin routes additionally apply: `auth`, `verified`, `RequireAdminAccess`.
+
+### Inertia Shared Props
+
+`HandleInertiaRequests` shares on every page load:
+```
+auth.user              — subset of User: id, name, email, is_active
+auth.permissions       — string[] from getCachedPermissions()
+auth.canAccessBackend  — boolean
+appName                — config('app.name')
+settings               — public settings key/value (SettingsService::getPublicSettings)
+tinymce_api_key        — only for backend users; null otherwise
+aiChatEnabled          — boolean from settings
+menus                  — Menu::active()->get()->keyBy('slug'), cached 300s under `active_menus`
+```
+
+### Frontend (`resources/js/`)
+
+- **Pages/** — one file per controller. Props typed via `PageProps<T>` generic from `types/index.d.ts`.
+- **Components/ui/** — Shadcn/Radix component wrappers
+- **Layouts/** — `AuthenticatedLayout`, `AuthLayout`, `GuestLayout`, `PublicLayout`
+- **types/index.d.ts** — `PageProps<T>` generic; extend it for page-specific props
+- **`route()`** — Ziggy-generated typed route helper, available globally
+
+Key UI libraries: TanStack Table (data grids), @dnd-kit (drag-drop), Recharts (analytics charts), Zod (form validation), Sonner (toasts), TinyMCE (`Editor.tsx`) for rich content, `react-dropzone` for Vault uploads.
+
+Inertia form pattern: use `useForm()` from `@inertiajs/react` — handles loading state, errors, and submission. No fetch calls or separate API layer.
+
+### AI-Native Endpoints (no auth)
+
+- `GET /llms.txt` — llmstxt.org standard index of published pages (plain text)
+- `GET /llms-full.txt` — full content of all published pages as Markdown; includes `x-llms-tokens` header
+- `GET /sitemap.md` — sitemap for AI agents
+- `GET /{slug}` with `Accept: text/markdown` — individual page as Markdown + YAML frontmatter
+
+### Route Structure (`routes/web.php`)
+
+- **Public (no auth):** `/`, `/rss`, `/feed`, `/sitemap.md`, `/llms.txt`, `/llms-full.txt`, `/{slug}`
+- **Public media:** `/media/{uuid}.{extension}` (and legacy `/media/{uuid}`) — `throttle:1000,1`; resolved by UUID only
+- **Profile:** `auth` only (no admin middleware)
+- **Admin:** `/admin` prefix, `auth` + `verified` + `admin` (`RequireAdminAccess`) — all resource controllers
+- **User batch actions:** `throttle:10,1`
+- **AI text generation:** `throttle:30,1`
+- **AI image generation:** `throttle:10,1`
+- **AI chat + actions:** `throttle:60,1`
+
+## Database
+
+MongoDB is required for production and for tests.
+
+```env
+DB_CONNECTION=mongodb
+DB_HOST=127.0.0.1
+DB_PORT=27017
+DB_DATABASE=untitled_cms
+```
+
+All models set `protected $connection = 'mongodb'` and `protected $collection = 'name'`. Use `mongodb/laravel-mongodb` relationship methods — standard Eloquent relationship internals differ.
+
+Key collections: `users`, `roles`, `pages`, `banners`, `vault_files`, `vault_folders`, `activity_logs`, `ai_hubs`, `chat_sessions`, `menus`, `settings`, `redirects`, `email_logs`, `suppressed_emails`.
+
+## Coding Style & Naming Conventions
+
+Follow `.editorconfig`: UTF-8, LF endings, 4-space indentation, and no trailing whitespace. Use `2` spaces in YAML files. PHP code should follow Laravel conventions and be kept Pint-clean. React/TypeScript files use PascalCase for components, camelCase for functions and variables, and descriptive names that match the feature area, such as `resources/js/Pages/Vault/Index.tsx`.
+
+## Testing Guidelines
+
+PHPUnit is configured in `phpunit.xml`; feature tests live in `tests/Feature` and unit tests in `tests/Unit`. Use descriptive names like `VaultFolderTest.php` or `AuthenticationTest.php`. Prefer feature tests for controller, policy, and workflow coverage. See `wiki/architecture/testing.md` for details.
+
+- `phpunit.xml` sets `DB_CONNECTION=sqlite`, but that only changes the default connection. Models pin `mongodb`, so tests need a reachable MongoDB configured via `.env` (`DB_HOST`/`DB_PORT`; CI uses 27017).
+- `tests/TestCase.php` creates the `public/hot` file in `setUp` and removes it in `tearDown` to bypass `ViteManifestNotFoundException`.
 
 ## LLM Wiki & Knowledge Base Management
+
 A persistent, LLM-maintained knowledge base lives in the `wiki/` directory. This is the single source of truth for architectural context and module guidelines.
 
-**CRITICAL INSTRUCTION FOR ALL AGENTS:** 
-You **MUST proactively construct and update the `wiki/`** immediately whenever you introduce new features, database schemas, API integrations, or architectural changes. Do not leave the system in an undocumented state; knowledge MUST be persisted here across operational runs.
+**CRITICAL INSTRUCTION FOR ALL AGENTS:**
+You **MUST proactively construct and update the `wiki/`** immediately whenever you introduce new features, routing patterns, database schemas, API integrations, dependencies, significant design decisions, or architectural changes. Do not leave the system in an undocumented state; knowledge MUST be persisted here across operational runs.
 
 ### Automatic Retrieval Protocol
 To effectively reference this knowledge in future runs and avoid redundant analysis:
 1. **Initialize**: Read `wiki/index.md` at the start of complex requests to map out the current structure and available documentation.
-2. **Navigate**: Use file tools to access detailed breakdowns under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/`.
+2. **Navigate**: Follow links in the index to detailed breakdowns under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/`.
 3. **Comply**: Read `wiki/SCHEMA.md` to understand formatting rules, update conventions, and query mechanics.
-4. **Log**: Update the `wiki/log.md` with a timestamped note after making documented adjustments.
+4. **Log**: Append a dated entry to `wiki/log.md` after making documented adjustments, using the format defined in `wiki/SCHEMA.md` (`## [YYYY-MM-DD] <operation> | <title>`).
 
 ### Key Wiki Files
 - `wiki/index.md` — master content catalog with links to every page (start here).
@@ -24,22 +175,10 @@ To effectively reference this knowledge in future runs and avoid redundant analy
 
 Pages are organized under `wiki/architecture/`, `wiki/database/`, `wiki/frontend/`, and `wiki/modules/`. Cross-references use standard Markdown links (e.g. `[Vault](modules/vault.md)`, `[Request Flow](architecture/request-flow.md)`).
 
-## Build, Test, and Development Commands
-- `composer run dev`: starts the Laravel server, queue listener, log viewer, and Vite HMR together.
-- `npm run dev`: runs the Vite dev server for frontend assets.
-- `npm run build`: compiles TypeScript and production assets.
-- `composer run setup`: installs dependencies, prepares `.env`, runs migrations and seeders, and builds assets.
-- `composer run test`: clears config and runs the PHPUnit suite.
-- `./vendor/bin/pint`: formats PHP code using Laravel Pint.
-
-## Coding Style & Naming Conventions
-Follow `.editorconfig`: UTF-8, LF endings, 4-space indentation, and no trailing whitespace. Use `2` spaces in YAML files. PHP code should follow Laravel conventions and be kept Pint-clean. React/TypeScript files use PascalCase for components, camelCase for functions and variables, and descriptive names that match the feature area, such as `resources/js/Pages/Vault/Index.tsx`.
-
-## Testing Guidelines
-PHPUnit is configured in `phpunit.xml`; feature tests live in `tests/Feature` (unit tests in `tests/Unit`) and should use descriptive names like `VaultFolderTest.php` or `AuthenticationTest.php`. Prefer feature tests for controller, policy, and workflow coverage. Run the full suite with `composer run test`; use `php artisan test --filter NameOfTest` when iterating on one case.
-
 ## Commit & Pull Request Guidelines
+
 Recent commits use conventional-style prefixes with optional scopes, for example `fix(tests): ...`, `feat(vault): ...`, or `style: ...`. Keep commit subjects short and specific. Pull requests should describe the change, list any migration or seeding steps, and include screenshots for UI work. Link related issues when applicable and note any test commands you ran.
 
 ## Security & Configuration Tips
+
 Do not commit secrets or environment-specific values. Local setup expects `.env`, MongoDB credentials, and a valid app key. If you change upload, auth, or AI-related code, call out any new permissions, queue jobs, or environment variables in the PR notes.

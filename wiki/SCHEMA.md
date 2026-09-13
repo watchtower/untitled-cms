@@ -95,7 +95,7 @@ Periodically health-check the wiki:
 - Prefer short summaries at the top, detail below.
 - When something is surprising or non-obvious, call it out explicitly.
 - Mark uncertainty: use "unclear", "TBD", or "investigate" rather than stating guesses as facts.
-- Do not duplicate what is already in CLAUDE.md — link to it instead or build on it.
+- Do not duplicate what is already in AGENTS.md (the canonical agent config; `CLAUDE.md` and `GEMINI.md` only forward to it) — link to it instead or build on it.
 
 ## Source of truth (anti-drift)
 
