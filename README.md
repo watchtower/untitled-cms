@@ -1,8 +1,15 @@
 # Untitled CMS
 
+**Untitled CMS** is a production-ready, open-source CMS that treats AI as a first-class citizen — not an
+afterthought. It is built for Laravel developers self-hosting a content site that both people and AI agents
+need to read: every public page is served as clean Markdown with YAML frontmatter to any client sending
+`Accept: text/markdown`, and the full site is indexed for LLM ingestion at `/llms.txt`. Under the hood it is
+Laravel 13, MongoDB and a React + Inertia.js admin SPA, with a secure **Media Vault** and a multi-provider
+**AI Hub** (OpenRouter, OpenAI, Anthropic, Gemini, and more).
+
 <p align="center">
   <a href="https://github.com/watchtower/untitled-cms/actions/workflows/ci.yml"><img src="https://github.com/watchtower/untitled-cms/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/PHP-8.2%2B-blue?logo=php" alt="PHP 8.2+">
+  <img src="https://img.shields.io/badge/PHP-8.4%2B-blue?logo=php" alt="PHP 8.4+">
   <img src="https://img.shields.io/badge/Laravel-13-red?logo=laravel" alt="Laravel 13">
   <img src="https://img.shields.io/badge/MongoDB-6%2B-green?logo=mongodb" alt="MongoDB 6+">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License">
@@ -19,8 +26,6 @@
 
 ---
 
-**Untitled CMS** is a production-ready, open-source CMS that treats AI as a first-class citizen — not an afterthought. Built on a modern monolithic SPA stack, it ships with a full-featured **Media Vault**, a multi-provider **AI Hub** (OpenRouter, OpenAI, Gemini, Anthropic, and more), and native **Markdown-for-Agents** delivery so AI crawlers and coding assistants can consume your content directly.
-
 ### Why Untitled CMS?
 
 | You want…                        | Untitled CMS gives you…                                                                                      |
@@ -28,7 +33,7 @@
 | A CMS that works _with_ AI tools | `/llms.txt`, `/llms-full.txt`, `Accept: text/markdown` on every page, and YAML frontmatter for agents        |
 | Secure media management          | 7-stage upload pipeline: double-extension detection → MIME check → image sanitization → optional ClamAV scan |
 | Flexible AI integration          | Swap providers at runtime — OpenRouter, OpenAI, Anthropic, Gemini, Groq, Mistral, Deepseek, Ollama           |
-| Granular access control          | 34 permissions across 8 policy classes, cached RBAC, invite-only user flow                                   |
+| Granular access control          | 32 permissions across policy classes, cached RBAC, invite-only user flow                                     |
 | A developer-friendly stack       | Laravel 13 + React 19 + TypeScript + Tailwind CSS v4 + Shadcn UI, all in one repo                            |
 | Easy self-hosting                | Interactive installer, Docker Compose, systemd + Nginx templates                                             |
 
@@ -39,7 +44,7 @@
 | Module                  | Highlights                                                                                                                                                                                              |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Auth & RBAC**         | Login · Registration · Email verification · Token-based invitations · Granular role/permission system with Laravel Gate policies                                                                        |
-| **Pages**               | CKEditor 5 rich text · Draft/Published workflow · SEO meta fields · AI-generated meta · Dynamic public routing · Scheduled publishing                                                                   |
+| **Pages**               | TinyMCE rich text · Draft/Published workflow · SEO meta fields · AI-generated meta · Dynamic public routing · Scheduled publishing                                                                      |
 | **Banners**             | Drag-and-drop reordering (`@dnd-kit`) · Active/inactive scheduling with `start_at / end_at`                                                                                                             |
 | **The Vault**           | Hierarchical media manager · 3-panel resizable layout · Secure 7-stage upload pipeline · Folder-level permissions · Full audit log · AI-generated alt text                                              |
 | **AI Hub**              | Multi-provider manager (OpenRouter, OpenAI, Gemini, Anthropic, Groq, Mistral, Deepseek, Ollama) · Per-hub monthly usage tracking · Text generation · SEO meta generation · Vision-based alt text · Image generation |
@@ -58,7 +63,7 @@
 
 | Requirement  | Version | Notes                                                                     |
 | ------------ | ------- | ------------------------------------------------------------------------- |
-| **PHP**      | >= 8.2  | Extensions: `mongodb`, `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo` |
+| **PHP**      | >= 8.4  | Extensions: `mongodb`, `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo` |
 | **Composer** | >= 2.0  | [getcomposer.org](https://getcomposer.org)                                |
 | **Node.js**  | >= 18   | [nodejs.org](https://nodejs.org)                                          |
 | **npm**      | >= 9    | Bundled with Node.js                                                      |
@@ -74,10 +79,18 @@
 
 The installer checks prerequisites, walks you through configuration, and prints your login credentials.
 
+**macOS / Linux:**
 ```bash
 git clone https://github.com/watchtower/untitled-cms.git untitled-cms
 cd untitled-cms
 bash install.sh
+```
+
+**Windows:**
+```powershell
+git clone https://github.com/watchtower/untitled-cms.git untitled-cms
+cd untitled-cms
+.\install.ps1
 ```
 
 ### Option B — One-Command Setup
@@ -232,7 +245,7 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 | TypeScript                                          | `^5.0`  | Type safety                  |
 | [Tailwind CSS](https://tailwindcss.com/)            | v4      | Utility-first styling        |
 | [Shadcn UI](https://ui.shadcn.com/)                 | latest  | Accessible component library |
-| [CKEditor 5](https://ckeditor.com/)                 | `^41`   | Rich text editor             |
+| [TinyMCE](https://www.tiny.cloud/)                  | `7`     | Rich text editor             |
 | [@dnd-kit](https://dndkit.com/)                     | `^6`    | Drag-and-drop                |
 | [@tanstack/react-table](https://tanstack.com/table) | `^8`    | Headless data tables         |
 | [Recharts](https://recharts.org/)                   | `^2`    | Dashboard charts             |
@@ -374,7 +387,7 @@ Scripts at the project root:
 - Granular RBAC — Roles, Permissions, Laravel Gate policies
 - Social login (Google, GitHub)
 - Users module (CRUD, soft-delete, avatar, batch actions, logout all devices)
-- Pages module (CKEditor 5, SEO fields, Draft/Published, dynamic routing)
+- Pages module (TinyMCE, SEO fields, Draft/Published, dynamic routing)
 - Banners module (drag-and-drop reorder, scheduling)
 - The Vault — hierarchical media manager with secure 7-stage upload pipeline
 - VaultPicker — reusable media selection component

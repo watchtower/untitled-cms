@@ -2,17 +2,27 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "nava/untitled-cms",
     "type": "project",
-    "version": "0.4.0",
-    "description": "AI-native CMS built on Laravel 13 + MongoDB with a React + Inertia.js admin SPA.",
+    "description": "AI-native CMS built on Laravel 13 + MongoDB with a React + Inertia.js admin SPA. Serves every page as Markdown to AI agents via llms.txt and Accept: text/markdown.",
     "keywords": [
         "laravel",
         "mongodb",
         "cms",
         "inertia",
+        "inertiajs",
         "react",
-        "ai"
+        "ai",
+        "llms-txt",
+        "ai-agents",
+        "headless-cms",
+        "content-management"
     ],
+    "homepage": "https://github.com/watchtower/untitled-cms#readme",
     "license": "MIT",
+    "support": {
+        "issues": "https://github.com/watchtower/untitled-cms/issues",
+        "source": "https://github.com/watchtower/untitled-cms",
+        "docs": "https://github.com/watchtower/untitled-cms#readme"
+    },
     "require": {
         "php": "^8.4",
         "ezyang/htmlpurifier": "^4.19",
