@@ -5,6 +5,18 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -e
 
+# Error handler
+trap 'echo -e "\n${RED}${BOLD}✖ Installation failed at line $LINENO.${NC} Please check the error output above."; exit 1' ERR
+
+# Windows Check
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    echo -e "\n\033[1;33m⚠ Warning: You appear to be running this on Windows.\033[0m"
+    echo -e "This script is designed for macOS and Linux."
+    echo -e "Please use the native PowerShell installer instead:"
+    echo -e "  \033[1;36m.\\install.ps1\033[0m\n"
+    read -rp "Press Enter to continue anyway, or Ctrl+C to abort..."
+fi
+
 # Colors
 RED='\033[0;31m'
 YEL='\033[1;33m'
@@ -54,7 +66,7 @@ if command -v php &>/dev/null; then
     PHP_VER=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
     PHP_MAJOR=$(php -r "echo PHP_MAJOR_VERSION;")
     PHP_MINOR=$(php -r "echo PHP_MINOR_VERSION;")
-    if [ "$PHP_MAJOR" -gt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -ge 2 ]); then
+    if [ "$PHP_MAJOR" -gt 8 ] || { [ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -ge 2 ]; }; then
         echo -e " $PASS PHP $PHP_VER"
     else
         echo -e " $FAIL PHP $PHP_VER — ${RED}requires PHP >= 8.2${NC}"
@@ -65,14 +77,16 @@ else
     ERRORS=$((ERRORS+1))
 fi
 
-# Required PHP extensions
-for EXT in mongodb mbstring xml curl zip gd fileinfo; do
-    if php -m 2>/dev/null | grep -qi "^$EXT$"; then
-        echo -e " $PASS PHP ext-$EXT"
-    else
-        echo -e " $WARN PHP ext-$EXT not found — ${YEL}may be required at runtime${NC}"
-    fi
-done
+# Required PHP extensions (only check if PHP is installed)
+if command -v php &>/dev/null; then
+    for EXT in mongodb mbstring xml curl zip gd fileinfo; do
+        if php -m 2>/dev/null | grep -qi "^$EXT$"; then
+            echo -e " $PASS PHP ext-$EXT"
+        else
+            echo -e " $WARN PHP ext-$EXT not found — ${YEL}may be required at runtime${NC}"
+        fi
+    done
+fi
 
 # Composer
 if command -v composer &>/dev/null; then
@@ -108,14 +122,11 @@ else
 fi
 
 # MongoDB
-MONGO_FOUND=false
 if command -v mongod &>/dev/null; then
     MONGO_VER=$(mongod --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
     echo -e " $PASS MongoDB $MONGO_VER (local)"
-    MONGO_FOUND=true
 elif command -v mongosh &>/dev/null; then
     echo -e " $PASS mongosh found (assuming MongoDB is available)"
-    MONGO_FOUND=true
 else
     echo -e " $WARN MongoDB CLI not found locally."
     echo -e "       You can use ${BOLD}MongoDB Atlas${NC} (free cloud cluster) instead."
@@ -215,10 +226,17 @@ fi
 
 # ─── Install Dependencies ─────────────────────────────────────────────────────
 header "Installing PHP Dependencies"
-composer install --no-interaction --prefer-dist
+if ! composer install --no-interaction --prefer-dist; then
+    echo -e "\n${RED}${BOLD}✖ Composer installation failed.${NC}"
+    echo -e "Please ensure PHP and Composer are properly installed."
+    exit 1
+fi
 
 header "Installing Node.js Dependencies"
-npm install
+if ! npm install; then
+    echo -e "\n${RED}${BOLD}✖ npm installation failed.${NC}"
+    exit 1
+fi
 
 # ─── Application Key ──────────────────────────────────────────────────────────
 header "Generating Application Key"
