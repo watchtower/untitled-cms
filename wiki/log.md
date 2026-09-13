@@ -4,6 +4,17 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-09-13] fix | Page save, editor sync and Vault size label
+- Found during browser smoke tests of the upgrade; all three predate it.
+- `PageController` store/update: empty editor content arrives as `null` (ConvertEmptyStringsToNull) and crashed `clean()`.
+  Store now cleans `content ?? ''`. Update only cleans `content` when it was submitted, so partial updates keep existing content.
+- `Components/Editor.tsx`: the TinyMCE textarea id was regenerated on every render, so each render re-initialised the editor
+  and leaked instances (500+ seen). The id is now a stable `useRef`, and cleanup removes the editor instance by id.
+  Content syncs on `input change undo redo` (not `SetContent`, which would mark forms dirty on load).
+- `VaultController::adminPage` sends `maxUploadSize` in MB (the dialog's unit): the smallest of `upload_max_filesize`,
+  `post_max_size` and `vault.max_upload_kb`, ignoring 0/-1 ini values.
+- New tests: empty-content create/update and omitted-content update in `PageControllerTest`, and the Vault MB prop in `VaultUploadTest`.
+
 ## [2026-09-13] update | Dependency upgrades completed
 - Executed all 7 phases of `docs/dependency-upgrade-plan.md` (see its Outcome section). Final gate is green:
   93 tests on PHPUnit 13, `tsc` and Vite 8 build clean, both audits clean.

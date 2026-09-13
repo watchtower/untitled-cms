@@ -25,6 +25,9 @@ Dependency upgrade. Requires Node.js 22.12+. See `docs/dependency-upgrade-plan.m
 
 ### Fixed
 - Dashboard chart tooltip `labelFormatter` now handles non-date labels (type error surfaced by the recharts update).
+- **Pages** — creating or updating a page with an empty editor no longer returns a 500 error (`clean()` received `null`). An update that omits `content` leaves the existing content untouched.
+- **Editor** — TinyMCE now syncs content on every edit, not only on blur, so clicking Save straight after typing sends the latest text. The editor id stays stable across renders, which stops TinyMCE re-initialising on every render and leaking editor instances.
+- **Vault** — the upload dialog showed the size limit in bytes labelled as MB (e.g. "2097152MB"). It now shows MB, using the smallest of PHP's upload/post limits and `vault.max_upload_kb`.
 
 ### Not upgraded
 - Guzzle 8: `league/oauth1-client` 1.x (required by Socialite) only allows Guzzle 7.
