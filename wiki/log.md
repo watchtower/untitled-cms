@@ -14,6 +14,8 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 - `VaultController::adminPage` sends `maxUploadSize` in MB (the dialog's unit): the smallest of `upload_max_filesize`,
   `post_max_size` and `vault.max_upload_kb`, ignoring 0/-1 ini values.
 - New tests: empty-content create/update and omitted-content update in `PageControllerTest`, and the Vault MB prop in `VaultUploadTest`.
+- Added `config/inertia.php` setting `pages.paths` to `resources/js/Pages`. Inertia v3 defaults to lowercase `js/pages`,
+  which only matches on case-insensitive filesystems. `assertInertia()->component()` failed on Linux CI while passing on macOS.
 
 ## [2026-09-13] update | Dependency upgrades completed
 - Executed all 7 phases of `docs/dependency-upgrade-plan.md` (see its Outcome section). Final gate is green:
