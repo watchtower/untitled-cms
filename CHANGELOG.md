@@ -9,12 +9,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-Dependency upgrade. Requires Node.js 22.12+. See `docs/dependency-upgrade-plan.md`.
+---
+
+## [0.6.0] — 2026-10-03
+
+Dependency and AI SDK upgrade. **Requires Node.js 22.12+.** The Bedrock AI provider is no longer supported.
+See `docs/dependency-upgrade-plan.md` and `docs/laravel-13.34-upgrade-plan.md`.
 
 ### Changed
 - **Requirements** — Node.js `>=22.12.0` (needed by Vite 8, react-dropzone 20 and concurrently 10).
-- **Backend dependencies** — `laravel/ai` 0.11 (drops `prism-php/prism`), `inertiajs/inertia-laravel` 3, `intervention/image` 4, PHPUnit 13, plus in-range Composer updates (Socialite 5.31 pulls in `phpseclib/phpseclib` 4).
-- **Frontend dependencies** — Vite 8 with `@vitejs/plugin-react` 6 and `laravel-vite-plugin` 3, `@inertiajs/react` 3, `@tanstack/react-table` 9, `lucide-react` 1, `react-dropzone` 20, `@shadcn/react` 0.3, `concurrently` 10, `@types/node` 26, plus in-range npm updates. `npm audit` is clean.
+- **Backend dependencies** — Laravel 13.34, `inertiajs/inertia-laravel` 3.5, `intervention/image` 4, PHPUnit 13.4, `resend/resend-laravel` 1.6, plus in-range Composer updates (Socialite 5.31 pulls in `phpseclib/phpseclib` 4).
+- **AI SDK** — `laravel/ai` 1.0 (from 0.5, via 0.11; drops `prism-php/prism`). Gemini text generation now uses Google's Interactions API. `aws/aws-sdk-php` is no longer installed.
+- **AI Hub** — the seeded Gemini hub uses `gemini-flash-latest`. Google has retired `gemini-2.5-pro` for new API keys, so fresh installs failed. Existing hubs are unchanged; edit the model in AI Integrations if you see a 404. Form placeholders suggest current models.
+- **Admin sidebar** — shows the real app version (read from `package.json` at build time) instead of a hardcoded `v0.2.0`.
+- **Frontend dependencies** — Vite 8 with `@vitejs/plugin-react` 6 and `laravel-vite-plugin` 3, `@inertiajs/react` 3.8, `@tanstack/react-table` 9, `lucide-react` 1, `react-dropzone` 20, `@shadcn/react` 0.3, `concurrently` 10, `@types/node` 26, plus in-range npm updates (see Known issues for `npm audit`).
 - **Vault** — `OptimizeVaultImageJob` converts to WebP with Laravel's `Image` facade (`IMAGE_DRIVER`, default `gd`) instead of calling Intervention directly. New `OptimizeVaultImageJobTest`.
 - **Data tables** — migrated to the TanStack Table v9 API: `useTable` with a shared `dataTableFeatures` set and `DataTableColumnDef<T>`.
 - **Inertia v3** — the root template uses `<title data-inertia>`, shared props are typed through `InertiaConfig.sharedPageProps`, and pages resolve with a typed default-export glob.
@@ -22,16 +30,24 @@ Dependency upgrade. Requires Node.js 22.12+. See `docs/dependency-upgrade-plan.m
 
 ### Removed
 - `@tailwindcss/vite` (unused; Tailwind loads through `@tailwindcss/postcss`).
+- **Bedrock AI provider** — `laravel/ai` 1.0 no longer ships the AWS SDK. Activating a Bedrock hub now returns a clear "not supported" error.
 
 ### Fixed
 - Dashboard chart tooltip `labelFormatter` now handles non-date labels (type error surfaced by the recharts update).
 - **Pages** — creating or updating a page with an empty editor no longer returns a 500 error (`clean()` received `null`). An update that omits `content` leaves the existing content untouched.
 - **Editor** — TinyMCE now syncs content on every edit, not only on blur, so clicking Save straight after typing sends the latest text. The editor id stays stable across renders, which stops TinyMCE re-initialising on every render and leaking editor instances.
+- **Pages** — Create Page no longer re-renders nonstop once a title is typed. Fast typing in the editor could hit React error #185, reload the page and lose the form. A hand-typed slug is no longer overwritten on every render.
 - **Vault** — the upload dialog showed the size limit in bytes labelled as MB (e.g. "2097152MB"). It now shows MB, using the smallest of PHP's upload/post limits and `vault.max_upload_kb`.
+
+### Security
+- `league/commonmark` 2.10.3 — fixes a `DisallowedRawHtml` bypass and a quadratic-time DoS in the GFM table extension. `composer audit` is clean.
 
 ### Not upgraded
 - Guzzle 8: `league/oauth1-client` 1.x (required by Socialite) only allows Guzzle 7.
 - TypeScript 7: ships without a compiler API. Upgrade path is 5.9 → 6.0 → 7.0.
+
+### Known issues
+- `npm audit --omit=dev` reports high-severity advisories in `braces` (via the `shadcn` CLI → `fast-glob` → `micromatch`). No patched version exists yet. The CLI only runs when adding components and is not part of the browser bundle.
 
 ---
 
@@ -143,7 +159,8 @@ Initial public release.
 - **Dark mode** — System-preference aware, toggle in admin UI
 - **34 permissions** — Organised by resource group across all modules
 
-[Unreleased]: https://github.com/watchtower/untitled-cms/compare/0.5.1...HEAD
+[Unreleased]: https://github.com/watchtower/untitled-cms/compare/0.6.0...HEAD
+[0.6.0]: https://github.com/watchtower/untitled-cms/compare/0.5.1...0.6.0
 [0.5.1]: https://github.com/watchtower/untitled-cms/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/watchtower/untitled-cms/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/watchtower/untitled-cms/compare/0.3.0...0.4.0

@@ -4,6 +4,11 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-10-03] release | 0.6.0
+- Version bumped to 0.6.0 in `package.json`; the admin sidebar now reads it via Vite `define` (`__APP_VERSION__`, typed in `types/global.d.ts`) instead of a hardcoded `v0.2.0`.
+- CHANGELOG `[Unreleased]` cut as `[0.6.0] — 2026-10-03`, with today's changes added (Laravel 13.34, `laravel/ai` 1.0, Bedrock removed, editor loop fix, Gemini seed, commonmark security). Compare links updated.
+- README: new "What's New in 0.6.0" section, current version line, `laravel/ai` row in the tech stack table.
+
 ## [2026-10-03] fix | Seeded Gemini model
 - `AiHubSeeder` seeded `gemini-2.5-pro`, which Google returns 404 for on new API keys. It now seeds `gemini-flash-latest` (verified for text through laravel/ai and for vision through `generateContent`).
 - AI Hub form placeholders now suggest models that are still available (`gemini-flash-latest`, `gemini-2.5-flash-image`).

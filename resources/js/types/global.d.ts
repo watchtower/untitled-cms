@@ -9,6 +9,9 @@ declare global {
 
     /* eslint-disable no-var */
     var route: typeof ziggyRoute;
+
+    /** App version from package.json, injected by Vite `define`. */
+    const __APP_VERSION__: string;
 }
 
 declare module '@inertiajs/core' {
