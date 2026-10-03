@@ -4,6 +4,11 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-10-03] ingest | Laravel 13.34 upgrade plan
+- Added `docs/laravel-13.34-upgrade-plan.md`. Phase 1: framework 13.34 + in-range updates. Phase 2: `laravel/ai` 1.0.
+- `laravel/ai` 1.0.1 keeps our `AnonymousAgent` / `prompt()` / `Base64Image` signatures. Open risks: the AWS SDK is dropped (Bedrock)
+  and Gemini moves to the Interactions API. Baseline: 97 tests / 245 assertions.
+
 ## [2026-10-03] ingest | Laravel changelog review (2026-09 digest)
 - Added [architecture/upgrade-tracker](architecture/upgrade-tracker.md): checkpoint against the Atom feed
   `laravel.com/rss/oss-changelog` (covered through the 2026-09 digest) plus a pending-upgrade checklist.
