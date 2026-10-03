@@ -38,7 +38,7 @@ After a review, bump the checkpoint table and the date in the command above.
 
 ## Pending
 
-Branch: `chore/laravel-13.34-upgrade`. Full plan: [docs/laravel-13.34-upgrade-plan.md](../../docs/laravel-13.34-upgrade-plan.md). Phase 1 done 2026-10-03; Phase 2 pending.
+Branch: `chore/laravel-13.34-upgrade`. Full plan: [docs/laravel-13.34-upgrade-plan.md](../../docs/laravel-13.34-upgrade-plan.md). Phases 1 and 2 done 2026-10-03.
 
 **Phase 1: minor/patch releases (done 2026-10-03)**
 - [x] laravel/framework 13.31.0 → 13.34.0, inertiajs/inertia-laravel 3.3.4 → 3.5.1 (+ `@inertiajs/react` 3.8.0)
@@ -50,10 +50,11 @@ Branch: `chore/laravel-13.34-upgrade`. Full plan: [docs/laravel-13.34-upgrade-pl
 (`fast-glob` → `micromatch` → `braces`, which has no patched version). The CLI only runs when adding components; at runtime the app imports just `shadcn/tailwind.css`.
 Re-check when `braces` is patched.
 
-**Phase 2: `laravel/ai` 0.11.2 → 1.0.1 (major version)**
-- [ ] Block the `bedrock` provider in `AiService::configureActiveAi()` (decided 2026-10-03; the AWS SDK is no longer installed)
-- [ ] Upgrade guide reviewed 2026-10-03 (see plan). Open items: Bedrock/AWS SDK decision, Gemini smoke test. Touches `AnonymousAgent` / `Base64Image` in `app/Services/AiService.php` and `app/Http/Controllers/AiController.php`
-- [ ] Evaluate `Ai::build()` (runtime provider config) for hub-configured providers, see [AI Hub](../modules/ai-hub.md)
+**Phase 2: `laravel/ai` 0.11.2 → 1.0.1 (done 2026-10-03)**
+- [x] Bedrock blocked in `AiService::configureActiveAi()` with a test. `aws/aws-sdk-php`, `aws-crt-php`, `jmespath` and `symfony/filesystem` were removed.
+- [x] Gemini smoke test on the Interactions API: rawPrompt, SEO meta, tags, chat and moderation (`Base64Image`) all OK
+- [ ] Follow-up: evaluate `Ai::build()` (runtime provider config) to replace the `config([...])` override, see [AI Hub](../modules/ai-hub.md)
+- [ ] Follow-up: `AiHubSeeder` seeds `gemini-2.5-pro`, which Google has retired for new keys
 
 **Blocked**
 - Guzzle 7 → 8: `league/oauth1-client` 1.11 (via `laravel/socialite`) caps at `^7`. Re-check with `composer why guzzlehttp/guzzle`.

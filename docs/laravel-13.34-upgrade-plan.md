@@ -1,6 +1,6 @@
 # Laravel 13.34 Upgrade Plan — October 2026
 
-Status: **Phase 1 done** 2026-10-03; Phase 2 pending. Branch: `chore/laravel-13.34-upgrade` off `master` (12843d9).
+Status: **Completed** 2026-10-03 (Phases 1 and 2; see [Outcome](#outcome)). Branch: `chore/laravel-13.34-upgrade` off `master` (12843d9).
 Source review: Laravel OSS changelog through the 2026-09 digest, see [wiki/architecture/upgrade-tracker.md](../wiki/architecture/upgrade-tracker.md).
 Each phase is staged separately and must pass the verification gate before the next one begins.
 
@@ -127,3 +127,19 @@ Each phase is its own commit, so `git revert <sha>` then `composer install` rest
   - 13.33's session password-hash change only affects `AuthenticateSession`, which we don't use.
   - `brick/math` is only used inside the framework and `ramsey/uuid`.
 - `npm audit fix` (non-breaking) removed 2 advisories. The 7 remaining highs come through the `shadcn` CLI with no patched `braces`. Accepted; see the tracker.
+
+### Phase 2 (2026-10-03)
+
+| Package | From | To |
+|---|---|---|
+| `laravel/ai` | 0.11.2 | 1.0.1 |
+| `aws/aws-sdk-php`, `aws/aws-crt-php`, `mtdowling/jmespath.php`, `symfony/filesystem` | installed | removed |
+
+- Bedrock rejected in `AiService::configureActiveAi()`, with the new test `tests/Feature/AiServiceProviderTest.php`.
+- Gate: Pint clean, 98 tests / 247 assertions with no deprecations, `composer audit` clean. No frontend changes.
+- Gemini live smoke test (laravel/ai 1.0 → Interactions API) with model `gemini-flash-latest`: `rawPrompt`, `generateSeoMeta`, `generateTags`,
+  `generateChatResponse` and `moderateImage` (`Base64Image` attachment) all returned real output.
+  `generateText` hit free-tier rate limits (429), but its call is identical to `rawPrompt`.
+- The runtime `config([...])` provider override in `configureActiveAi()` still takes effect on 1.0 (Gemini was used).
+- Found: Google returns 404 for `gemini-2.5-pro` on new keys. The seeded hub default is stale (follow-up).
+- Not covered: OpenAI hub (no key available).

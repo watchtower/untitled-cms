@@ -45,6 +45,11 @@ class AiService
             );
         }
 
+        // Bedrock needs aws/aws-sdk-php, which laravel/ai 1.0 no longer installs.
+        if ($providerName === 'bedrock') {
+            throw new \Exception('The Bedrock provider is not supported. Please activate a different AI Integration.');
+        }
+
         $supportedProviders = array_keys(config('ai.providers'));
         if (! in_array($providerName, $supportedProviders)) {
             throw new \Exception("Unsupported AI Integration provider by laravel/ai: {$providerName}");

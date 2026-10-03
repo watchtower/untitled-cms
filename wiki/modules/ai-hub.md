@@ -2,7 +2,7 @@
 
 > Multi-provider AI configuration, usage tracking, and integration patterns.
 
-Last updated: 2026-07-12
+Last updated: 2026-10-03
 
 ## Overview
 
@@ -24,6 +24,14 @@ Capabilities depend on hub configuration and model choice. Typical matrix:
 
 Canonical provider keys for the SDK are `array_keys(config('ai.providers'))`.
 Hub `name` must match a supported key (case-insensitive).
+
+**SDK version:** `laravel/ai` ^1.0 (since 2026-10-03).
+- **Bedrock is blocked.** `configureActiveAi()` rejects it because laravel/ai 1.0 no longer installs `aws/aws-sdk-php`,
+  and resolving Bedrock without the SDK throws. Covered by `tests/Feature/AiServiceProviderTest.php`.
+- **Gemini text uses Google's Interactions API** (laravel/ai 1.0). We pass no raw provider options, so no mapping is needed.
+  Vision and image paths still call `generateContent` / Imagen directly over HTTP.
+- **Retired models:** Google withdrew `gemini-2.5-pro` for new API keys (404 "no longer available to new users").
+  `AiHubSeeder` still seeds it; prefer `gemini-flash-latest` or a current 3.x model in the hub.
 
 ## Rate limits (enforced at route level)
 
