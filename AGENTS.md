@@ -107,7 +107,7 @@ menus                  — Menu::active()->get()->keyBy('slug'), cached 300s und
 
 Key UI libraries: TanStack Table (data grids), @dnd-kit (drag-drop), Recharts (analytics charts), Zod (form validation), Sonner (toasts), TinyMCE (`Editor.tsx`) for rich content, `react-dropzone` for Vault uploads.
 
-Inertia form pattern: use `useForm()` from `@inertiajs/react` — handles loading state, errors, and submission. No fetch calls or separate API layer.
+Inertia form pattern: use `useForm()` from `@inertiajs/react` — handles loading state, errors, and submission. No fetch calls or separate API layer. `setData` always re-renders (it never skips unchanged values), so never call it from a `useEffect` that depends on an inline `onChange` prop — see the gotcha in `wiki/frontend/ui-stack.md`.
 
 ### AI-Native Endpoints (no auth)
 
