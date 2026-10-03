@@ -18,6 +18,7 @@ Content catalog for the untitled-cms wiki. Updated on every ingest.
 | [architecture/middleware](architecture/middleware.md) | Web middleware stack and what each layer does |
 | [architecture/testing](architecture/testing.md) | Test setup, SQLite override, known gotchas |
 | [architecture/mongodb](architecture/mongodb.md) | Why MongoDB, test dual-path, re-evaluate criteria |
+| [architecture/upgrade-tracker](architecture/upgrade-tracker.md) | Laravel changelog review checkpoint and pending upgrades |
 
 ## Database
 
