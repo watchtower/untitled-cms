@@ -4,6 +4,11 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-10-03] fix | Seeded Gemini model
+- `AiHubSeeder` seeded `gemini-2.5-pro`, which Google returns 404 for on new API keys. It now seeds `gemini-flash-latest` (verified for text through laravel/ai and for vision through `generateContent`).
+- AI Hub form placeholders now suggest models that are still available (`gemini-flash-latest`, `gemini-2.5-flash-image`).
+- Updated [modules/ai-hub](modules/ai-hub.md) and ticked the follow-up in [architecture/upgrade-tracker](architecture/upgrade-tracker.md).
+
 ## [2026-10-03] fix | Create Page render loop (React #185)
 - `SlugInput`'s auto-slug effect depended on the inline `onChange` and called `setData` every render. Inertia's `setData` always commits a new object,
   so Create Page re-rendered nonstop once a title existed (~2000 scheduler ticks/s, measured). Fast typing in TinyMCE then hit React #185,

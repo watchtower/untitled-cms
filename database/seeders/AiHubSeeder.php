@@ -23,7 +23,7 @@ class AiHubSeeder extends Seeder
             ],
             [
                 'name' => 'Gemini',
-                'default_model' => 'gemini-2.5-pro',
+                'default_model' => 'gemini-flash-latest',
             ],
             [
                 'name' => 'Deepseek',

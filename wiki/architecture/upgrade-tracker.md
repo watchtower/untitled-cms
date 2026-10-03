@@ -54,7 +54,7 @@ Re-check when `braces` is patched.
 - [x] Bedrock blocked in `AiService::configureActiveAi()` with a test. `aws/aws-sdk-php`, `aws-crt-php`, `jmespath` and `symfony/filesystem` were removed.
 - [x] Gemini smoke test on the Interactions API: rawPrompt, SEO meta, tags, chat and moderation (`Base64Image`) all OK
 - [ ] Follow-up: evaluate `Ai::build()` (runtime provider config) to replace the `config([...])` override, see [AI Hub](../modules/ai-hub.md)
-- [ ] Follow-up: `AiHubSeeder` seeds `gemini-2.5-pro`, which Google has retired for new keys
+- [x] Follow-up: `AiHubSeeder` now seeds `gemini-flash-latest` instead of the retired `gemini-2.5-pro` (2026-10-03)
 
 **Blocked**
 - Guzzle 7 → 8: `league/oauth1-client` 1.11 (via `laravel/socialite`) caps at `^7`. Re-check with `composer why guzzlehttp/guzzle`.
