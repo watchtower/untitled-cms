@@ -4,6 +4,14 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-10-03] fix | Create Page render loop (React #185)
+- `SlugInput`'s auto-slug effect depended on the inline `onChange` and called `setData` every render. Inertia's `setData` always commits a new object,
+  so Create Page re-rendered nonstop once a title existed (~2000 scheduler ticks/s, measured). Fast typing in TinyMCE then hit React #185,
+  the page reloaded, and the form was lost. Edit Page was unaffected (`isEditing`).
+- Fix: read `value`/`onChange` through refs, depend only on `sourceValue`/`isLocked`/`isEditing`, and skip unchanged slugs.
+  Side effect: a hand-typed slug on Create is no longer overwritten on every render (only when the title changes again).
+- Added the gotcha to [frontend/ui-stack](frontend/ui-stack.md) and a one-line pointer in `AGENTS.md` (Inertia form pattern).
+
 ## [2026-10-03] update | Phase 2 upgrade: laravel/ai 1.0
 - `laravel/ai` 0.11.2 → 1.0.1. The AWS SDK chain was removed and the Bedrock provider is now rejected in `configureActiveAi()` (test added).
 - Gemini text now goes through the Interactions API and was verified live. `gemini-2.5-pro` is retired for new keys; the seeder default is stale.

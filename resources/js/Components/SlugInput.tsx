@@ -2,7 +2,7 @@
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
 import { Lock, Unlock, Link as LinkIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/Components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,16 @@ export function SlugInput({
 }: SlugInputProps) {
     const [isLocked, setIsLocked] = useState(isEditing);
 
+    // Parents pass an inline onChange, and Inertia's setData always commits a new object.
+    // Depending on onChange (or calling it with an unchanged slug) re-renders forever, so read both through refs.
+    const valueRef = useRef(value);
+    const onChangeRef = useRef(onChange);
+
+    useEffect(() => {
+        valueRef.current = value;
+        onChangeRef.current = onChange;
+    }, [value, onChange]);
+
     // Auto-generate slug from source (Name) only if NOT locked AND not in edit mode (to prevent accidental overrides)
     useEffect(() => {
         // In creation mode: Sync if unlocked.
@@ -34,9 +44,11 @@ export function SlugInput({
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)+/g, '');
-            onChange(slug);
+            if (slug !== valueRef.current) {
+                onChangeRef.current(slug);
+            }
         }
-    }, [sourceValue, isLocked, onChange, isEditing]);
+    }, [sourceValue, isLocked, isEditing]);
 
     return (
         <div className={cn("relative flex items-center", className)}>

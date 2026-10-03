@@ -2,7 +2,7 @@
 
 > React 19 + TypeScript + Inertia.js admin SPA patterns and conventions.
 
-Last updated: 2026-09-13
+Last updated: 2026-10-03
 
 ## Stack
 
@@ -59,6 +59,10 @@ Injected by `HandleInertiaRequests` middleware:
 - Use `router.visit()` or `<Link>` for navigation — never `window.location`.
 - Props are typed — check the corresponding controller's `Inertia::render()` call
   to see what's available on a given page.
+- **Gotcha: `setData` never bails out.** It always commits a cloned object, even when the value is unchanged,
+  so every call re-renders. Never call it from a `useEffect` whose dependencies include an inline `onChange` prop.
+  That loops forever and crashes with React error #185 under fast input. Read callback and value props through refs,
+  and only call `onChange` when the value actually differs (see `Components/SlugInput.tsx`, fixed 2026-10-03).
 
 ## No API layer
 
