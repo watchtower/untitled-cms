@@ -363,7 +363,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
                                         type="text"
                                         value={data.default_model}
                                         onChange={(e) => setData('default_model', e.target.value)}
-                                        placeholder="e.g. gemini-2.5-flash, gpt-4o..."
+                                        placeholder="e.g. gemini-flash-latest, gpt-4o..."
                                     />
                                     <p className="text-sm text-muted-foreground">
                                         The model used for text generation.
@@ -378,7 +378,7 @@ export default function Index({ integrations }: PageProps<{ integrations: AiHub[
                                         type="text"
                                         value={data.image_model}
                                         onChange={(e) => setData('image_model', e.target.value)}
-                                        placeholder="e.g. gemini-2.0-flash-preview-image-generation, dall-e-3"
+                                        placeholder="e.g. gemini-2.5-flash-image, dall-e-3"
                                     />
                                     <p className="text-sm text-muted-foreground">
                                         The model used for image generation. Leave blank to use the provider default.

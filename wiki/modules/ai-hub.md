@@ -31,7 +31,8 @@ Hub `name` must match a supported key (case-insensitive).
 - **Gemini text uses Google's Interactions API** (laravel/ai 1.0). We pass no raw provider options, so no mapping is needed.
   Vision and image paths still call `generateContent` / Imagen directly over HTTP.
 - **Retired models:** Google withdrew `gemini-2.5-pro` for new API keys (404 "no longer available to new users").
-  `AiHubSeeder` still seeds it; prefer `gemini-flash-latest` or a current 3.x model in the hub.
+  `AiHubSeeder` now seeds `gemini-flash-latest` (fixed 2026-10-03; verified for text and vision). `firstOrCreate` leaves existing hubs alone,
+  and keys created before the retirement can still use 2.5-pro, so existing installs only need a change if they see that 404.
 
 ## Rate limits (enforced at route level)
 
