@@ -4,6 +4,11 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-10-03] update | Phase 2 upgrade: laravel/ai 1.0
+- `laravel/ai` 0.11.2 → 1.0.1. The AWS SDK chain was removed and the Bedrock provider is now rejected in `configureActiveAi()` (test added).
+- Gemini text now goes through the Interactions API and was verified live. `gemini-2.5-pro` is retired for new keys; the seeder default is stale.
+- Updated [modules/ai-hub](modules/ai-hub.md), [architecture/upgrade-tracker](architecture/upgrade-tracker.md), and the Outcome section of `docs/laravel-13.34-upgrade-plan.md`.
+
 ## [2026-10-03] update | Phase 1 upgrade: Laravel 13.34
 - Framework 13.31.0 → 13.34.0, inertia-laravel 3.5.1 / `@inertiajs/react` 3.8.0, PHPUnit 13.4.0, resend-laravel 1.6.0, patch releases.
 - Security: league/commonmark 2.10.3 (raw-HTML filter bypass, GFM table DoS). `npm audit fix` applied; the shadcn-CLI `braces` chain is accepted (no patch).
