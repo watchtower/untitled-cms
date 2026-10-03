@@ -39,6 +39,17 @@ Laravel 13, MongoDB and a React + Inertia.js admin SPA, with a secure **Media Va
 
 ---
 
+## What's New in 0.6.0
+
+Highlights of the [0.6.0 release](CHANGELOG.md#060--2026-10-03). Full details in [CHANGELOG.md](CHANGELOG.md#060--2026-10-03).
+
+- **Requirements** — Node.js **22.12+** (Vite 8). PHP 8.4 and MongoDB requirements are unchanged.
+- **Laravel 13.34 and `laravel/ai` 1.0** — the AI SDK reaches 1.0. Gemini now runs on Google's Interactions API. The **Bedrock provider is no longer supported** (the AWS SDK is no longer bundled).
+- **Frontend toolchain** — Vite 8, Inertia 3 (server 3.5, client 3.8), TanStack Table 9 and other major npm updates.
+- **Editor fixes** — Create Page no longer crashes or loses the form when you type quickly. Content saves straight after typing, empty pages save without errors, and a hand-typed slug sticks.
+- **AI Hub** — the seeded Gemini hub uses `gemini-flash-latest` (Google retired `gemini-2.5-pro` for new keys).
+- **Security** — `league/commonmark` 2.10.3; `composer audit` is clean.
+
 ## What's New in 0.5.0
 
 Highlights of the [0.5.0 release](CHANGELOG.md#050--2026-09-13). Full details in [CHANGELOG.md](CHANGELOG.md#050--2026-09-13).
@@ -250,7 +261,7 @@ Responses include `Content-Signal` and `x-markdown-tokens` headers for AI pipeli
 | [mongodb/laravel-mongodb](https://github.com/mongodb/laravel-mongodb)       | `^5.7`   | MongoDB ODM                        |
 | [laravel/sanctum](https://laravel.com/docs/sanctum)                         | `^4.0`   | Session & token authentication     |
 | [laravel/socialite](https://laravel.com/docs/socialite)                     | `^5.24`  | OAuth (Google, GitHub)             |
-| [laravel/ai](https://github.com/laravel/ai)                                 | `^0.11`  | LLM provider abstraction           |
+| [laravel/ai](https://github.com/laravel/ai)                                 | `^1.0`   | LLM provider abstraction           |
 | [inertiajs/inertia-laravel](https://inertiajs.com/)                         | `^3.0`   | Server-side SPA bridge             |
 | [intervention/image](https://image.intervention.io/v4)                      | `^4.0`   | Driver for Laravel's `Image` (WebP optimization) |
 | [league/html-to-markdown](https://github.com/thephpleague/html-to-markdown) | `^5.1`   | HTML → Markdown for AI delivery    |
@@ -476,7 +487,7 @@ Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.5.1** — a security patch on top of 0.5.0 (highlights in [What's New in 0.5.0](#whats-new-in-050)).
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes. Current version: **0.6.0** (highlights in [What's New in 0.6.0](#whats-new-in-060)).
 
 ---
 

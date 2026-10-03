@@ -105,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
             <span className="truncate font-semibold">{appName}</span>
-            <span className="truncate text-xs">v0.2.0</span>
+            <span className="truncate text-xs">v{__APP_VERSION__}</span>
           </div>
         </div>
       </SidebarHeader>

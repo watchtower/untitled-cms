@@ -64,6 +64,11 @@ Injected by `HandleInertiaRequests` middleware:
   That loops forever and crashes with React error #185 under fast input. Read callback and value props through refs,
   and only call `onChange` when the value actually differs (see `Components/SlugInput.tsx`, fixed 2026-10-03).
 
+## Build-time constants
+
+- `__APP_VERSION__` holds the app version from `package.json`. `vite.config.js` injects it with `define`, and it is declared in `types/global.d.ts`.
+  The admin sidebar shows it. Bump the version in `package.json` only (`npm version X.Y.Z --no-git-tag-version`); never hardcode it in components.
+
 ## No API layer
 
 There is no separate REST/GraphQL API consumed by the frontend. If you need data
