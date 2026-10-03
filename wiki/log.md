@@ -4,6 +4,12 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-10-03] update | Phase 1 upgrade: Laravel 13.34
+- Framework 13.31.0 → 13.34.0, inertia-laravel 3.5.1 / `@inertiajs/react` 3.8.0, PHPUnit 13.4.0, resend-laravel 1.6.0, patch releases.
+- Security: league/commonmark 2.10.3 (raw-HTML filter bypass, GFM table DoS). `npm audit fix` applied; the shadcn-CLI `braces` chain is accepted (no patch).
+- Decision: the Bedrock provider will be blocked in Phase 2 (`laravel/ai` 1.0 no longer installs the AWS SDK).
+- Updated [architecture/upgrade-tracker](architecture/upgrade-tracker.md) and the Outcome section of `docs/laravel-13.34-upgrade-plan.md`.
+
 ## [2026-10-03] ingest | Laravel 13.34 upgrade plan
 - Added `docs/laravel-13.34-upgrade-plan.md`. Phase 1: framework 13.34 + in-range updates. Phase 2: `laravel/ai` 1.0.
 - `laravel/ai` 1.0.1 keeps our `AnonymousAgent` / `prompt()` / `Base64Image` signatures. Open risks: the AWS SDK is dropped (Bedrock)
