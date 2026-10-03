@@ -4,6 +4,12 @@ Append-only record of wiki operations. Format: `## [YYYY-MM-DD] <op> | <title>`
 
 ---
 
+## [2026-10-03] ingest | Laravel changelog review (2026-09 digest)
+- Added [architecture/upgrade-tracker](architecture/upgrade-tracker.md): checkpoint against the Atom feed
+  `laravel.com/rss/oss-changelog` (covered through the 2026-09 digest) plus a pending-upgrade checklist.
+- Available: framework 13.31.0 → 13.34.0 and other minor/patch releases; `laravel/ai` 1.0.1 (major version). Guzzle 8 still blocked.
+- Branch `chore/laravel-13.34-upgrade` created; nothing applied yet.
+
 ## [2026-09-13] fix | Page save, editor sync and Vault size label
 - Found during browser smoke tests of the upgrade; all three predate it.
 - `PageController` store/update: empty editor content arrives as `null` (ConvertEmptyStringsToNull) and crashed `clean()`.
