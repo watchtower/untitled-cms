@@ -38,7 +38,7 @@ After a review, bump the checkpoint table and the date in the command above.
 
 ## Pending
 
-Branch: `chore/laravel-13.34-upgrade`. Nothing applied yet.
+Branch: `chore/laravel-13.34-upgrade`. Full plan: [docs/laravel-13.34-upgrade-plan.md](../../docs/laravel-13.34-upgrade-plan.md). Nothing applied yet.
 
 **Phase 1: minor/patch releases**
 - [ ] laravel/framework 13.31.0 → 13.34.0
@@ -49,7 +49,7 @@ Branch: `chore/laravel-13.34-upgrade`. Nothing applied yet.
 - [ ] Gate: `composer run test`, `./vendor/bin/pint --test`, `npm run build`
 
 **Phase 2: `laravel/ai` 0.11.2 → 1.0.1 (major version)**
-- [ ] Read its upgrade notes; touches `AnonymousAgent` / `Base64Image` in `app/Services/AiService.php` and `app/Http/Controllers/AiController.php`
+- [ ] Upgrade guide reviewed 2026-10-03 (see plan). Open items: Bedrock/AWS SDK decision, Gemini smoke test. Touches `AnonymousAgent` / `Base64Image` in `app/Services/AiService.php` and `app/Http/Controllers/AiController.php`
 - [ ] Evaluate `Ai::build()` (runtime provider config) for hub-configured providers, see [AI Hub](../modules/ai-hub.md)
 
 **Blocked**
